@@ -13,6 +13,19 @@
   <property name="windowTitle">
    <string>Resistance</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton {
+	background-color: black;
+	border: 2px solid #B66DDB;
+	color: white;
+}
+
+QPushButton:disabled {
+	background-color: #808080;
+	border: none;
+	color: #CCCCCC;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
     <property name="leftMargin">
@@ -31,6 +44,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
       <item>
        <widget class="QPushButton" name="backButton">
+        <property name="styleSheet">
+         <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+        </property>
         <property name="text">
          <string>&lt;</string>
         </property>
@@ -38,6 +54,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="resistButton">
+        <property name="styleSheet">
+         <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+        </property>
         <property name="text">
          <string>Start</string>
         </property>

@@ -24,31 +24,33 @@ QLabel {
 }
 
 QPushButton {
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
-	border-radius: 24px;
+	background-color: black;
+	border: 2px solid #B66DDB;
 	color: white;
 	font-size: 16px;
 	font-weight: 500;
 	height: 48px;
 	padding: 0 24px;
-	border: 2px solid #B66DDB;
+	border-radius: 24px;
 	transition: all 0.3s ease;
 }
 
 QPushButton:hover {
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #A05CC4, stop: 1 #7A3BA0);
-	border: 2px solid #A05CC4;
+	background-color: #333333;
+	border: 2px solid #B66DDB;
 	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
 }
 
 QPushButton:pressed {
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #8A4BB0, stop: 1 #6A2B90);
-	border: 2px solid #8A4BB0;
+	background-color: #555555;
+	border: 2px solid #B66DDB;
 	transform: translateY(2px);
 }
 
 QPushButton:disabled {
-	opacity: 0.5;
+	background-color: #808080;
+	border: none;
+	color: #CCCCCC;
 }
 
 /* Header */
@@ -250,25 +252,6 @@ QStatusBar QLabel {
          </property>
          <property name="text">
           <string>Спектр</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QPushButton" name="emulatorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>60</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Использовать эмулятор</string>
          </property>
         </widget>
        </item>

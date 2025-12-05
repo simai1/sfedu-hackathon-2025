@@ -30,7 +30,6 @@ class MenuScreen(QMainWindow):
         self.toEmBipolarButton.clicked.connect(self.go_to_emotions)
         self.toEmMonopolarButton.clicked.connect(self.go_to_monopolar_emotions)
         self.toSpectrumButton.clicked.connect(self.go_to_spectrum)
-        self.emulatorButton.clicked.connect(self.use_emulator)
 
     def is_sensor_connected(self, state):
         buttons_enabled = state == SensorState.StateInRange
@@ -57,20 +56,6 @@ class MenuScreen(QMainWindow):
 
     def go_to_spectrum(self):
         stackNavigation.setCurrentWidget(spectrumScreen)
-        
-    def use_emulator(self):
-        # Создаем эмулятор сенсора
-        emulator = create_sensor_emulator()
-        
-        # Устанавливаем эмулятор в контроллер
-        brain_bit_controller.set_emulator(emulator)
-        
-        # Имитируем подключение
-        emulator.connect()
-        
-        # Даем время на подключение обработчиков
-        import time
-        time.sleep(0.1)
 
 
 class SearchScreen(QMainWindow):

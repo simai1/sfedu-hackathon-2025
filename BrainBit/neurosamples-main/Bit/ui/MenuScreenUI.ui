@@ -13,6 +13,19 @@
   <property name="windowTitle">
    <string>Main</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton {
+	background-color: black;
+	border: 2px solid #B66DDB;
+	color: white;
+}
+
+QPushButton:disabled {
+	background-color: #808080;
+	border: none;
+	color: #CCCCCC;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="leftMargin">
@@ -29,6 +42,9 @@
     </property>
     <item>
      <widget class="QPushButton" name="toSearchButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Search</string>
       </property>
@@ -45,6 +61,9 @@
     </item>
     <item>
      <widget class="QPushButton" name="toResistButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Resistance</string>
       </property>
@@ -52,6 +71,9 @@
     </item>
     <item>
      <widget class="QPushButton" name="toSignalButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Signal</string>
       </property>
@@ -59,6 +81,9 @@
     </item>
     <item>
      <widget class="QPushButton" name="toEmBipolarButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Emotions bipolar</string>
       </property>
@@ -66,6 +91,9 @@
     </item>
     <item>
      <widget class="QPushButton" name="toEmMonopolarButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Emotions monopolar</string>
       </property>
@@ -73,6 +101,9 @@
     </item>
     <item>
      <widget class="QPushButton" name="toSpectrumButton">
+      <property name="styleSheet">
+       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white;</string>
+      </property>
       <property name="text">
        <string>Spectrum</string>
       </property>
