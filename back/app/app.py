@@ -57,7 +57,7 @@ def create_app():
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3001",  
-        "https://my-frontend.app",
+        "null",
     ],
     allow_credentials=True,
     allow_methods=["*"],
