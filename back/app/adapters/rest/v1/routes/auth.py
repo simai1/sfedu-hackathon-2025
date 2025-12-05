@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form
 from app.composites.auth_composite import get_controller
 from app.adapters.rest.v1.controllers.auth import AuthController
 from app.domains.user import CreateUser, ValidateUser
-from back.app.domains.auth import AuthUser
+from app.domains.auth import AuthUser
 
 router = APIRouter()
 
