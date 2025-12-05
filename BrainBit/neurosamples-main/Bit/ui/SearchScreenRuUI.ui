@@ -70,7 +70,7 @@ QLabel#subtitleLabel {
 QLabel#statusLabel {
 	font-size: 14px;
 	font-weight: 400;
-	margin: 16px 24px;
+	margin: 0;
 	padding: 12px 20px;
 	text-align: center;
 	background: rgba(77, 161, 255, 0.05);
@@ -84,7 +84,7 @@ QWidget#listContainer {
 	background: rgba(77, 161, 255, 0.03);
 	border: 1px solid rgba(77, 161, 255, 0.15);
 	border-radius: 12px;
-	margin: 0 24px;
+	margin: 0;
 	padding: 16px;
 }
 
@@ -163,16 +163,16 @@ QStatusBar QLabel {
      <number>16</number>
     </property>
     <property name="leftMargin">
-     <number>0</number>
+     <number>24</number>
     </property>
     <property name="topMargin">
      <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>0</number>
+     <number>24</number>
     </property>
     <property name="bottomMargin">
-     <number>0</number>
+     <number>24</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="topButtonLayout">
@@ -213,6 +213,22 @@ QStatusBar QLabel {
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="disconnectButton">
+        <property name="minimumSize">
+         <size>
+          <width>140</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Отключиться</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="exitButton">
@@ -278,6 +294,9 @@ QStatusBar QLabel {
          </property>
          <property name="spacing">
           <number>4</number>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

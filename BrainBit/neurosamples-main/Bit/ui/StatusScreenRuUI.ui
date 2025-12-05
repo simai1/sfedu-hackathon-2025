@@ -62,7 +62,7 @@ QWidget[statusSection="true"] {
 	background: rgba(77, 161, 255, 0.03);
 	border: 1px solid rgba(77, 161, 255, 0.15);
 	border-radius: 12px;
-	margin: 16px 24px;
+	margin: 16px 0;
 	padding: 20px;
 }
 
@@ -143,6 +143,18 @@ QLabel[statusIcon="false"] {
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
      <number>16</number>
+    </property>
+    <property name="leftMargin">
+     <number>24</number>
+    </property>
+    <property name="rightMargin">
+     <number>24</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>24</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="topLayout">

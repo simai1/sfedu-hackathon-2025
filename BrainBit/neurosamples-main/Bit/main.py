@@ -66,9 +66,29 @@ class SearchScreen(QMainWindow):
         self.sensorsList = None
         self.refreshButton.clicked.connect(self.__refresh_search)
         self.exitButton.clicked.connect(self.__exit_application)
+        self.disconnectButton.clicked.connect(self.__disconnect_device)
         self.listWidget.itemClicked.connect(self.__connect_to_sensor)
+        # Подключаемся к сигналу изменения состояния подключения
+        brain_bit_controller.sensorConnectionState.connect(self.__on_connection_state_changed)
+        # Проверяем начальное состояние и показываем/скрываем кнопку отключения
+        self.__update_disconnect_button()
         # Автоматически запускаем поиск при инициализации
         self.__start_scan()
+    
+    def __on_connection_state_changed(self, state):
+        """Обработка изменения состояния подключения"""
+        self.__update_disconnect_button()
+    
+    def __update_disconnect_button(self):
+        """Обновление видимости кнопки отключения"""
+        is_connected = brain_bit_controller.is_sensor_connected()
+        self.disconnectButton.setVisible(is_connected)
+    
+    def __disconnect_device(self):
+        """Отключение устройства"""
+        brain_bit_controller.disconnect_sensor()
+        self.__update_disconnect_button()
+        self.__refresh_search()
 
     def __search(self):
         if self.is_searching:
@@ -90,6 +110,14 @@ class SearchScreen(QMainWindow):
         # Показываем лоадер подключения
         self.statusLabel.setText("Подключение к устройству...")
         self.listWidget.setEnabled(False)
+        # Сохраняем текущий экран в статусах для возврата
+        if hasattr(statusScreen, 'previous_screen'):
+            statusScreen.previous_screen = self
+        # Подключаемся к сигналу только один раз
+        try:
+            brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
+        except:
+            pass
         brain_bit_controller.sensorConnectionState.connect(self.__is_sensor_connected)
         brain_bit_controller.create_and_connect(sensor_info=self.sensorsList[item_number])
 
@@ -101,6 +129,9 @@ class SearchScreen(QMainWindow):
             except Exception:
                 pass
             self.__stop_scan()
+            # Сохраняем текущий экран в статусах для возврата
+            if hasattr(statusScreen, 'previous_screen'):
+                statusScreen.previous_screen = self
             stackNavigation.setCurrentWidget(emotionMonopolarScreen)
             # Запускаем калибровку автоматически
             emotionMonopolarScreen.auto_start_calibration()
@@ -430,6 +461,9 @@ class EmotionMonopolarScreen(QMainWindow):
             self.calibration_completed = True
             print("EmotionMonopolarScreen: All channels calibrated, moving to token screen")
             # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
+            # Сохраняем текущий экран в статусах для возврата
+            if hasattr(statusScreen, 'previous_screen'):
+                statusScreen.previous_screen = self
             # Просто переключаем интерфейс на экран ввода токена
             stackNavigation.setCurrentWidget(tokenScreen)
 
@@ -536,8 +570,13 @@ class EmotionMonopolarScreen(QMainWindow):
                 print('Unknown channel')
 
     def __close_screen(self):
-        self.__stop_signal()
-        stackNavigation.setCurrentWidget(menuScreen)
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на статусы
+        if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
+            stackNavigation.setCurrentWidget(statusScreen.previous_screen)
+            statusScreen.previous_screen = None
+        else:
+            self.__stop_signal()
+            stackNavigation.setCurrentWidget(statusScreen)
 
 
 class TokenScreen(QMainWindow):
@@ -573,6 +612,7 @@ class StatusScreen(QMainWindow):
         self.device_connected = False
         self.calibrated = False
         self.backend_connected = False
+        self.previous_screen = None  # Сохраняем предыдущий экран для возврата
         
         # Делаем статусы кликабельными
         self.deviceStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('device')
@@ -581,10 +621,19 @@ class StatusScreen(QMainWindow):
 
     def __on_status_clicked(self, status_type):
         """Обработка клика на статус"""
+        # Сохраняем текущий экран как предыдущий
+        self.previous_screen = stackNavigation.currentWidget()
+        
         if status_type == 'device':
-            # Переходим на экран поиска и обновляем
-            stackNavigation.setCurrentWidget(searchScreen)
-            searchScreen.__refresh_search()
+            # Если устройство подключено, переходим на экран статусов (остаемся здесь)
+            # Если не подключено, переходим на экран поиска
+            if self.device_connected:
+                # Устройство подключено - остаемся на экране статусов
+                pass
+            else:
+                # Устройство не подключено - переходим на поиск
+                stackNavigation.setCurrentWidget(searchScreen)
+                searchScreen.__refresh_search()
         elif status_type == 'calibration':
             # Переходим на экран калибровки и обновляем
             stackNavigation.setCurrentWidget(emotionMonopolarScreen)
@@ -685,7 +734,12 @@ class StatusScreen(QMainWindow):
         """)
 
     def __close_screen(self):
-        stackNavigation.setCurrentWidget(tokenScreen)
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на токен
+        if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
+            stackNavigation.setCurrentWidget(statusScreen.previous_screen)
+            statusScreen.previous_screen = None
+        else:
+            stackNavigation.setCurrentWidget(tokenScreen)
 
 
 class SpectrumScreen(QMainWindow):

@@ -89,6 +89,18 @@ QLabel#descriptionLabel {
     <property name="spacing">
      <number>16</number>
     </property>
+    <property name="leftMargin">
+     <number>24</number>
+    </property>
+    <property name="rightMargin">
+     <number>24</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>24</number>
+    </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">

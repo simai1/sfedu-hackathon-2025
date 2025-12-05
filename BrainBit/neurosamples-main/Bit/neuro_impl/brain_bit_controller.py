@@ -79,8 +79,16 @@ class BrainBitController(QObject):
         if self.__sensor is not None:
             try:
                 self.__sensor.disconnect()
+                if self.sensorConnectionState is not None:
+                    self.sensorConnectionState.emit(SensorState.StateOutOfRange)
             except Exception as e:
                 print(f"Error disconnecting sensor: {e}")
+            finally:
+                self.__sensor = None
+    
+    def is_sensor_connected(self):
+        """Проверка, подключено ли устройство"""
+        return self.__sensor is not None and (hasattr(self.__sensor, 'state') and self.__sensor.state == SensorState.StateInRange)
 
     def __connection_state_changed(self, sensor: Sensor, state: SensorState):
         if self.sensorConnectionState is not None:
