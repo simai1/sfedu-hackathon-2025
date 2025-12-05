@@ -1,8 +1,5 @@
-from fastapi import APIRouter, Depends, Form, Query
+from fastapi import APIRouter, Depends, Query
 from app.composites.pair_token_composite import get_controller
-from app.adapters.rest.v1.controllers.auth import AuthController
-from app.domains.user import CreateUser, ValidateUser
-from app.domains.auth import AuthUser
 from app.adapters.rest.v1.controllers.pair_token import PairTokenController
 from fastapi.security import OAuth2PasswordBearer
 
