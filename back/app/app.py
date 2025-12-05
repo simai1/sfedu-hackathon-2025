@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from http import HTTPStatus
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
@@ -52,19 +54,39 @@ def create_app():
     # CORS
     app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",  
+        "https://my-frontend.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+    )
+
+    @app.middleware("http")
+    async def catch_async(request: Request, call_next):
+        try:
+            response = await call_next(request)
+            return response
+        except Exception as exc:
+            return JSONResponse(
+                content={
+                    "detail": str(exc)
+                    if settings.NODE_ENV != "production"
+                    else "Internal server error",
+                    "error_type": type(exc).__name__,
+                },
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
     # handlers
-    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
-    app.add_exception_handler(ValidationError, validation_exception_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(IntegrityError, sqlalchemy_exception_handler)
-    app.add_exception_handler(DomainBaseError, domain_exception_handler)
-    app.add_exception_handler(RestBaseError, http_exception_handler)
-    app.add_exception_handler(Exception, universal_exception_handler)
+    # app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+    # app.add_exception_handler(ValidationError, validation_exception_handler)
+    # app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    # app.add_exception_handler(IntegrityError, sqlalchemy_exception_handler)
+    # app.add_exception_handler(DomainBaseError, domain_exception_handler)
+    # app.add_exception_handler(RestBaseError, http_exception_handler)
+    # app.add_exception_handler(Exception, universal_exception_handler)
 
     return app
