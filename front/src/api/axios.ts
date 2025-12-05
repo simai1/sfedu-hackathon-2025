@@ -3,12 +3,9 @@ import { useUserStore } from "../store/userStore"
 
 // Use a simpler approach for determining the server URL
 const getServerUrl = () => {
-  // Check if we're in development (Vite dev server)
   if (import.meta.env.DEV) {
-    // Use the VITE_API_URL environment variable if available, otherwise fallback
     return import.meta.env.VITE_API_URL || "http://localhost:3001"
   } else {
-    // In production, use the same origin as the frontend
     return window.location.origin
   }
 }
@@ -26,6 +23,9 @@ api.interceptors.request.use(
     const token = useUserStore.getState().token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (config.data instanceof FormData) {
+      config.headers["Content-Type"] = "multipart/form-data"
     }
     return config
   },

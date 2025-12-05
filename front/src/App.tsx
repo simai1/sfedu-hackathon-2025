@@ -2,14 +2,8 @@ import "./assets/styles/app.module.scss"
 import { Route, Routes, useLocation } from "react-router-dom"
 import { useEffect } from "react"
 import { routes } from "./routes/routes"
-import Header from "./core/components/Header/Header"
-
-interface AppRouter {
-  path: any
-  element: any
-  childrens?: any
-  grandson?: any
-}
+import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 function ScrollToTop() {
   const locations = useLocation()
@@ -37,6 +31,18 @@ function App() {
           </Route>
         ))}
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   )
 }

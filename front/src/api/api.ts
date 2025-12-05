@@ -5,17 +5,22 @@ export const apiRequest = async (
   method: "get" | "post" | "put" | "delete" | "patch",
   endpoint: string,
   data: any = null,
-  headers = {},
+  headers: Record<string, string> = {},
   serv = server,
   params: Record<string, any> = {}
 ) => {
   try {
+    const finalHeaders: Record<string, string> = { ...headers }
+    if (data instanceof FormData) {
+      finalHeaders["Content-Type"] = "multipart/form-data"
+    }
+
     const config = {
       method,
       url: `${serv}${endpoint}`,
-      headers,
+      headers: finalHeaders,
       data,
-      params, // Add params support for query parameters
+      params,
     }
 
     const response = await api(config)
