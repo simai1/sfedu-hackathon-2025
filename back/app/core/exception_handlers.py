@@ -49,3 +49,12 @@ async def domain_exception_handler(request, exc):
         },
         status_code=HTTPStatus.BAD_REQUEST,
     )
+
+async def universal_exception_handler(request, exc: Exception):
+    return JSONResponse(
+        content={
+            "detail": str(exc) if settings.NODE_ENV != "production" else "Internal server error",
+            "error_type": type(exc).__name__,
+        },
+        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )

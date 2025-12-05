@@ -19,6 +19,7 @@ from app.core.exception_handlers import (
     http_exception_handler,
     sqlalchemy_exception_handler,
     validation_exception_handler,
+    universal_exception_handler,
 )
 from app.utils.migration import upgrade
 
@@ -64,5 +65,6 @@ def create_app():
     app.add_exception_handler(IntegrityError, sqlalchemy_exception_handler)
     app.add_exception_handler(DomainBaseError, domain_exception_handler)
     app.add_exception_handler(RestBaseError, http_exception_handler)
+    app.add_exception_handler(Exception, universal_exception_handler)
 
     return app
