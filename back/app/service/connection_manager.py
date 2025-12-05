@@ -1,18 +1,17 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
+from fastapi import WebSocket
 
 class ConnectionManager:
     def __init__(self):
-        self.device_sockets: dict[int, WebSocket] = {}        # user_id -> device ws
-        self.client_sockets: dict[int, set[WebSocket]] = {}   # user_id -> set of client ws
+        self.device_sockets: dict[str, WebSocket] = {}        # user_id -> device ws
+        self.client_sockets: dict[str, set[WebSocket]] = {}   # user_id -> set of client ws
 
-    async def connect_device(self, user_id: int, websocket: WebSocket):
+    async def connect_device(self, user_id: str, websocket: WebSocket):
         self.device_sockets[user_id] = websocket
 
-    async def connect_client(self, user_id: int, websocket: WebSocket):
+    async def connect_client(self, user_id: str, websocket: WebSocket):
         self.client_sockets.setdefault(user_id, set()).add(websocket)
 
     async def disconnect(self, websocket: WebSocket):
-        # вычищаем сокет отовсюду
         for uid, ws in list(self.device_sockets.items()):
             if ws is websocket:
                 del self.device_sockets[uid]
@@ -22,6 +21,6 @@ class ConnectionManager:
                 if not ws_set:
                     del self.client_sockets[uid]
 
-    async def send_to_clients(self, user_id: int, message: dict):
+    async def send_to_clients(self, user_id: str, message: dict):
         for ws in self.client_sockets.get(user_id, set()):
             await ws.send_json(message)

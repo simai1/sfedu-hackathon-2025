@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from http import HTTPStatus
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +8,7 @@ from pydantic_core import ValidationError
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from app.adapters.rest.v1.routes.ws_exe import router as ws_exe_router
 
 from app.adapters.rest.v1.errors.base import RestBaseError
 from app.adapters.rest.v1.routes.base import router as v1_router
@@ -43,6 +42,7 @@ def create_app():
 
     # routers
     app.include_router(router=v1_router, prefix="/v1", tags=["v1"])
+    app.include_router(router=ws_exe_router)
 
     # static files
     upload_dir = Path(settings.UPLOAD_DIR)
