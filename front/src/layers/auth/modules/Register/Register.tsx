@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import styles from "./Register.module.scss"
 import { registerEndpoint } from "../../../../api/login"
 import { useUserStore } from "../../../../store/userStore"
@@ -9,6 +10,7 @@ interface RegisterProps {
 }
 
 const Register = ({ onSwitchToLogin }: RegisterProps) => {
+  const navigate = useNavigate()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -108,9 +110,13 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
         const response = await registerEndpoint({ name, email, password })
         console.log("Register response:", response)
 
-        // Set token and user data in the store
+        // Set token and user data in the store (persist middleware автоматически сохранит в localStorage)
         setToken(response.token)
-        setUser(response.user)
+        setUser({
+          id: response.id,
+          name: response.name,
+          email: response.email,
+        })
 
         // Clear form and errors
         setName("")
@@ -123,6 +129,10 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
           password: "",
           confirmPassword: "",
         })
+
+        // Редирект в профиль
+        toast.success("Регистрация успешна!")
+        navigate("/profile")
       } catch (error: any) {
         console.error("Registration error:", error)
         const errorMessage =
