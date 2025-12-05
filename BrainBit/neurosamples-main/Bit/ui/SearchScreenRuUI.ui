@@ -6,47 +6,315 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
-    <height>600</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Поиск устройства</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background: #0A0E1A;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #E0E0E0;
+}
+
+QPushButton {
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
+	font-weight: 500;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 8px;
+}
+
+QPushButton:hover {
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
+}
+
+QPushButton:pressed {
+	background: rgba(77, 161, 255, 0.15);
+	transform: scale(0.98);
+}
+
+QPushButton:disabled {
+	opacity: 0.4;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0 8px 0;
+	text-align: center;
+	color: #4DA1FF;
+}
+
+/* Subtitle */
+QLabel#subtitleLabel {
+	font-size: 14px;
+	font-weight: 400;
+	margin: 0 0 24px 0;
+	text-align: center;
+	color: #999999;
+}
+
+/* Status Label */
+QLabel#statusLabel {
+	font-size: 14px;
+	font-weight: 400;
+	margin: 0;
+	padding: 12px 20px;
+	text-align: center;
+	background: rgba(77, 161, 255, 0.05);
+	border: 1px solid rgba(77, 161, 255, 0.2);
+	border-radius: 8px;
+	color: #CCCCCC;
+}
+
+/* Device List Container */
+QWidget#listContainer {
+	background: rgba(77, 161, 255, 0.03);
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 12px;
+	margin: 0;
+	padding: 16px;
+}
+
+/* Device List */
+QListWidget#listWidget {
+	background-color: transparent;
+	border: none;
+	border-radius: 8px;
+	color: #E0E0E0;
+	font-size: 14px;
+	font-weight: 400;
+}
+
+QListWidget#listWidget::item {
+	padding: 12px 16px;
+	margin: 4px 0;
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 8px;
+	background: rgba(77, 161, 255, 0.05);
+	min-height: 20px;
+}
+
+QListWidget#listWidget::item::text {
+	word-wrap: break-word;
+}
+
+QListWidget#listWidget::item:hover {
+	background: rgba(77, 161, 255, 0.15);
+	border: 1px solid rgba(77, 161, 255, 0.4);
+}
+
+QListWidget#listWidget::item:selected {
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	color: #FFFFFF;
+	font-weight: 500;
+}
+
+/* Scroll Bar */
+QScrollBar:vertical {
+	background: rgba(77, 161, 255, 0.05);
+	width: 8px;
+	border-radius: 4px;
+	margin: 0;
+}
+
+QScrollBar::handle:vertical {
+	background: rgba(77, 161, 255, 0.3);
+	border-radius: 4px;
+	min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+	background: rgba(77, 161, 255, 0.5);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+	height: 0px;
+}
+
+/* Status Bar */
+QStatusBar {
+	background: #0A0E1A;
+	border: none;
+	border-top: 1px solid rgba(77, 161, 255, 0.15);
+}
+
+QStatusBar QLabel {
+	color: #999999;
+	font-size: 12px;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
     <property name="leftMargin">
-     <number>15</number>
+     <number>24</number>
     </property>
     <property name="topMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>15</number>
+     <number>24</number>
     </property>
     <property name="bottomMargin">
-     <number>15</number>
+     <number>24</number>
     </property>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+     <layout class="QHBoxLayout" name="topButtonLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>24</number>
+      </property>
+      <property name="rightMargin">
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>24</number>
+      </property>
       <item>
-       <widget class="QPushButton" name="backButton">
+       <widget class="QPushButton" name="refreshButton">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="text">
-         <string>&lt;</string>
+         <string>Обновить</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="searchButton">
+       <spacer name="topSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="disconnectButton">
+        <property name="minimumSize">
+         <size>
+          <width>140</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Поиск</string>
+         <string>Отключиться</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="exitButton">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Выйти</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="QListWidget" name="listWidget"/>
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Поиск устройств</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="subtitleLabel">
+      <property name="text">
+       <string>Выберите устройство из списка для подключения</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="statusLabel">
+      <property name="text">
+       <string>Поиск устройств...</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="listContainer">
+      <layout class="QVBoxLayout" name="listContainerLayout">
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QListWidget" name="listWidget">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <spacer name="bottomSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
   </widget>

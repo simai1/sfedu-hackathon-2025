@@ -30,7 +30,6 @@ class MenuScreen(QMainWindow):
         self.toEmBipolarButton.clicked.connect(self.go_to_emotions)
         self.toEmMonopolarButton.clicked.connect(self.go_to_monopolar_emotions)
         self.toSpectrumButton.clicked.connect(self.go_to_spectrum)
-        self.emulatorButton.clicked.connect(self.use_emulator)
 
     def is_sensor_connected(self, state):
         buttons_enabled = state == SensorState.StateInRange
@@ -57,20 +56,6 @@ class MenuScreen(QMainWindow):
 
     def go_to_spectrum(self):
         stackNavigation.setCurrentWidget(spectrumScreen)
-        
-    def use_emulator(self):
-        # Создаем эмулятор сенсора
-        emulator = create_sensor_emulator()
-        
-        # Устанавливаем эмулятор в контроллер
-        brain_bit_controller.set_emulator(emulator)
-        
-        # Имитируем подключение
-        emulator.connect()
-        
-        # Даем время на подключение обработчиков
-        import time
-        time.sleep(0.1)
 
 
 class SearchScreen(QMainWindow):
@@ -79,9 +64,31 @@ class SearchScreen(QMainWindow):
         loadUi("ui/SearchScreenRuUI.ui", self)
         self.is_searching = False
         self.sensorsList = None
-        self.backButton.clicked.connect(self.__close_screen)
-        self.searchButton.clicked.connect(self.__search)
+        self.refreshButton.clicked.connect(self.__refresh_search)
+        self.exitButton.clicked.connect(self.__exit_application)
+        self.disconnectButton.clicked.connect(self.__disconnect_device)
         self.listWidget.itemClicked.connect(self.__connect_to_sensor)
+        # Подключаемся к сигналу изменения состояния подключения
+        brain_bit_controller.sensorConnectionState.connect(self.__on_connection_state_changed)
+        # Проверяем начальное состояние и показываем/скрываем кнопку отключения
+        self.__update_disconnect_button()
+        # Автоматически запускаем поиск при инициализации
+        self.__start_scan()
+    
+    def __on_connection_state_changed(self, state):
+        """Обработка изменения состояния подключения"""
+        self.__update_disconnect_button()
+    
+    def __update_disconnect_button(self):
+        """Обновление видимости кнопки отключения"""
+        is_connected = brain_bit_controller.is_sensor_connected()
+        self.disconnectButton.setVisible(is_connected)
+    
+    def __disconnect_device(self):
+        """Отключение устройства"""
+        brain_bit_controller.disconnect_sensor()
+        self.__update_disconnect_button()
+        self.__refresh_search()
 
     def __search(self):
         if self.is_searching:
@@ -92,35 +99,79 @@ class SearchScreen(QMainWindow):
     def __sensors_founded(self, sensors):
         self.sensorsList = sensors
         self.listWidget.clear()
-        self.listWidget.addItems([sens.Name + ' (' + sens.SerialNumber + ')' for sens in sensors])
+        if sensors:
+            self.listWidget.addItems([sens.Name + ' (' + sens.SerialNumber + ')' for sens in sensors])
+            self.statusLabel.setText(f"Найдено устройств: {len(sensors)}. Нажмите на устройство для подключения")
+        else:
+            self.statusLabel.setText("Устройства не найдены. Поиск продолжается...")
 
     def __connect_to_sensor(self, item):
         item_number = self.listWidget.row(item)
+        # Показываем лоадер подключения
+        self.statusLabel.setText("Подключение к устройству...")
+        self.listWidget.setEnabled(False)
+        # Сохраняем текущий экран в статусах для возврата
+        if hasattr(statusScreen, 'previous_screen'):
+            statusScreen.previous_screen = self
+        # Подключаемся к сигналу только один раз
+        try:
+            brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
+        except:
+            pass
         brain_bit_controller.sensorConnectionState.connect(self.__is_sensor_connected)
         brain_bit_controller.create_and_connect(sensor_info=self.sensorsList[item_number])
 
     def __is_sensor_connected(self, sensor_state):
-        self.__close_screen()
+        if sensor_state == SensorState.StateInRange:
+            # Автоматически переходим на экран монополярных эмоций и запускаем калибровку
+            try:
+                brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
+            except Exception:
+                pass
+            self.__stop_scan()
+            # Сохраняем текущий экран в статусах для возврата
+            if hasattr(statusScreen, 'previous_screen'):
+                statusScreen.previous_screen = self
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+            # Запускаем калибровку автоматически
+            emotionMonopolarScreen.auto_start_calibration()
+        else:
+            self.statusLabel.setText("Ошибка подключения. Попробуйте снова.")
+            self.listWidget.setEnabled(True)
 
     def __start_scan(self):
-        self.searchButton.setText('Stop')
+        self.statusLabel.setText("Поиск устройств...")
         brain_bit_controller.sensorsFounded = self.__sensors_founded
         brain_bit_controller.start_scan()
         self.is_searching = True
 
     def __stop_scan(self):
-        self.searchButton.setText('Search')
         brain_bit_controller.stop_scan()
         brain_bit_controller.sensorsFounded = None
         self.is_searching = False
 
-    def __close_screen(self):
-        try:
-            brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
-        except Exception as err:
-            print(err)
-        self.__stop_scan()
-        stackNavigation.setCurrentWidget(menuScreen)
+    def __refresh_search(self):
+        """Обновление поиска устройств"""
+        # Останавливаем текущий поиск, если он идет
+        if self.is_searching:
+            self.__stop_scan()
+        # Очищаем список устройств
+        self.listWidget.clear()
+        self.sensorsList = None
+        # Включаем список обратно (на случай если он был отключен)
+        self.listWidget.setEnabled(True)
+        # Запускаем новый поиск
+        self.__start_scan()
+
+    def __exit_application(self):
+        """Закрытие приложения"""
+        # Останавливаем поиск перед выходом
+        if self.is_searching:
+            self.__stop_scan()
+        # Отключаем устройство, если подключено
+        brain_bit_controller.disconnect_sensor()
+        # Закрываем приложение
+        QApplication.instance().quit()
 
 
 class ResistanceScreen(QMainWindow):
@@ -194,37 +245,67 @@ class SignalScreen(QMainWindow):
             self.__start_signal()
 
     def signal_received(self, signal):
-        o1Samples = [sample.O1 for sample in signal]
-        o2Samples = [sample.O2 for sample in signal]
-        t3Samples = [sample.T3 for sample in signal]
-        t4Samples = [sample.T4 for sample in signal]
-        self.o1Graph.update_data(o1Samples)
-        self.o2Graph.update_data(o2Samples)
-        self.t3Graph.update_data(t3Samples)
-        self.t4Graph.update_data(t4Samples)
+        try:
+            o1Samples = [sample.O1 for sample in signal]
+            o2Samples = [sample.O2 for sample in signal]
+            t3Samples = [sample.T3 for sample in signal]
+            t4Samples = [sample.T4 for sample in signal]
+            self.o1Graph.update_data(o1Samples)
+            self.o2Graph.update_data(o2Samples)
+            self.t3Graph.update_data(t3Samples)
+            self.t4Graph.update_data(t4Samples)
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __start_signal(self):
         self.signalButton.setText('Stop')
-        self.o1Graph.start_draw()
-        self.o2Graph.start_draw()
-        self.t3Graph.start_draw()
-        self.t4Graph.start_draw()
+        try:
+            self.o1Graph.start_draw()
+            self.o2Graph.start_draw()
+            self.t3Graph.start_draw()
+            self.t4Graph.start_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.signalReceived = self.signal_received
         brain_bit_controller.start_signal()
         self.__is_started = True
 
     def __stop_signal(self):
         self.signalButton.setText('Start')
-        self.o1Graph.stop_draw()
-        self.o2Graph.stop_draw()
-        self.t3Graph.stop_draw()
-        self.t4Graph.stop_draw()
+        try:
+            self.o1Graph.stop_draw()
+            self.o2Graph.stop_draw()
+            self.t3Graph.stop_draw()
+            self.t4Graph.stop_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.resistReceived = None
         self.__is_started = False
 
     def __close_screen(self):
         self.__stop_signal()
+        # Очищаем графики перед закрытием экрана
+        if hasattr(self, 'o1Graph'):
+            self.o1Graph.cleanup()
+        if hasattr(self, 'o2Graph'):
+            self.o2Graph.cleanup()
+        if hasattr(self, 't3Graph'):
+            self.t3Graph.cleanup()
+        if hasattr(self, 't4Graph'):
+            self.t4Graph.cleanup()
         stackNavigation.setCurrentWidget(menuScreen)
 
 
@@ -260,6 +341,7 @@ class EmotionBipolarScreen(QMainWindow):
 
     def __stop_signal(self):
         self.startBipolarEmotionButton.setText('Start')
+        self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.is_started = False
@@ -306,8 +388,10 @@ class EmotionMonopolarScreen(QMainWindow):
         super().__init__(*args, **kwargs)
         loadUi("ui/EmotionMonopolarScreenRuUI.ui", self)
         self.backButton.clicked.connect(self.__close_screen)
-        self.startEmotionButton.clicked.connect(self.__start_calibration)
+        self.refreshButton.clicked.connect(self.__refresh_calibration)
         self.is_started = False
+        self.calibration_completed = False
+        self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
 
         self.emotionController = EmotionMonopolar()
         self.emotionController.progressCalibrationCallback = self.calibration_callback
@@ -317,38 +401,71 @@ class EmotionMonopolarScreen(QMainWindow):
         self.emotionController.lastSpectralDataCallback = self.last_spectral_data_callback
         self.emotionController.rawSpectralDataCallback = self.raw_spectral_data_callback
 
-    def __start_calibration(self):
-        if self.is_started:
-            self.__stop_signal()
-        else:
+    def auto_start_calibration(self):
+        """Автоматический запуск калибровки после подключения устройства"""
+        if not self.is_started:
             self.__start_signal()
 
+    def __refresh_calibration(self):
+        """Обновление калибровки - прерывает процесс и начинает заново"""
+        # Останавливаем текущий процесс
+        if self.is_started:
+            self.__stop_signal()
+        # Сбрасываем прогресс-бары
+        self.o1calibrationProgress.setValue(0)
+        self.o2calibrationProgress.setValue(0)
+        self.t3calibrationProgress.setValue(0)
+        self.t4calibrationProgress.setValue(0)
+        # Запускаем заново
+        self.__start_signal()
+
     def __start_signal(self):
-        self.startEmotionButton.setText('Stop')
         self.emotionController.start_calibration()
         brain_bit_controller.signalReceived = self.emotionController.process_data
         brain_bit_controller.start_signal()
         self.is_started = True
 
     def __stop_signal(self):
-        self.startEmotionButton.setText('Start')
+        self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.is_started = False
+        # Сбрасываем флаги калибровки при остановке
+        self.calibration_completed = False
+        self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
 
     def calibration_callback(self, progress, channel):
         print(f"EmotionMonopolarScreen: Calibration progress for {channel}: {progress}%")
         match channel:
             case 'O1':
                 self.o1calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['O1'] = True
             case 'O2':
                 self.o2calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['O2'] = True
             case 'T3':
                 self.t3calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['T3'] = True
             case 'T4':
                 self.t4calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['T4'] = True
             case _:
                 print('Unknown channel')
+        
+        # Проверяем, завершена ли калибровка всех каналов
+        if all(self.calibrated_channels.values()) and not self.calibration_completed:
+            self.calibration_completed = True
+            print("EmotionMonopolarScreen: All channels calibrated, moving to token screen")
+            # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
+            # Сохраняем текущий экран в статусах для возврата
+            if hasattr(statusScreen, 'previous_screen'):
+                statusScreen.previous_screen = self
+            # Просто переключаем интерфейс на экран ввода токена
+            stackNavigation.setCurrentWidget(tokenScreen)
 
     def is_artifacted_sequence_callback(self, artifacted, channel):
         print(f"EmotionMonopolarScreen: Artifacted sequence for {channel}: {artifacted}")
@@ -453,8 +570,176 @@ class EmotionMonopolarScreen(QMainWindow):
                 print('Unknown channel')
 
     def __close_screen(self):
-        self.__stop_signal()
-        stackNavigation.setCurrentWidget(menuScreen)
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на статусы
+        if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
+            stackNavigation.setCurrentWidget(statusScreen.previous_screen)
+            statusScreen.previous_screen = None
+        else:
+            self.__stop_signal()
+            stackNavigation.setCurrentWidget(statusScreen)
+
+
+class TokenScreen(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("ui/TokenScreenRuUI.ui", self)
+        self.backButton.clicked.connect(self.__close_screen)
+        self.connectButton.clicked.connect(self.__connect_to_backend)
+        self.token = None
+
+    def __connect_to_backend(self):
+        token = self.tokenInput.text().strip()
+        if token:
+            self.token = token
+            print(f"TokenScreen: Token entered: {token}")
+            # Переходим на экран статусов
+            stackNavigation.setCurrentWidget(statusScreen)
+            # Обновляем статусы на экране статусов
+            statusScreen.update_statuses(device_connected=True, calibrated=True, backend_connected=True)
+        else:
+            print("TokenScreen: Token is empty")
+
+    def __close_screen(self):
+        stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+
+
+class StatusScreen(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("ui/StatusScreenRuUI.ui", self)
+        self.backButton.clicked.connect(self.__close_screen)
+        self.disconnectButton.clicked.connect(self.__disconnect_device)
+        self.device_connected = False
+        self.calibrated = False
+        self.backend_connected = False
+        self.previous_screen = None  # Сохраняем предыдущий экран для возврата
+        
+        # Делаем статусы кликабельными
+        self.deviceStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('device')
+        self.calibrationStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('calibration')
+        self.backendStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('backend')
+
+    def __on_status_clicked(self, status_type):
+        """Обработка клика на статус"""
+        # Сохраняем текущий экран как предыдущий
+        self.previous_screen = stackNavigation.currentWidget()
+        
+        if status_type == 'device':
+            # Если устройство подключено, переходим на экран статусов (остаемся здесь)
+            # Если не подключено, переходим на экран поиска
+            if self.device_connected:
+                # Устройство подключено - остаемся на экране статусов
+                pass
+            else:
+                # Устройство не подключено - переходим на поиск
+                stackNavigation.setCurrentWidget(searchScreen)
+                searchScreen.__refresh_search()
+        elif status_type == 'calibration':
+            # Переходим на экран калибровки и обновляем
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+            emotionMonopolarScreen.__refresh_calibration()
+        elif status_type == 'backend':
+            # Переходим на экран токена
+            stackNavigation.setCurrentWidget(tokenScreen)
+
+    def __disconnect_device(self):
+        """Отключение устройства и возврат к поиску"""
+        brain_bit_controller.disconnect_sensor()
+        stackNavigation.setCurrentWidget(searchScreen)
+        # Перезапускаем поиск
+        searchScreen.__refresh_search()
+
+    def update_statuses(self, device_connected=False, calibrated=False, backend_connected=False):
+        """Обновление статусов на экране"""
+        self.device_connected = device_connected
+        self.calibrated = calibrated
+        self.backend_connected = backend_connected
+        
+        # Обновляем отображение статусов устройства
+        self.deviceStatusValue.setText("Да" if device_connected else "Нет")
+        status_style = "true" if device_connected else "false"
+        self.deviceStatusValue.setProperty("statusValue", status_style)
+        self.deviceStatusIcon.setText("✓" if device_connected else "✗")
+        self.deviceStatusIcon.setProperty("statusIcon", status_style)
+        self.deviceStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 16px;
+                font-weight: 600;
+                color: {'#4DA1FF' if device_connected else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if device_connected else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if device_connected else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.deviceStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if device_connected else '#999999'};
+                font-weight: bold;
+            }}
+        """)
+        
+        # Обновляем отображение статусов калибровки
+        self.calibrationStatusValue.setText("Да" if calibrated else "Нет")
+        status_style = "true" if calibrated else "false"
+        self.calibrationStatusValue.setProperty("statusValue", status_style)
+        self.calibrationStatusIcon.setText("✓" if calibrated else "✗")
+        self.calibrationStatusIcon.setProperty("statusIcon", status_style)
+        self.calibrationStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 16px;
+                font-weight: 600;
+                color: {'#4DA1FF' if calibrated else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if calibrated else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if calibrated else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.calibrationStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if calibrated else '#999999'};
+                font-weight: bold;
+            }}
+        """)
+        
+        # Обновляем отображение статусов бэка
+        self.backendStatusValue.setText("Да" if backend_connected else "Нет")
+        status_style = "true" if backend_connected else "false"
+        self.backendStatusValue.setProperty("statusValue", status_style)
+        self.backendStatusIcon.setText("✓" if backend_connected else "✗")
+        self.backendStatusIcon.setProperty("statusIcon", status_style)
+        self.backendStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 16px;
+                font-weight: 600;
+                color: {'#4DA1FF' if backend_connected else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if backend_connected else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if backend_connected else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.backendStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if backend_connected else '#999999'};
+                font-weight: bold;
+            }}
+        """)
+
+    def __close_screen(self):
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на токен
+        if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
+            stackNavigation.setCurrentWidget(statusScreen.previous_screen)
+            statusScreen.previous_screen = None
+        else:
+            stackNavigation.setCurrentWidget(tokenScreen)
 
 
 class SpectrumScreen(QMainWindow):
@@ -485,26 +770,47 @@ class SpectrumScreen(QMainWindow):
 
     def __start_signal(self):
         self.signalButton.setText('Stop')
-        self.o1Graph.start_draw()
-        self.o2Graph.start_draw()
-        self.t3Graph.start_draw()
-        self.t4Graph.start_draw()
+        try:
+            self.o1Graph.start_draw()
+            self.o2Graph.start_draw()
+            self.t3Graph.start_draw()
+            self.t4Graph.start_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.signalReceived = self.__signal_received
         brain_bit_controller.start_signal()
         self.__is_started = True
 
     def __stop_signal(self):
         self.signalButton.setText('Start')
-        self.o1Graph.stop_draw()
-        self.o2Graph.stop_draw()
-        self.t3Graph.stop_draw()
-        self.t4Graph.stop_draw()
+        try:
+            self.o1Graph.stop_draw()
+            self.o2Graph.stop_draw()
+            self.t3Graph.stop_draw()
+            self.t4Graph.stop_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.__is_started = False
 
     def __signal_received(self, signal):
-        self.spectrumController.process_data(signal)
+        try:
+            self.spectrumController.process_data(signal)
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __processed_waves(self, waves, channel):
         print(f"SpectrumScreen: Waves data for {channel} - Alpha: {waves.alpha_raw:.4f}, Beta: {waves.beta_raw:.4f}, Theta: {waves.theta_raw:.4f}, Delta: {waves.delta_raw:.4f}, Gamma: {waves.gamma_raw:.4f}")
@@ -557,21 +863,37 @@ class SpectrumScreen(QMainWindow):
                 print('Unknown channel')
 
     def __processed_spectrum(self, spectrum, channel):
-        print(f"SpectrumScreen: Spectrum data for {channel}, length: {len(spectrum)}")
-        match channel:
-            case 'O1':
-                self.o1Graph.update_data(spectrum)
-            case 'O2':
-                self.o2Graph.update_data(spectrum)
-            case 'T3':
-                self.t3Graph.update_data(spectrum)
-            case 'T4':
-                self.t4Graph.update_data(spectrum)
-            case _:
-                print('Unknown channel')
+        try:
+            print(f"SpectrumScreen: Spectrum data for {channel}, length: {len(spectrum)}")
+            match channel:
+                case 'O1':
+                    self.o1Graph.update_data(spectrum)
+                case 'O2':
+                    self.o2Graph.update_data(spectrum)
+                case 'T3':
+                    self.t3Graph.update_data(spectrum)
+                case 'T4':
+                    self.t4Graph.update_data(spectrum)
+                case _:
+                    print('Unknown channel')
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __close_screen(self):
         self.__stop_signal()
+        # Очищаем графики перед закрытием экрана
+        if hasattr(self, 'o1Graph'):
+            self.o1Graph.cleanup()
+        if hasattr(self, 'o2Graph'):
+            self.o2Graph.cleanup()
+        if hasattr(self, 't3Graph'):
+            self.t3Graph.cleanup()
+        if hasattr(self, 't4Graph'):
+            self.t4Graph.cleanup()
         stackNavigation.setCurrentWidget(menuScreen)
 
 
@@ -583,6 +905,8 @@ resistScreen = ResistanceScreen()
 signalScreen = SignalScreen()
 emotionBipolarScreen = EmotionBipolarScreen()
 emotionMonopolarScreen = EmotionMonopolarScreen()
+tokenScreen = TokenScreen()
+statusScreen = StatusScreen()
 spectrumScreen = SpectrumScreen()
 stackNavigation.addWidget(menuScreen)
 stackNavigation.addWidget(searchScreen)
@@ -590,10 +914,35 @@ stackNavigation.addWidget(resistScreen)
 stackNavigation.addWidget(signalScreen)
 stackNavigation.addWidget(emotionBipolarScreen)
 stackNavigation.addWidget(emotionMonopolarScreen)
+stackNavigation.addWidget(tokenScreen)
+stackNavigation.addWidget(statusScreen)
 stackNavigation.addWidget(spectrumScreen)
-stackNavigation.setCurrentWidget(menuScreen)
+stackNavigation.setCurrentWidget(searchScreen)
 stackNavigation.show()
 app.exec()
+
+# Очищаем графики перед завершением программы
+try:
+    if 'signalScreen' in globals():
+        if hasattr(signalScreen, 'o1Graph'):
+            signalScreen.o1Graph.cleanup()
+        if hasattr(signalScreen, 'o2Graph'):
+            signalScreen.o2Graph.cleanup()
+        if hasattr(signalScreen, 't3Graph'):
+            signalScreen.t3Graph.cleanup()
+        if hasattr(signalScreen, 't4Graph'):
+            signalScreen.t4Graph.cleanup()
+    if 'spectrumScreen' in globals():
+        if hasattr(spectrumScreen, 'o1Graph'):
+            spectrumScreen.o1Graph.cleanup()
+        if hasattr(spectrumScreen, 'o2Graph'):
+            spectrumScreen.o2Graph.cleanup()
+        if hasattr(spectrumScreen, 't3Graph'):
+            spectrumScreen.t3Graph.cleanup()
+        if hasattr(spectrumScreen, 't4Graph'):
+            spectrumScreen.t4Graph.cleanup()
+except Exception as e:
+    print(f"Ошибка при очистке графиков: {e}")
 
 # Отключаем сенсор только если он не None
 if brain_bit_controller is not None:
