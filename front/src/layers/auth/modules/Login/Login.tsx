@@ -1,5 +1,7 @@
 import { useState } from "react"
 import styles from "./Login.module.scss"
+import { loginEndpoint } from "../../../../api/login"
+import { useUserStore } from "../../../../store/userStore"
 
 interface LoginProps {
   onSwitchToRegister: () => void
@@ -12,6 +14,8 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
     username: "",
     password: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const { setToken, setUser } = useUserStore()
 
   const validateForm = () => {
     let isValid = true
@@ -37,15 +41,31 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
     return isValid
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // Здесь будет логика отправки данных на сервер
-      console.log("Login with:", { username, password })
-      // Очищаем форму после успешной отправки
-      setUsername("")
-      setPassword("")
+      setIsLoading(true)
+      try {
+        const response = await loginEndpoint({ username, password })
+        console.log("Login response:", response)
+
+        // Set token and user data in the store
+        setToken(response.token)
+        setUser(response.user)
+
+        // Clear form
+        setUsername("")
+        setPassword("")
+      } catch (error) {
+        console.error("Login error:", error)
+        setErrors({
+          ...errors,
+          password: "Неверное имя пользователя или пароль",
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -88,8 +108,12 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
             )}
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Войти
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? "Вход..." : "Войти"}
           </button>
         </form>
 

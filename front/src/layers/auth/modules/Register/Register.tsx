@@ -1,33 +1,37 @@
 import { useState } from "react"
 import styles from "./Register.module.scss"
+import { registerEndpoint } from "../../../../api/login"
+import { useUserStore } from "../../../../store/userStore"
 
 interface RegisterProps {
   onSwitchToLogin: () => void
 }
 
 const Register = ({ onSwitchToLogin }: RegisterProps) => {
-  const [username, setUsername] = useState("")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [errors, setErrors] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const { setToken, setUser } = useUserStore()
 
   const validateForm = () => {
     let isValid = true
     const newErrors = {
-      username: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
     }
 
-    if (!username.trim()) {
-      newErrors.username = "Введите имя пользователя"
+    if (!name.trim()) {
+      newErrors.name = "Введите имя пользователя"
       isValid = false
     }
 
@@ -59,17 +63,33 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
     return isValid
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // Здесь будет логика отправки данных на сервер
-      console.log("Register with:", { username, email, password })
-      // Очищаем форму после успешной отправки
-      setUsername("")
-      setEmail("")
-      setPassword("")
-      setConfirmPassword("")
+      setIsLoading(true)
+      try {
+        const response = await registerEndpoint({ name, email, password })
+        console.log("Register response:", response)
+
+        // Set token and user data in the store
+        setToken(response.token)
+        setUser(response.user)
+
+        // Clear form
+        setName("")
+        setEmail("")
+        setPassword("")
+        setConfirmPassword("")
+      } catch (error) {
+        console.error("Registration error:", error)
+        setErrors({
+          ...errors,
+          email: "Пользователь с таким email уже существует",
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -79,19 +99,17 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
         <h2 className={styles.title}>Регистрация</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label htmlFor="reg-username">Имя пользователя</label>
+            <label htmlFor="reg-name">Имя пользователя</label>
             <input
               type="text"
-              id="reg-username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className={`${styles.input} ${
-                errors.username ? styles.error : ""
-              }`}
+              id="reg-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={`${styles.input} ${errors.name ? styles.error : ""}`}
               placeholder="Введите имя пользователя"
             />
-            {errors.username && (
-              <span className={styles.errorMessage}>{errors.username}</span>
+            {errors.name && (
+              <span className={styles.errorMessage}>{errors.name}</span>
             )}
           </div>
 
@@ -146,8 +164,12 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
             )}
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Зарегистрироваться
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? "Регистрация..." : "Зарегистрироваться"}
           </button>
         </form>
 
