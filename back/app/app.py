@@ -56,7 +56,7 @@ def create_app():
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://localhost:3000",  
+        "http://localhost:3001",  
         "https://my-frontend.app",
     ],
     allow_credentials=True,
