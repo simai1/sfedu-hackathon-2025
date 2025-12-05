@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic_core import ValidationError
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.adapters.rest.v1.errors.base import RestBaseError
 from app.adapters.rest.v1.routes.base import router as v1_router
@@ -46,6 +47,15 @@ def create_app():
     upload_dir.mkdir(exist_ok=True)
 
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="static")
+
+    # CORS
+    app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
     # handlers
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
