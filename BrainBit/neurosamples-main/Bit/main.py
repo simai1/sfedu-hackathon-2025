@@ -1,9 +1,47 @@
 import sys
 import os
+import logging
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
+from PyQt6.QtCore import qInstallMessageHandler, QtMsgType
 from PyQt6.uic import loadUi
 from neurosdk.cmn_types import SensorState
+
+# Подавляем предупреждения о неизвестных CSS свойствах
+def suppress_qt_warnings(msg_type, context, message):
+    """Фильтрует предупреждения Qt о неизвестных CSS свойствах"""
+    message_str = str(message)
+    # Игнорируем предупреждения о неизвестных CSS свойствах
+    if "Unknown property" in message_str:
+        return
+    # Игнорируем другие несущественные предупреждения
+    if "QWindowsWindow::setGeometry" in message_str:
+        return
+    # Выводим только критичные ошибки
+    if msg_type in (QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg):
+        print(f"Qt Error: {message_str}")
+
+# Устанавливаем обработчик сообщений Qt
+qInstallMessageHandler(suppress_qt_warnings)
+
+# Также отключаем логирование для стилей
+logging.getLogger('PyQt6').setLevel(logging.ERROR)
+
+# Подавляем вывод исключений из ctypes callback
+_original_stderr_write = sys.stderr.write
+
+def filtered_stderr_write(text):
+    """Фильтрует сообщения об исключениях из ctypes callback"""
+    text_str = str(text)
+    # Игнорируем исключения из ctypes callback
+    if "Exception ignored on calling ctypes callback function" in text_str:
+        return len(text_str)
+    if "AttributeError" in text_str and "ctypes callback" in text_str:
+        return len(text_str)
+    return _original_stderr_write(text)
+
+# Применяем фильтр
+sys.stderr.write = filtered_stderr_write
 
 # Определяем базовый путь для ресурсов (работает и в exe, и в обычном режиме)
 def resource_path(relative_path):
@@ -358,26 +396,21 @@ class EmotionBipolarScreen(QMainWindow):
         self.is_started = False
 
     def calibration_callback(self, progress):
-        print(f"EmotionBipolarScreen: Calibration progress {progress}%")
         self.calibrationProgress.setValue(progress)
 
     def is_artifacted_sequence_callback(self, artifacted):
-        print(f"EmotionBipolarScreen: Artifacted sequence: {artifacted}")
         self.artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
 
     def is_both_sides_artifacted_callback(self, artifacted):
-        print(f"EmotionBipolarScreen: Both sides artifacted: {artifacted}")
         self.artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
 
     def mind_data_callback(self, data):
-        print(f"EmotionBipolarScreen: Mind data - Attention: {data.rel_attention:.2f}%, Relaxation: {data.rel_relaxation:.2f}%")
         self.attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
         self.relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
         self.attentionRawLabel.setText(str(round(data.inst_attention, 2)))
         self.relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
 
     def last_spectral_data_callback(self, spectral_data):
-        print(f"EmotionBipolarScreen: Spectral data - Delta: {spectral_data.delta*100:.2f}%, Theta: {spectral_data.theta*100:.2f}%, Alpha: {spectral_data.alpha*100:.2f}%, Beta: {spectral_data.beta*100:.2f}%, Gamma: {spectral_data.gamma*100:.2f}%")
         self.deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
         self.thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
         self.alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
@@ -385,7 +418,6 @@ class EmotionBipolarScreen(QMainWindow):
         self.gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
 
     def raw_spectral_data_callback(self, spect_vals):
-        print(f"EmotionBipolarScreen: Raw spectral data - Alpha: {spect_vals.alpha:.2f}, Beta: {spect_vals.beta:.2f}")
         self.alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
         self.betaRawLabel.setText(str(round(spect_vals.beta, 2)))
 
@@ -446,7 +478,6 @@ class EmotionMonopolarScreen(QMainWindow):
         self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
 
     def calibration_callback(self, progress, channel):
-        print(f"EmotionMonopolarScreen: Calibration progress for {channel}: {progress}%")
         match channel:
             case 'O1':
                 self.o1calibrationProgress.setValue(progress)
@@ -465,12 +496,11 @@ class EmotionMonopolarScreen(QMainWindow):
                 if progress >= 100:
                     self.calibrated_channels['T4'] = True
             case _:
-                print('Unknown channel')
+                pass
         
         # Проверяем, завершена ли калибровка всех каналов
         if all(self.calibrated_channels.values()) and not self.calibration_completed:
             self.calibration_completed = True
-            print("EmotionMonopolarScreen: All channels calibrated, moving to token screen")
             # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
             # Сохраняем текущий экран в статусах для возврата
             if hasattr(statusScreen, 'previous_screen'):
@@ -479,106 +509,158 @@ class EmotionMonopolarScreen(QMainWindow):
             stackNavigation.setCurrentWidget(tokenScreen)
 
     def is_artifacted_sequence_callback(self, artifacted, channel):
-        print(f"EmotionMonopolarScreen: Artifacted sequence for {channel}: {artifacted}")
-        match channel:
-            case 'O1':
-                self.o1artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
-            case 'O2':
-                self.o2artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
-            case 'T3':
-                self.t3artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
-            case 'T4':
-                self.t4artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
-            case _:
-                print('Unknown channel')
+        try:
+            match channel:
+                case 'O1':
+                    if hasattr(self, 'o1artSequenceLabel'):
+                        self.o1artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
+                case 'O2':
+                    if hasattr(self, 'o2artSequenceLabel'):
+                        self.o2artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
+                case 'T3':
+                    if hasattr(self, 't3artSequenceLabel'):
+                        self.t3artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
+                case 'T4':
+                    if hasattr(self, 't4artSequenceLabel'):
+                        self.t4artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
+        except AttributeError:
+            pass
 
     def is_both_sides_artifacted_callback(self, artifacted, channel):
-        print(f"EmotionMonopolarScreen: Both sides artifacted for {channel}: {artifacted}")
-        match channel:
-            case 'O1':
-                self.o1artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
-            case 'O2':
-                self.o2artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
-            case 'T3':
-                self.t3artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
-            case 'T4':
-                self.t4artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
-            case _:
-                print('Unknown channel')
+        try:
+            match channel:
+                case 'O1':
+                    if hasattr(self, 'o1artBothSidesLabel'):
+                        self.o1artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
+                case 'O2':
+                    if hasattr(self, 'o2artBothSidesLabel'):
+                        self.o2artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
+                case 'T3':
+                    if hasattr(self, 't3artBothSidesLabel'):
+                        self.t3artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
+                case 'T4':
+                    if hasattr(self, 't4artBothSidesLabel'):
+                        self.t4artBothSidesLabel.setText('Artefacted both side: ' + str(artifacted))
+        except AttributeError:
+            pass
 
     def mind_data_callback(self, data, channel):
-        print(f"EmotionMonopolarScreen: Mind data for {channel} - Attention: {data.rel_attention:.2f}%, Relaxation: {data.rel_relaxation:.2f}%")
-        match channel:
-            case 'O1':
-                self.o1attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
-                self.o1relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
-                self.o1attentionRawLabel.setText(str(round(data.inst_attention, 2)))
-                self.o1relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
-            case 'O2':
-                self.o2attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
-                self.o2relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
-                self.o2attentionRawLabel.setText(str(round(data.inst_attention, 2)))
-                self.o2relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
-            case 'T3':
-                self.t3attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
-                self.t3relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
-                self.t3attentionRawLabel.setText(str(round(data.inst_attention, 2)))
-                self.t3relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
-            case 'T4':
-                self.t4attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
-                self.t4relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
-                self.t4attentionRawLabel.setText(str(round(data.inst_attention, 2)))
-                self.t4relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
-            case _:
-                print('Unknown channel')
+        try:
+            match channel:
+                case 'O1':
+                    if hasattr(self, 'o1attentionPercentLabel'):
+                        self.o1attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
+                    if hasattr(self, 'o1relaxPercentLabel'):
+                        self.o1relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
+                    if hasattr(self, 'o1attentionRawLabel'):
+                        self.o1attentionRawLabel.setText(str(round(data.inst_attention, 2)))
+                    if hasattr(self, 'o1relaxRawLabel'):
+                        self.o1relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
+                case 'O2':
+                    if hasattr(self, 'o2attentionPercentLabel'):
+                        self.o2attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
+                    if hasattr(self, 'o2relaxPercentLabel'):
+                        self.o2relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
+                    if hasattr(self, 'o2attentionRawLabel'):
+                        self.o2attentionRawLabel.setText(str(round(data.inst_attention, 2)))
+                    if hasattr(self, 'o2relaxRawLabel'):
+                        self.o2relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
+                case 'T3':
+                    if hasattr(self, 't3attentionPercentLabel'):
+                        self.t3attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
+                    if hasattr(self, 't3relaxPercentLabel'):
+                        self.t3relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
+                    if hasattr(self, 't3attentionRawLabel'):
+                        self.t3attentionRawLabel.setText(str(round(data.inst_attention, 2)))
+                    if hasattr(self, 't3relaxRawLabel'):
+                        self.t3relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
+                case 'T4':
+                    if hasattr(self, 't4attentionPercentLabel'):
+                        self.t4attentionPercentLabel.setText(str(round(data.rel_attention, 2)))
+                    if hasattr(self, 't4relaxPercentLabel'):
+                        self.t4relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
+                    if hasattr(self, 't4attentionRawLabel'):
+                        self.t4attentionRawLabel.setText(str(round(data.inst_attention, 2)))
+                    if hasattr(self, 't4relaxRawLabel'):
+                        self.t4relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
+        except AttributeError:
+            pass
 
     def last_spectral_data_callback(self, spectral_data, channel):
-        print(f"EmotionMonopolarScreen: Spectral data for {channel} - Delta: {spectral_data.delta*100:.2f}%, Theta: {spectral_data.theta*100:.2f}%, Alpha: {spectral_data.alpha*100:.2f}%, Beta: {spectral_data.beta*100:.2f}%, Gamma: {spectral_data.gamma*100:.2f}%")
-        match channel:
-            case 'O1':
-                self.o1deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
-                self.o1thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
-                self.o1alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
-                self.o1betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
-                self.o1gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
-            case 'O2':
-                self.o2deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
-                self.o2thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
-                self.o2alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
-                self.o2betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
-                self.o2gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
-            case 'T3':
-                self.t3deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
-                self.t3thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
-                self.t3alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
-                self.t3betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
-                self.t3gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
-            case 'T4':
-                self.t4deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
-                self.t4thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
-                self.t4alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
-                self.t4betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
-                self.t4gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
-            case _:
-                print('Unknown channel')
+        try:
+            match channel:
+                case 'O1':
+                    if hasattr(self, 'o1deltaPercentLabel'):
+                        self.o1deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
+                    if hasattr(self, 'o1thetaPercentLabel'):
+                        self.o1thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
+                    if hasattr(self, 'o1alphaPercentLabel'):
+                        self.o1alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
+                    if hasattr(self, 'o1betaPercentLabel'):
+                        self.o1betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
+                    if hasattr(self, 'o1gammaPercentLabel'):
+                        self.o1gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
+                case 'O2':
+                    if hasattr(self, 'o2deltaPercentLabel'):
+                        self.o2deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
+                    if hasattr(self, 'o2thetaPercentLabel'):
+                        self.o2thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
+                    if hasattr(self, 'o2alphaPercentLabel'):
+                        self.o2alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
+                    if hasattr(self, 'o2betaPercentLabel'):
+                        self.o2betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
+                    if hasattr(self, 'o2gammaPercentLabel'):
+                        self.o2gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
+                case 'T3':
+                    if hasattr(self, 't3deltaPercentLabel'):
+                        self.t3deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
+                    if hasattr(self, 't3thetaPercentLabel'):
+                        self.t3thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
+                    if hasattr(self, 't3alphaPercentLabel'):
+                        self.t3alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
+                    if hasattr(self, 't3betaPercentLabel'):
+                        self.t3betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
+                    if hasattr(self, 't3gammaPercentLabel'):
+                        self.t3gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
+                case 'T4':
+                    if hasattr(self, 't4deltaPercentLabel'):
+                        self.t4deltaPercentLabel.setText(str(round(spectral_data.delta * 100, 2)) + '%')
+                    if hasattr(self, 't4thetaPercentLabel'):
+                        self.t4thetaPercentLabel.setText(str(round(spectral_data.theta * 100, 2)) + '%')
+                    if hasattr(self, 't4alphaPercentLabel'):
+                        self.t4alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
+                    if hasattr(self, 't4betaPercentLabel'):
+                        self.t4betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
+                    if hasattr(self, 't4gammaPercentLabel'):
+                        self.t4gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
+        except AttributeError:
+            pass
 
     def raw_spectral_data_callback(self, spect_vals, channel):
-        print(f"EmotionMonopolarScreen: Raw spectral data for {channel} - Alpha: {spect_vals.alpha:.2f}, Beta: {spect_vals.beta:.2f}")
-        match channel:
-            case 'O1':
-                self.o1alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
-                self.o1betaRawLabel.setText(str(round(spect_vals.beta, 2)))
-            case 'O2':
-                self.o2alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
-                self.o2betaRawLabel.setText(str(round(spect_vals.beta, 2)))
-            case 'T3':
-                self.t3alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
-                self.t3betaRawLabel.setText(str(round(spect_vals.beta, 2)))
-            case 'T4':
-                self.t4alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
-                self.t4betaRawLabel.setText(str(round(spect_vals.beta, 2)))
-            case _:
-                print('Unknown channel')
+        try:
+            match channel:
+                case 'O1':
+                    if hasattr(self, 'o1alphaRawLabel'):
+                        self.o1alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
+                    if hasattr(self, 'o1betaRawLabel'):
+                        self.o1betaRawLabel.setText(str(round(spect_vals.beta, 2)))
+                case 'O2':
+                    if hasattr(self, 'o2alphaRawLabel'):
+                        self.o2alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
+                    if hasattr(self, 'o2betaRawLabel'):
+                        self.o2betaRawLabel.setText(str(round(spect_vals.beta, 2)))
+                case 'T3':
+                    if hasattr(self, 't3alphaRawLabel'):
+                        self.t3alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
+                    if hasattr(self, 't3betaRawLabel'):
+                        self.t3betaRawLabel.setText(str(round(spect_vals.beta, 2)))
+                case 'T4':
+                    if hasattr(self, 't4alphaRawLabel'):
+                        self.t4alphaRawLabel.setText(str(round(spect_vals.alpha, 2)))
+                    if hasattr(self, 't4betaRawLabel'):
+                        self.t4betaRawLabel.setText(str(round(spect_vals.beta, 2)))
+        except AttributeError:
+            pass
 
     def __close_screen(self):
         # Возвращаемся на предыдущий экран, если он был сохранен, иначе на статусы
@@ -602,13 +684,10 @@ class TokenScreen(QMainWindow):
         token = self.tokenInput.text().strip()
         if token:
             self.token = token
-            print(f"TokenScreen: Token entered: {token}")
             # Переходим на экран статусов
             stackNavigation.setCurrentWidget(statusScreen)
             # Обновляем статусы на экране статусов
             statusScreen.update_statuses(device_connected=True, calibrated=True, backend_connected=True)
-        else:
-            print("TokenScreen: Token is empty")
 
     def __close_screen(self):
         stackNavigation.setCurrentWidget(emotionMonopolarScreen)
@@ -644,7 +723,8 @@ class StatusScreen(QMainWindow):
             else:
                 # Устройство не подключено - переходим на поиск
                 stackNavigation.setCurrentWidget(searchScreen)
-                searchScreen.__refresh_search()
+                if hasattr(searchScreen, '_SearchScreen__refresh_search'):
+                    searchScreen._SearchScreen__refresh_search()
         elif status_type == 'calibration':
             # Переходим на экран калибровки и обновляем
             stackNavigation.setCurrentWidget(emotionMonopolarScreen)
@@ -824,7 +904,6 @@ class SpectrumScreen(QMainWindow):
                 raise
 
     def __processed_waves(self, waves, channel):
-        print(f"SpectrumScreen: Waves data for {channel} - Alpha: {waves.alpha_raw:.4f}, Beta: {waves.beta_raw:.4f}, Theta: {waves.theta_raw:.4f}, Delta: {waves.delta_raw:.4f}, Gamma: {waves.gamma_raw:.4f}")
         match channel:
             case 'O1':
                 self.o1_alpha_raw.setText(str(round(waves.alpha_raw, 4)))
@@ -871,11 +950,10 @@ class SpectrumScreen(QMainWindow):
                 self.t4_delta_percent.setText(str(round(waves.delta_rel * 100)) + '%')
                 self.t4_gamma_percent.setText(str(round(waves.gamma_rel * 100)) + '%')
             case _:
-                print('Unknown channel')
+                pass
 
     def __processed_spectrum(self, spectrum, channel):
         try:
-            print(f"SpectrumScreen: Spectrum data for {channel}, length: {len(spectrum)}")
             match channel:
                 case 'O1':
                     self.o1Graph.update_data(spectrum)
@@ -917,7 +995,6 @@ def main():
         app = QApplication(sys.argv)
         stackNavigation = QStackedWidget()
         
-        print("[INFO] Инициализация экранов...")
         menuScreen = MenuScreen()
         searchScreen = SearchScreen()
         resistScreen = ResistanceScreen()
@@ -928,7 +1005,6 @@ def main():
         statusScreen = StatusScreen()
         spectrumScreen = SpectrumScreen()
         
-        print("[INFO] Добавление виджетов в стек...")
         stackNavigation.addWidget(menuScreen)
         stackNavigation.addWidget(searchScreen)
         stackNavigation.addWidget(resistScreen)
@@ -939,11 +1015,8 @@ def main():
         stackNavigation.addWidget(statusScreen)
         stackNavigation.addWidget(spectrumScreen)
         
-        print("[INFO] Показ главного окна...")
         stackNavigation.setCurrentWidget(searchScreen)
         stackNavigation.show()
-        
-        print("[INFO] Запуск приложения...")
         exit_code = app.exec()
         
         # Очищаем графики перед завершением программы
@@ -964,22 +1037,30 @@ def main():
                 spectrumScreen.t3Graph.cleanup()
             if hasattr(spectrumScreen, 't4Graph'):
                 spectrumScreen.t4Graph.cleanup()
-        except Exception as e:
-            print(f"Ошибка при очистке графиков: {e}")
+        except Exception:
+            pass
         
         # Отключаем сенсор только если он не None
         try:
             if brain_bit_controller is not None:
                 brain_bit_controller.disconnect_sensor()
-        except Exception as e:
-            print(f"Ошибка при отключении сенсора: {e}")
+        except Exception:
+            pass
         
         return exit_code
     except Exception as e:
-        print(f"[ERROR] Критическая ошибка при запуске приложения: {e}")
+        # Только критичные ошибки - показываем только если консоль включена
         import traceback
-        traceback.print_exc()
-        input("Нажмите Enter для выхода...")
+        try:
+            if sys.stdout and not sys.stdout.isatty():
+                # Консоль отключена, не выводим
+                pass
+            else:
+                print(f"[ERROR] Критическая ошибка: {e}")
+                traceback.print_exc()
+                input("Нажмите Enter для выхода...")
+        except:
+            pass
         return 1
 
 if __name__ == "__main__":

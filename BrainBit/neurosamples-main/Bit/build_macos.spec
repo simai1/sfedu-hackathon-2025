@@ -38,7 +38,6 @@ def find_library_binaries(library_name, target_prefix):
                         break
         
         if library_path:
-            print(f"[INFO] Найден {library_name} в: {library_path}")
             # Используем os.walk для поиска всех dylib/so/dll файлов
             found_files = set()
             for root, dirs, files in os.walk(library_path):
@@ -56,14 +55,9 @@ def find_library_binaries(library_name, target_prefix):
                         if file_key not in found_files:
                             found_files.add(file_key)
                             binaries.append(file_key)
-            
-            print(f"[INFO] Найдено {len(binaries)} библиотечных файлов {library_name}")
-        else:
-            print(f"[WARNING] Не удалось найти папку {library_name}. Библиотечные файлы могут отсутствовать в сборке.")
     except Exception as e:
-        print(f"[WARNING] Ошибка при поиске библиотечных файлов {library_name}: {e}")
-        import traceback
-        traceback.print_exc()
+        # Только критичные ошибки
+        pass
     
     return binaries
 
@@ -71,8 +65,6 @@ def find_library_binaries(library_name, target_prefix):
 neurosdk_binaries.extend(find_library_binaries('neurosdk', 'neurosdk'))
 neurosdk_binaries.extend(find_library_binaries('em_st_artifacts', 'em_st_artifacts'))
 neurosdk_binaries.extend(find_library_binaries('spectrum_lib', 'spectrum_lib'))
-
-print(f"[INFO] Всего найдено {len(neurosdk_binaries)} библиотечных файлов для включения в сборку")
 
 a = Analysis(
     ['main.py'],
