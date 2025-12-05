@@ -58,8 +58,10 @@ from neuro_impl.emotions_bipolar_controller import EmotionBipolar
 from neuro_impl.emotions_monopolar_controller import EmotionMonopolar
 from neuro_impl.spectrum_controller import SpectrumController
 from neuro_impl.sensor_emulator import create_sensor_emulator, create_emulator_sensor_info
+from neuro_impl.websocket_client import WebSocketClient
 from PyQt6.QtWidgets import QPushButton
 from ui.plots import SpectrumPlot, SignalPlot
+import json
 
 
 class MenuScreen(QMainWindow):
@@ -501,12 +503,21 @@ class EmotionMonopolarScreen(QMainWindow):
         # Проверяем, завершена ли калибровка всех каналов
         if all(self.calibrated_channels.values()) and not self.calibration_completed:
             self.calibration_completed = True
+            # Собираем данные калибровки для отправки на сервер
+            calibration_data = self.__collect_calibration_data()
+            tokenScreen.set_calibration_data(calibration_data)
             # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
             # Сохраняем текущий экран в статусах для возврата
             if hasattr(statusScreen, 'previous_screen'):
                 statusScreen.previous_screen = self
             # Просто переключаем интерфейс на экран ввода токена
             stackNavigation.setCurrentWidget(tokenScreen)
+            
+    def __collect_calibration_data(self) -> dict:
+        """Сбор всех данных после калибровки"""
+        if hasattr(self.emotionController, 'get_calibration_data'):
+            return self.emotionController.get_calibration_data()
+        return {"calibration_completed": True, "channels": {}}
 
     def is_artifacted_sequence_callback(self, artifacted, channel):
         try:
@@ -679,17 +690,161 @@ class TokenScreen(QMainWindow):
         self.backButton.clicked.connect(self.__close_screen)
         self.connectButton.clicked.connect(self.__connect_to_backend)
         self.token = None
-
+        self.ws_client = None
+        self.calibration_data = {}  # Хранилище данных после калибровки
+        
+        # Инициализируем UI элементы
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.setText("")
+        if hasattr(self, 'errorLabel'):
+            self.errorLabel.setText("")
+        if hasattr(self, 'loadingProgressBar'):
+            self.loadingProgressBar.setVisible(False)
+            
+    def set_calibration_data(self, data: dict):
+        """Установка данных калибровки для отправки"""
+        self.calibration_data = data
+        
     def __connect_to_backend(self):
         token = self.tokenInput.text().strip()
-        if token:
-            self.token = token
+        if not token:
+            if hasattr(self, 'errorLabel'):
+                self.errorLabel.setText("Введите токен")
+            return
+            
+        self.token = token
+        
+        # Показываем лоадер
+        if hasattr(self, 'loadingProgressBar'):
+            self.loadingProgressBar.setVisible(True)
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.setText("Подключение к серверу...")
+        if hasattr(self, 'errorLabel'):
+            self.errorLabel.setText("")
+        self.connectButton.setEnabled(False)
+        
+        # Создаем WebSocket клиент
+        self.ws_client = WebSocketClient("ws://147.45.184.2:3000/ws/device")
+        self.ws_client.connected.connect(self.__on_websocket_connected)
+        self.ws_client.disconnected.connect(self.__on_websocket_disconnected)
+        self.ws_client.error.connect(self.__on_websocket_error)
+        self.ws_client.message_received.connect(self.__on_websocket_message)
+        
+        # Запускаем подключение
+        self.ws_client.start()
+        
+    def __on_websocket_connected(self):
+        """Обработчик успешного подключения"""
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.setText("Отправка токена...")
+        
+        # Отправляем токен
+        if self.ws_client:
+            self.ws_client.send_pair_token(self.token)
+            
+    def __on_websocket_disconnected(self):
+        """Обработчик отключения"""
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.setText("Соединение разорвано")
+        if hasattr(self, 'loadingProgressBar'):
+            self.loadingProgressBar.setVisible(False)
+        self.connectButton.setEnabled(True)
+        
+    def __on_websocket_error(self, error_msg: str):
+        """Обработчик ошибок"""
+        if hasattr(self, 'errorLabel'):
+            self.errorLabel.setText(f"Ошибка: {error_msg}")
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.setText("Ошибка подключения")
+        if hasattr(self, 'loadingProgressBar'):
+            self.loadingProgressBar.setVisible(False)
+        self.connectButton.setEnabled(True)
+        
+    def __on_websocket_message(self, message: dict):
+        """Обработчик сообщений от сервера"""
+        msg_type = message.get("type", "")
+        
+        if msg_type == "error":
+            error_text = message.get("message", "Неизвестная ошибка")
+            if hasattr(self, 'errorLabel'):
+                self.errorLabel.setText(f"Ошибка сервера: {error_text}")
+            if hasattr(self, 'loadingProgressBar'):
+                self.loadingProgressBar.setVisible(False)
+            self.connectButton.setEnabled(True)
+        elif msg_type == "paired" or msg_type == "connected" or msg_type == "ok":
+            # Успешное подключение
+            if hasattr(self, 'statusLabel'):
+                self.statusLabel.setText("Подключено. Отправка данных калибровки...")
+            
+            # Отправляем данные калибровки
+            if self.calibration_data:
+                self.ws_client.send_eeg_sample(self.calibration_data)
+                if hasattr(self, 'statusLabel'):
+                    self.statusLabel.setText("Подключено. Данные отправляются...")
+            
+            # Настраиваем отправку данных в реальном времени
+            self.__setup_realtime_data_sending()
+            
+            # Скрываем лоадер
+            if hasattr(self, 'loadingProgressBar'):
+                self.loadingProgressBar.setVisible(False)
+            
             # Переходим на экран статусов
             stackNavigation.setCurrentWidget(statusScreen)
-            # Обновляем статусы на экране статусов
             statusScreen.update_statuses(device_connected=True, calibrated=True, backend_connected=True)
+            
+    def __setup_realtime_data_sending(self):
+        """Настройка отправки данных в реальном времени"""
+        # Подключаемся к callback'ам для отправки данных
+        if hasattr(emotionMonopolarScreen, 'emotionController'):
+            controller = emotionMonopolarScreen.emotionController
+            
+            # Сохраняем оригинальные callback'и
+            original_mind_callback = controller.lastMindDataCallback
+            original_spectral_callback = controller.lastSpectralDataCallback
+            
+            def send_mind_data(data, channel):
+                # Вызываем оригинальный callback
+                if original_mind_callback:
+                    original_mind_callback(data, channel)
+                # Отправляем данные через WebSocket
+                if self.ws_client and self.ws_client.is_connected():
+                    eeg_data = {
+                        "type": "mind_data",
+                        "channel": channel,
+                        "attention": data.rel_attention,
+                        "relaxation": data.rel_relaxation,
+                        "inst_attention": data.inst_attention,
+                        "inst_relaxation": data.inst_relaxation
+                    }
+                    self.ws_client.send_eeg_sample(eeg_data)
+            
+            def send_spectral_data(spectral_data, channel):
+                # Вызываем оригинальный callback
+                if original_spectral_callback:
+                    original_spectral_callback(spectral_data, channel)
+                # Отправляем данные через WebSocket
+                if self.ws_client and self.ws_client.is_connected():
+                    eeg_data = {
+                        "type": "spectral_data",
+                        "channel": channel,
+                        "delta": spectral_data.delta,
+                        "theta": spectral_data.theta,
+                        "alpha": spectral_data.alpha,
+                        "beta": spectral_data.beta,
+                        "gamma": spectral_data.gamma
+                    }
+                    self.ws_client.send_eeg_sample(eeg_data)
+            
+            # Устанавливаем новые callback'и
+            controller.lastMindDataCallback = send_mind_data
+            controller.lastSpectralDataCallback = send_spectral_data
 
     def __close_screen(self):
+        # Отключаемся от WebSocket при закрытии
+        if self.ws_client:
+            self.ws_client.stop()
+            self.ws_client = None
         stackNavigation.setCurrentWidget(emotionMonopolarScreen)
 
 

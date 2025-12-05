@@ -45,6 +45,54 @@ class EmotionMonopolar:
         self.lastSpectralDataCallback = None
         self.rawSpectralDataCallback = None
         self.lastMindDataCallback = None
+        
+    def get_calibration_data(self) -> dict:
+        """Получение всех данных после калибровки"""
+        data = {
+            "calibration_completed": all(self.__is_calibrated.values()),
+            "channels": {}
+        }
+        
+        for channel in BB_channels:
+            if not self.__is_calibrated[channel]:
+                continue
+                
+            channel_data = {}
+            
+            # Спектральные данные
+            spectral_values = self.__maths[channel].read_spectral_data_percents_arr()
+            if len(spectral_values) > 0:
+                spectral = spectral_values[-1]
+                channel_data["spectral"] = {
+                    "delta": float(spectral.delta),
+                    "theta": float(spectral.theta),
+                    "alpha": float(spectral.alpha),
+                    "beta": float(spectral.beta),
+                    "gamma": float(spectral.gamma)
+                }
+            
+            # Сырые спектральные данные
+            raw_spectral = self.__maths[channel].read_raw_spectral_vals()
+            if raw_spectral:
+                channel_data["raw_spectral"] = {
+                    "alpha": float(raw_spectral.alpha),
+                    "beta": float(raw_spectral.beta)
+                }
+            
+            # Ментальные данные
+            mental_values = self.__maths[channel].read_mental_data_arr()
+            if len(mental_values) > 0:
+                mind = mental_values[-1]
+                channel_data["mind"] = {
+                    "rel_attention": float(mind.rel_attention),
+                    "rel_relaxation": float(mind.rel_relaxation),
+                    "inst_attention": float(mind.inst_attention),
+                    "inst_relaxation": float(mind.inst_relaxation)
+                }
+            
+            data["channels"][channel] = channel_data
+        
+        return data
 
     def start_calibration(self):
         for i in range(4):
