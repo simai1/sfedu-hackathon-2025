@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeuroSensor API Client</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .data-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #fafafa;
+      }
+      .card h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      .sensor-data {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .sensor-value {
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .emotion-display {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        color: white;
+      }
+      .neutral {
+        background-color: #6c757d;
+      }
+      .relaxed {
+        background-color: #28a745;
+      }
+      .focused {
+        background-color: #007bff;
+      }
+      .anxious {
+        background-color: #ffc107;
+        color: black;
+      }
+      .drowsy {
+        background-color: #17a2b8;
+      }
+      .status {
+        text-align: center;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .connected {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>NeuroSensor API Client</h1>
+        <p>
+          Клиент для получения данных с датчиков и определенных эмоций через
+          WebSocket
+        </p>
+      </div>
+
+      <div id="status" class="status disconnected">Статус: Отключен</div>
+
+      <div style="text-align: center; margin-bottom: 20px">
+        <button id="connectBtn" class="btn">Подключиться к серверу</button>
+        <button id="disconnectBtn" class="btn" disabled>Отключиться</button>
+      </div>
+
+      <div class="data-section">
+        <div class="card">
+          <h3>Данные с датчиков</h3>
+          <div class="sensor-data">
+            <div class="sensor-value">
+              <div>O1</div>
+              <div id="o1Value">-</div>
+            </div>
+            <div class="sensor-value">
+              <div>O2</div>
+              <div id="o2Value">-</div>
+            </div>
+            <div class="sensor-value">
+              <div>T3</div>
+              <div id="t3Value">-</div>
+            </div>
+            <div class="sensor-value">
+              <div>T4</div>
+              <div id="t4Value">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Эмоции</h3>
+          <div id="emotionDisplay" class="emotion-display neutral">
+            Неизвестно
+          </div>
+          <div style="margin-top: 15px">
+            <p>
+              <strong>Эмулируемая эмоция:</strong>
+              <span id="emulatedEmotion">-</span>
+            </p>
+            <p>
+              <strong>Определенная эмоция:</strong>
+              <span id="detectedEmotion">-</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Ментальные данные</h3>
+          <div class="sensor-data">
+            <div class="sensor-value">
+              <div>Внимание</div>
+              <div id="attentionValue">-%</div>
+            </div>
+            <div class="sensor-value">
+              <div>Расслабление</div>
+              <div id="relaxationValue">-%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Спектральные данные</h3>
+        <div class="sensor-data">
+          <div class="sensor-value">
+            <div>Дельта (δ)</div>
+            <div id="deltaValue">-%</div>
+          </div>
+          <div class="sensor-value">
+            <div>Тета (θ)</div>
+            <div id="thetaValue">-%</div>
+          </div>
+          <div class="sensor-value">
+            <div>Альфа (α)</div>
+            <div id="alphaValue">-%</div>
+          </div>
+          <div class="sensor-value">
+            <div>Бета (β)</div>
+            <div id="betaValue">-%</div>
+          </div>
+          <div class="sensor-value">
+            <div>Гамма (γ)</div>
+            <div id="gammaValue">-%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let socket = null;
+
+      document
+        .getElementById("connectBtn")
+        .addEventListener("click", connectToServer);
+      document
+        .getElementById("disconnectBtn")
+        .addEventListener("click", disconnectFromServer);
+
+      function connectToServer() {
+        try {
+          // Подключаемся к WebSocket серверу
+          socket = new WebSocket("ws://localhost:8766");
+
+          socket.onopen = function (event) {
+            console.log("Подключение установлено");
+            updateStatus("Подключено", true);
+            document.getElementById("connectBtn").disabled = true;
+            document.getElementById("disconnectBtn").disabled = false;
+          };
+
+          socket.onmessage = function (event) {
+            try {
+              const message = JSON.parse(event.data);
+              console.log("Получены данные:", message);
+
+              if (
+                message.type === "sensor_data" ||
+                message.type === "initial_data"
+              ) {
+                updateSensorData(message.data);
+              }
+            } catch (error) {
+              console.error("Ошибка обработки сообщения:", error);
+            }
+          };
+
+          socket.onclose = function (event) {
+            console.log("Подключение закрыто");
+            updateStatus("Отключено", false);
+            document.getElementById("connectBtn").disabled = false;
+            document.getElementById("disconnectBtn").disabled = true;
+          };
+
+          socket.onerror = function (error) {
+            console.error("Ошибка WebSocket:", error);
+            updateStatus("Ошибка подключения", false);
+          };
+        } catch (error) {
+          console.error("Ошибка подключения:", error);
+          updateStatus("Ошибка подключения: " + error.message, false);
+        }
+      }
+
+      function disconnectFromServer() {
+        if (socket) {
+          socket.close();
+          socket = null;
+        }
+      }
+
+      function updateStatus(text, isConnected) {
+        const statusElement = document.getElementById("status");
+        statusElement.textContent = "Статус: " + text;
+        statusElement.className =
+          "status " + (isConnected ? "connected" : "disconnected");
+      }
+
+      function updateSensorData(data) {
+        // Обновляем данные с датчиков
+        if (data.sensor_data) {
+          document.getElementById("o1Value").textContent =
+            data.sensor_data.O1.toFixed(2);
+          document.getElementById("o2Value").textContent =
+            data.sensor_data.O2.toFixed(2);
+          document.getElementById("t3Value").textContent =
+            data.sensor_data.T3.toFixed(2);
+          document.getElementById("t4Value").textContent =
+            data.sensor_data.T4.toFixed(2);
+        }
+
+        // Обновляем эмоции
+        if (data.emotion) {
+          document.getElementById("emulatedEmotion").textContent = data.emotion;
+        }
+
+        if (data.mental_data) {
+          document.getElementById("detectedEmotion").textContent =
+            data.mental_data.detected_emotion;
+          document.getElementById("attentionValue").textContent =
+            data.mental_data.attention.toFixed(2) + "%";
+          document.getElementById("relaxationValue").textContent =
+            data.mental_data.relaxation.toFixed(2) + "%";
+
+          // Обновляем отображение эмоции
+          const emotionDisplay = document.getElementById("emotionDisplay");
+          emotionDisplay.textContent = data.mental_data.detected_emotion;
+          emotionDisplay.className =
+            "emotion-display " +
+            getEmotionClass(data.mental_data.detected_emotion);
+        }
+
+        // Обновляем спектральные данные
+        if (data.spectral_data) {
+          document.getElementById("deltaValue").textContent =
+            data.spectral_data.delta.toFixed(2) + "%";
+          document.getElementById("thetaValue").textContent =
+            data.spectral_data.theta.toFixed(2) + "%";
+          document.getElementById("alphaValue").textContent =
+            data.spectral_data.alpha.toFixed(2) + "%";
+          document.getElementById("betaValue").textContent =
+            data.spectral_data.beta.toFixed(2) + "%";
+          document.getElementById("gammaValue").textContent =
+            data.spectral_data.gamma.toFixed(2) + "%";
+        }
+      }
+
+      function getEmotionClass(emotion) {
+        const emotionMap = {
+          нейтральное: "neutral",
+          расслабленное: "relaxed",
+          сосредоточенное: "focused",
+          возбужденное: "anxious",
+          сонное: "drowsy",
+        };
+
+        return emotionMap[emotion] || "neutral";
+      }
+    </script>
+  </body>
+</html>

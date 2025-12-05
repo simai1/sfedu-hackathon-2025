@@ -1,0 +1,9 @@
+# python3 -m venv venv
+# .venv\Scripts\Activate
+# pip install pyneurosdk2
+# pip freeze > requirements.txt
+# pip list
+
+для смены версии
+Нажми Ctrl + Shift + P (или F1) → откроется командная палитра.
+Python: Select Interpreter
