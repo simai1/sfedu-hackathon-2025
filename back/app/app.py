@@ -52,17 +52,17 @@ def create_app():
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="static")
 
     # CORS
-    app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3001",  
-        "https://my-frontend.app",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    )
+    # app.add_middleware(
+    # CORSMiddleware,
+    # allow_origins=[
+    #     "http://localhost:5173",
+    #     "http://localhost:3001",  
+    #     "https://my-frontend.app",
+    # ],
+    # allow_credentials=True,
+    # allow_methods=["*"],
+    # allow_headers=["*"],
+    # )
 
     @app.middleware("http")
     async def catch_async(request: Request, call_next):
