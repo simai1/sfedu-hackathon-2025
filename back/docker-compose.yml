@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    container_name: hackathon-app
+    restart: always
+    ports:
+      - "3010:3010"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: ["python", "main.py"]
+    volumes:
+      - ./uploads:/app/uploads
+  db:
+    image: postgres:16
+    container_name: hackathon-db
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PWD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

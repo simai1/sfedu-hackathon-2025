@@ -1,0 +1,62 @@
+[project]
+name = "SOVA access service"
+version = "0.0.1"
+
+[tool.ruff]
+
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+line-length = 88
+indent-width = 4
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["E402"]
+
+[tool.semantic_release]
+version_variable = "pyproject.toml:project.version"
+upload_to_pypi = false
+changelog_file = "CHANGELOG.md"
+branch = "main"
