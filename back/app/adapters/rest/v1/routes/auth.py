@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends
 from app.composites.auth_composite import get_controller
 from app.adapters.rest.v1.controllers.auth import AuthController
 from app.domains.user import CreateUser, ValidateUser

@@ -24,7 +24,6 @@ from app.core.exception_handlers import (
     universal_exception_handler,
 )
 from app.utils.migration import upgrade
-from app.core.logger import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,28 +63,13 @@ def create_app():
     allow_headers=["*"],
     )
 
-    @app.middleware("http")
-    async def log_exceptions(request: Request, call_next):
-        try:
-            response = await call_next(request)
-            return response
-        except Exception as exc:
-            logger.exception(f"Unexpected error: {exc}")  # Логируем исключение
-            return JSONResponse(
-                content={
-                    "detail": str(exc),
-                    "error_type": type(exc).__name__,
-                },
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
     # handlers
-    # app.add_exception_handler(StarletteHTTPException, http_exception_handler)
-    # app.add_exception_handler(ValidationError, validation_exception_handler)
-    # app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    # app.add_exception_handler(IntegrityError, sqlalchemy_exception_handler)
-    # app.add_exception_handler(DomainBaseError, domain_exception_handler)
-    # app.add_exception_handler(RestBaseError, http_exception_handler)
-    # app.add_exception_handler(Exception, universal_exception_handler)
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+    app.add_exception_handler(ValidationError, validation_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(IntegrityError, sqlalchemy_exception_handler)
+    app.add_exception_handler(DomainBaseError, domain_exception_handler)
+    app.add_exception_handler(RestBaseError, http_exception_handler)
+    app.add_exception_handler(Exception, universal_exception_handler)
 
     return app
