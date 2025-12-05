@@ -131,7 +131,7 @@ exe = EXE(
                  'em_st_artifacts-x64.dll', 'em_st_artifacts-x32.dll',
                  'spectrum_lib', 'pyspectrum_lib'],
     runtime_tmpdir=None,
-    console=True,  # Показать консоль для отладки (можно изменить на False после проверки)
+    console=False,  # Скрыть консольное окно
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

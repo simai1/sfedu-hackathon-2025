@@ -35,7 +35,38 @@
    pyinstaller build.spec
    ```
 
-## Сборка на Linux/macOS
+## Сборка на macOS
+
+1. Откройте терминал
+2. Перейдите в папку с приложением:
+   ```bash
+   cd BrainBit/neurosamples-main/Bit
+   ```
+3. Убедитесь, что установлены все зависимости:
+   ```bash
+   pip3 install PyQt6 pyqtgraph pyneurosdk2 pyem-st-artifacts pyspectrum-lib
+   ```
+4. Сделайте скрипт исполняемым:
+   ```bash
+   chmod +x build_macos.sh
+   ```
+5. Запустите скрипт сборки:
+   ```bash
+   ./build_macos.sh
+   ```
+
+### Создание .app пакета для macOS
+
+После сборки можно создать .app пакет для удобного запуска:
+
+```bash
+mkdir -p dist/BitApp.app/Contents/MacOS
+cp dist/BitApp dist/BitApp.app/Contents/MacOS/
+```
+
+Или используйте скрипт `create_macos_app.sh` (см. ниже).
+
+## Сборка на Linux
 
 1. Откройте терминал
 2. Перейдите в папку с приложением:
@@ -68,11 +99,24 @@ name='ВашеИмяПриложения',
 
 ### Добавление иконки
 
-1. Подготовьте файл иконки (`.ico` для Windows, `.icns` для macOS)
-2. В файле `build.spec` укажите путь к иконке:
+1. Подготовьте файл иконки:
+   - `.ico` для Windows
+   - `.icns` для macOS
+2. В файле `build.spec` (Windows) или `build_macos.spec` (macOS) укажите путь к иконке:
 ```python
-icon='path/to/your/icon.ico',
+icon='path/to/your/icon.ico',  # Windows
+icon='path/to/your/icon.icns',  # macOS
 ```
+
+### Подпись кода для macOS
+
+Для распространения приложения на macOS может потребоваться подпись кода:
+
+```bash
+codesign --deep --force --verify --verbose --sign "Developer ID Application: Your Name" dist/BitApp.app
+```
+
+**Важно:** Для подписи требуется Apple Developer ID. Без подписи macOS может блокировать запуск приложения.
 
 ### Показать консольное окно (для отладки)
 
