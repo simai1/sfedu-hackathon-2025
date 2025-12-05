@@ -6,40 +6,203 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
-    <height>600</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Сопротивление</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
+	border-radius: 24px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border: 2px solid #B66DDB;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #A05CC4, stop: 1 #7A3BA0);
+	border: 2px solid #A05CC4;
+	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+}
+
+QPushButton:pressed {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #8A4BB0, stop: 1 #6A2B90);
+	border: 2px solid #8A4BB0;
+	transform: translateY(2px);
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0;
+	text-align: center;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background-color: #00223F;
+	border-radius: 12px;
+	font-size: 18px;
+	padding: 0 20px;
+	min-width: 40px;
+}
+
+QPushButton#backButton:hover {
+	background-color: #00335F;
+	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+}
+
+/* Start Button */
+QPushButton#resistButton {
+	margin: 0 32px 24px 32px;
+}
+
+/* Data Grid */
+QGridLayout#gridLayout {
+	margin: 20px;
+	spacing: 15px;
+}
+
+/* Labels */
+QLabel {
+	font-size: 16px;
+	color: #FFFFFF;
+}
+
+/* Value Labels */
+QLabel[id$="Value"] {
+	font-weight: 600;
+	font-size: 18px;
+	color: #4DA1FF;
+}
+
+/* Quality Labels */
+QLabel[id$="Q"] {
+	font-weight: 600;
+	font-size: 18px;
+	border-radius: 8px;
+	padding: 8px 16px;
+}
+
+QLabel#o1Q[quality="good"], 
+QLabel#o2Q[quality="good"], 
+QLabel#t3Q[quality="good"], 
+QLabel#t4Q[quality="good"] {
+	background-color: rgba(32, 201, 151, 0.3);
+	color: #20C997;
+}
+
+QLabel#o1Q[quality="poor"], 
+QLabel#o2Q[quality="poor"], 
+QLabel#t3Q[quality="poor"], 
+QLabel#t4Q[quality="poor"] {
+	background-color: rgba(220, 53, 69, 0.3);
+	color: #DC3545;
+}
+
+/* Header Labels */
+QLabel#label_6, QLabel#label_7 {
+	font-weight: 600;
+	font-size: 18px;
+	color: #B66DDB;
+	text-align: center;
+}
+
+/* Channel Labels */
+QLabel#label, QLabel#label_2, QLabel#label_3, QLabel#label_4 {
+	font-weight: 600;
+	font-size: 18px;
+	color: #4DA1FF;
+}
+
+/* Status Bar */
+QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
     <property name="leftMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
+    <item alignment="Qt::AlignTop">
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Измерение сопротивления электродов</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+      <property name="leftMargin">
+       <number>32</number>
+      </property>
+      <property name="rightMargin">
+       <number>32</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>48</height>
+         </size>
+        </property>
         <property name="text">
-         <string>&lt;</string>
+         <string>← Назад</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="resistButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>60</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Старт</string>
+         <string>Начать измерение</string>
         </property>
        </widget>
       </item>
@@ -47,10 +210,31 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>64</number>
+      </property>
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <property name="rightMargin">
+       <number>64</number>
+      </property>
+      <property name="bottomMargin">
+       <number>40</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>20</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>25</number>
+      </property>
       <item row="3" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>T3</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -59,12 +243,18 @@
         <property name="text">
          <string>O2</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>T4</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -73,12 +263,18 @@
         <property name="text">
          <string>0.0</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>Значение, Ом</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -87,12 +283,18 @@
         <property name="text">
          <string>O1</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Качество</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -101,12 +303,18 @@
         <property name="text">
          <string>0.0</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
       <item row="3" column="1">
        <widget class="QLabel" name="t3Value">
         <property name="text">
          <string>0.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -115,12 +323,21 @@
         <property name="text">
          <string>0.0</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
       <item row="1" column="2">
        <widget class="QLabel" name="o1Q">
         <property name="text">
          <string>Плохое</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>quality=poor</string>
         </property>
        </widget>
       </item>
@@ -129,12 +346,24 @@
         <property name="text">
          <string>Плохое</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>quality=poor</string>
+        </property>
        </widget>
       </item>
       <item row="3" column="2">
        <widget class="QLabel" name="t3Q">
         <property name="text">
          <string>Плохое</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>quality=poor</string>
         </property>
        </widget>
       </item>
@@ -143,13 +372,32 @@
         <property name="text">
          <string>Плохое</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>quality=poor</string>
+        </property>
        </widget>
       </item>
      </layout>
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="styleSheet">
+    <string notr="true">QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>backButton</tabstop>

@@ -6,28 +6,229 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>787</width>
-    <height>1109</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Эмоции (монополярные)</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
+	border-radius: 24px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border: 2px solid #B66DDB;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #A05CC4, stop: 1 #7A3BA0);
+	border: 2px solid #A05CC4;
+	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+}
+
+QPushButton:pressed {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #8A4BB0, stop: 1 #6A2B90);
+	border: 2px solid #8A4BB0;
+	transform: translateY(2px);
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0;
+	text-align: center;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background-color: #00223F;
+	border-radius: 12px;
+	font-size: 18px;
+	padding: 0 20px;
+	min-width: 40px;
+}
+
+QPushButton#backButton:hover {
+	background-color: #00335F;
+	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+}
+
+/* Start Button */
+QPushButton#startEmotionButton {
+	margin: 0 32px 24px 32px;
+}
+
+/* Channel Section */
+QWidget[channelSection="true"] {
+	background-color: rgba(0, 34, 63, 0.3);
+	border-radius: 16px;
+	margin: 15px 32px;
+	padding: 15px;
+}
+
+/* Channel Header */
+QLabel[channelHeader="true"] {
+	font-size: 20px;
+	font-weight: 600;
+	color: #4DA1FF;
+	margin: 10px 0;
+	text-align: center;
+}
+
+/* Section Headers */
+QLabel[sectionHeader="true"] {
+	font-size: 18px;
+	font-weight: 600;
+	color: #B66DDB;
+	margin: 10px 0 5px 0;
+}
+
+/* Progress Bars */
+QProgressBar {
+	border: 2px solid #4DA1FF;
+	border-radius: 10px;
+	background-color: rgba(0, 34, 63, 0.5);
+	margin: 8px 0;
+	height: 20px;
+	text-align: center;
+}
+
+QProgressBar::chunk {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
+	border-radius: 8px;
+}
+
+/* Status Labels */
+QLabel[statusLabel="true"] {
+	font-size: 16px;
+	margin: 5px 0;
+	padding: 8px;
+	border-radius: 8px;
+	background-color: rgba(0, 34, 63, 0.3);
+}
+
+/* Data Grids */
+QGridLayout[dataGrid="true"] {
+	margin: 10px 0;
+	spacing: 10px;
+}
+
+/* Grid Headers */
+QLabel[gridHeader="true"] {
+	font-weight: 600;
+	font-size: 16px;
+	color: #4DA1FF;
+	text-align: center;
+}
+
+/* Value Labels */
+QLabel[valueLabel="true"] {
+	font-weight: 600;
+	font-size: 18px;
+	color: #20C997;
+	text-align: center;
+	background-color: rgba(0, 34, 63, 0.3);
+	border-radius: 8px;
+	padding: 8px;
+}
+
+/* Scroll Area */
+QScrollArea {
+	border: none;
+	background-color: transparent;
+}
+
+QScrollArea QWidget {
+	background-color: transparent;
+}
+
+/* Status Bar */
+QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item alignment="Qt::AlignTop">
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Анализ монополярных эмоций</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+      <property name="leftMargin">
+       <number>32</number>
+      </property>
+      <property name="rightMargin">
+       <number>32</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>48</height>
+         </size>
+        </property>
         <property name="text">
-         <string>&lt;</string>
+         <string>← Назад</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="startEmotionButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>60</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Старт</string>
+         <string>Начать анализ</string>
         </property>
        </widget>
       </item>
@@ -39,49 +240,779 @@
        <enum>Qt::ScrollBarAsNeeded</enum>
       </property>
       <property name="sizeAdjustPolicy">
-       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+       <enum>QAbstractScrollArea::AdjustToContents</enum>
       </property>
       <property name="widgetResizable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <widget class="QWidget" name="scrollAreaWidgetContents">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>750</width>
-         <height>1036</height>
+         <width>1000</width>
+         <height>600</height>
         </rect>
        </property>
-       <widget class="QWidget" name="verticalLayoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>10</y>
-          <width>751</width>
-          <height>961</height>
-         </rect>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="leftMargin">
+         <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <layout class="QVBoxLayout" name="t4Layout">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QWidget" name="o1ChannelSection" native="true">
+          <property name="property" stdset="0">
+           <string>channelSection=true</string>
+          </property>
+          <layout class="QVBoxLayout" name="o1Layout">
            <item>
-            <widget class="QLabel" name="label_34">
-             <property name="font">
-              <font>
-               <pointsize>12</pointsize>
-               <bold>true</bold>
-              </font>
-             </property>
+            <widget class="QLabel" name="o1ChannelHeader">
              <property name="text">
-              <string>T4</string>
+              <string>O1 Канал</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>channelHeader=true</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="label_35">
+            <widget class="QLabel" name="o1CalibrationHeader">
              <property name="text">
               <string>Калибровка:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="o1calibrationProgress">
+             <property name="value">
+              <number>0</number>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o1artBothSidesLabel">
+             <property name="text">
+              <string>Артефакты с обеих сторон: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o1artSequenceLabel">
+             <property name="text">
+              <string>Артефакты последовательности: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o1SpectralHeader">
+             <property name="text">
+              <string>Спектральные данные:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="o1SpectralGrid" stretch="0,1,2" rowstretch="0,1,2">
+             <property name="property" stdset="0">
+              <string>dataGrid=true</string>
+             </property>
+             <item row="0" column="2">
+              <widget class="QLabel" name="o1AlphaHeader">
+               <property name="text">
+                <string>Альфа</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="o1betaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="o1thetaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="o1DeltaHeader">
+               <property name="text">
+                <string>Дельта</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="o1gammaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="o1betaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="o1deltaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="o1ThetaHeader">
+               <property name="text">
+                <string>Тета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="o1alphaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="o1GammaHeader">
+               <property name="text">
+                <string>Гамма</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="o1alphaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="o1BetaHeader">
+               <property name="text">
+                <string>Бета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="o2ChannelSection" native="true">
+          <property name="property" stdset="0">
+           <string>channelSection=true</string>
+          </property>
+          <layout class="QVBoxLayout" name="o2Layout">
+           <item>
+            <widget class="QLabel" name="o2ChannelHeader">
+             <property name="text">
+              <string>O2 Канал</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>channelHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o2CalibrationHeader">
+             <property name="text">
+              <string>Калибровка:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="o2calibrationProgress">
+             <property name="value">
+              <number>0</number>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o2artBothSidesLabel">
+             <property name="text">
+              <string>Артефакты с обеих сторон: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o2artSequenceLabel">
+             <property name="text">
+              <string>Артефакты последовательности: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="o2SpectralHeader">
+             <property name="text">
+              <string>Спектральные данные:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="o2SpectralGrid" stretch="0,1,2" rowstretch="0,1,2">
+             <property name="property" stdset="0">
+              <string>dataGrid=true</string>
+             </property>
+             <item row="0" column="2">
+              <widget class="QLabel" name="o2AlphaHeader">
+               <property name="text">
+                <string>Альфа</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="o2betaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="o2thetaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="o2DeltaHeader">
+               <property name="text">
+                <string>Дельта</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="o2gammaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="o2betaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="o2deltaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="o2ThetaHeader">
+               <property name="text">
+                <string>Тета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="o2alphaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="o2GammaHeader">
+               <property name="text">
+                <string>Гамма</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="o2alphaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="o2BetaHeader">
+               <property name="text">
+                <string>Бета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="t3ChannelSection" native="true">
+          <property name="property" stdset="0">
+           <string>channelSection=true</string>
+          </property>
+          <layout class="QVBoxLayout" name="t3Layout">
+           <item>
+            <widget class="QLabel" name="t3ChannelHeader">
+             <property name="text">
+              <string>T3 Канал</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>channelHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="t3CalibrationHeader">
+             <property name="text">
+              <string>Калибровка:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="t3calibrationProgress">
+             <property name="value">
+              <number>0</number>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="t3artBothSidesLabel">
+             <property name="text">
+              <string>Артефакты с обеих сторон: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="t3artSequenceLabel">
+             <property name="text">
+              <string>Артефакты последовательности: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="t3SpectralHeader">
+             <property name="text">
+              <string>Спектральные данные:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="t3SpectralGrid" stretch="0,1,2" rowstretch="0,1,2">
+             <property name="property" stdset="0">
+              <string>dataGrid=true</string>
+             </property>
+             <item row="0" column="2">
+              <widget class="QLabel" name="t3AlphaHeader">
+               <property name="text">
+                <string>Альфа</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="t3betaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="t3thetaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="t3DeltaHeader">
+               <property name="text">
+                <string>Дельта</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="t3gammaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="t3betaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="t3deltaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="t3ThetaHeader">
+               <property name="text">
+                <string>Тета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="t3alphaRawLabel">
+               <property name="text">
+                <string>0.0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="t3GammaHeader">
+               <property name="text">
+                <string>Гамма</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="t3alphaPercentLabel">
+               <property name="text">
+                <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="t3BetaHeader">
+               <property name="text">
+                <string>Бета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="t4ChannelSection" native="true">
+          <property name="property" stdset="0">
+           <string>channelSection=true</string>
+          </property>
+          <layout class="QVBoxLayout" name="t4Layout">
+           <item>
+            <widget class="QLabel" name="t4ChannelHeader">
+             <property name="text">
+              <string>T4 Канал</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>channelHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="t4CalibrationHeader">
+             <property name="text">
+              <string>Калибровка:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
              </property>
             </widget>
            </item>
@@ -90,28 +1021,65 @@
              <property name="value">
               <number>0</number>
              </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QLabel" name="t4artBothSidesLabel">
              <property name="text">
-              <string>Артефакты с обеих сторон</string>
+              <string>Артефакты с обеих сторон: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QLabel" name="t4artSequenceLabel">
              <property name="text">
-              <string>Артефакты последовательности</string>
+              <string>Артефакты последовательности: Нет</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="property" stdset="0">
+              <string>statusLabel=true</string>
              </property>
             </widget>
            </item>
            <item>
-            <layout class="QGridLayout" name="gridLayout_7">
+            <widget class="QLabel" name="t4SpectralHeader">
+             <property name="text">
+              <string>Спектральные данные:</string>
+             </property>
+             <property name="property" stdset="0">
+              <string>sectionHeader=true</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="t4SpectralGrid" stretch="0,1,2" rowstretch="0,1,2">
+             <property name="property" stdset="0">
+              <string>dataGrid=true</string>
+             </property>
              <item row="0" column="2">
-              <widget class="QLabel" name="label_36">
+              <widget class="QLabel" name="t4AlphaHeader">
                <property name="text">
                 <string>Альфа</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
                </property>
               </widget>
              </item>
@@ -120,6 +1088,12 @@
                <property name="text">
                 <string>0.0</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="1" column="1">
@@ -127,12 +1101,24 @@
                <property name="text">
                 <string>0%</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="0" column="0">
-              <widget class="QLabel" name="label_37">
+              <widget class="QLabel" name="t4DeltaHeader">
                <property name="text">
                 <string>Дельта</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
                </property>
               </widget>
              </item>
@@ -141,12 +1127,24 @@
                <property name="text">
                 <string>0%</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="1" column="3">
               <widget class="QLabel" name="t4betaPercentLabel">
                <property name="text">
                 <string>0%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
                </property>
               </widget>
              </item>
@@ -155,12 +1153,24 @@
                <property name="text">
                 <string>0%</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QLabel" name="label_38">
+              <widget class="QLabel" name="t4ThetaHeader">
                <property name="text">
                 <string>Тета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
                </property>
               </widget>
              </item>
@@ -169,12 +1179,24 @@
                <property name="text">
                 <string>0.0</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="0" column="4">
-              <widget class="QLabel" name="label_39">
+              <widget class="QLabel" name="t4GammaHeader">
                <property name="text">
                 <string>Гамма</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
                </property>
               </widget>
              </item>
@@ -183,21 +1205,55 @@
                <property name="text">
                 <string>0%</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>valueLabel=true</string>
+               </property>
               </widget>
              </item>
              <item row="0" column="3">
-              <widget class="QLabel" name="label_40">
+              <widget class="QLabel" name="t4BetaHeader">
                <property name="text">
                 <string>Бета</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="property" stdset="0">
+                <string>gridHeader=true</string>
                </property>
               </widget>
              </item>
             </layout>
            </item>
-           <item>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_41">
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="styleSheet">
+    <string notr="true">QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
                <property name="text">
                 <string>Внимание</string>
                </property>
@@ -834,15 +1890,28 @@
             </layout>
            </item>
           </layout>
-         </item>
-        </layout>
-       </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="styleSheet">
+    <string notr="true">QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
