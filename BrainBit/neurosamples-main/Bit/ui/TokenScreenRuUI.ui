@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TokenScreen</class>
+ <widget class="QMainWindow" name="TokenScreen">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Подключение к серверу</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: black;
+	border: 2px solid #B66DDB;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border-radius: 24px;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background-color: #333333;
+	border: 2px solid #B66DDB;
+	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+}
+
+QPushButton:pressed {
+	background-color: #555555;
+	border: 2px solid #B66DDB;
+	transform: translateY(2px);
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+QLineEdit {
+	background-color: rgba(0, 34, 63, 0.5);
+	border: 2px solid #4DA1FF;
+	border-radius: 12px;
+	color: #FFFFFF;
+	font-size: 16px;
+	padding: 12px 16px;
+	margin: 8px 0;
+}
+
+QLineEdit:focus {
+	border: 2px solid #B66DDB;
+	background-color: rgba(0, 34, 63, 0.7);
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 28px;
+	font-weight: 600;
+	margin: 32px 0;
+	text-align: center;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background-color: #00223F;
+	border-radius: 12px;
+	font-size: 18px;
+	padding: 0 20px;
+	min-width: 40px;
+}
+
+QPushButton#backButton:hover {
+	background-color: #00335F;
+	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+}
+
+/* Connect Button */
+QPushButton#connectButton {
+	margin: 24px 32px;
+}
+
+/* Description Label */
+QLabel#descriptionLabel {
+	font-size: 16px;
+	margin: 16px 32px;
+	text-align: center;
+	color: #CCCCCC;
+}
+
+/* Token Input */
+QLineEdit#tokenInput {
+	margin: 16px 32px;
+	font-size: 18px;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="backButton">
+        <property name="text">
+         <string>&lt;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Подключение к серверу</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="descriptionLabel">
+      <property name="text">
+       <string>Введите токен для подключения к сокетам на бэке</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="tokenInput">
+      <property name="placeholderText">
+       <string>Введите токен...</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="connectButton">
+      <property name="text">
+       <string>Подключиться</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+

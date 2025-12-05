@@ -76,6 +76,9 @@ class EmotionMonopolar:
                     self.progressCalibrationCallback(progress, BB_channels[i])
             else:
                 print(f"EmotionMonopolar: Calibration finished for {BB_channels[i]}")
+                # Вызываем callback с progress=100 когда калибровка завершена
+                if self.progressCalibrationCallback:
+                    self.progressCalibrationCallback(100, BB_channels[i])
 
     def process_data(self, brain_bit_data: []):
         # Проверяем, запущена ли калибровка

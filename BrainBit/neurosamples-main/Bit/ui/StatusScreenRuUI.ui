@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StatusScreen</class>
+ <widget class="QMainWindow" name="StatusScreen">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Статус подключения</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: black;
+	border: 2px solid #B66DDB;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border-radius: 24px;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background-color: #333333;
+	border: 2px solid #B66DDB;
+	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+}
+
+QPushButton:pressed {
+	background-color: #555555;
+	border: 2px solid #B66DDB;
+	transform: translateY(2px);
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 28px;
+	font-weight: 600;
+	margin: 32px 0;
+	text-align: center;
+}
+
+/* Status Section */
+QWidget[statusSection="true"] {
+	background-color: rgba(0, 34, 63, 0.3);
+	border-radius: 16px;
+	margin: 15px 32px;
+	padding: 20px;
+}
+
+/* Status Item */
+QWidget[statusItem="true"] {
+	margin: 16px 0;
+	padding: 16px;
+	background-color: rgba(0, 34, 63, 0.5);
+	border-radius: 12px;
+}
+
+/* Status Label */
+QLabel[statusLabel="true"] {
+	font-size: 18px;
+	font-weight: 500;
+	margin: 8px 0;
+}
+
+/* Status Value */
+QLabel[statusValue="true"] {
+	font-size: 20px;
+	font-weight: 600;
+	color: #20C997;
+	margin: 8px 0;
+}
+
+QLabel[statusValue="false"] {
+	font-size: 20px;
+	font-weight: 600;
+	color: #FF6B6B;
+	margin: 8px 0;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background-color: #00223F;
+	border-radius: 12px;
+	font-size: 18px;
+	padding: 0 20px;
+	min-width: 40px;
+}
+
+QPushButton#backButton:hover {
+	background-color: #00335F;
+	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="backButton">
+        <property name="text">
+         <string>&lt;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Статус подключения</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="statusSection" statusSection="true">
+      <layout class="QVBoxLayout" name="statusLayout">
+       <item>
+        <widget class="QWidget" name="deviceStatusItem" statusItem="true">
+         <layout class="QHBoxLayout" name="deviceStatusLayout">
+          <item>
+           <widget class="QLabel" name="deviceStatusLabel" statusLabel="true">
+            <property name="text">
+             <string>Устройство подключено:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="deviceStatusSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="deviceStatusValue" statusValue="true">
+            <property name="text">
+             <string>Да</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="calibrationStatusItem" statusItem="true">
+         <layout class="QHBoxLayout" name="calibrationStatusLayout">
+          <item>
+           <widget class="QLabel" name="calibrationStatusLabel" statusLabel="true">
+            <property name="text">
+             <string>Откалибровано:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="calibrationStatusSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="calibrationStatusValue" statusValue="true">
+            <property name="text">
+             <string>Да</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="backendStatusItem" statusItem="true">
+         <layout class="QHBoxLayout" name="backendStatusLayout">
+          <item>
+           <widget class="QLabel" name="backendStatusLabel" statusLabel="true">
+            <property name="text">
+             <string>Подключено к бэку:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="backendStatusSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="backendStatusValue" statusValue="true">
+            <property name="text">
+             <string>Да</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+

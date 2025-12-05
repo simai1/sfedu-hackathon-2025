@@ -2,7 +2,6 @@ import sys
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
 from PyQt6.uic import loadUi
-from PyQt6.QtCore import QTimer
 from neurosdk.cmn_types import SensorState
 
 from neuro_impl.brain_bit_controller import brain_bit_controller, BrainBitController
@@ -12,7 +11,6 @@ from neuro_impl.spectrum_controller import SpectrumController
 from neuro_impl.sensor_emulator import create_sensor_emulator, create_emulator_sensor_info
 from PyQt6.QtWidgets import QPushButton
 from ui.plots import SpectrumPlot, SignalPlot
-from sensor_data_logger import SensorDataLogger
 
 
 class MenuScreen(QMainWindow):
@@ -87,26 +85,14 @@ class SearchScreen(QMainWindow):
         brain_bit_controller.create_and_connect(sensor_info=self.sensorsList[item_number])
 
     def __is_sensor_connected(self, sensor_state):
-        # После подключения устройства автоматически переходим к монополярным эмоциям
         if sensor_state == SensorState.StateInRange:
+            # Автоматически переходим на экран монополярных эмоций и запускаем калибровку
             self.__close_screen()
-            # Автоматически запускаем монополярные эмоции
-            self.__auto_start_monopolar_emotions()
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+            # Запускаем калибровку автоматически
+            emotionMonopolarScreen.auto_start_calibration()
         else:
             self.__close_screen()
-
-    def __auto_start_monopolar_emotions(self):
-        """Автоматический запуск монополярных эмоций после подключения устройства"""
-        # Переходим на экран монополярных эмоций
-        stackNavigation.setCurrentWidget(emotionMonopolarScreen)
-        
-        # Автоматически запускаем калибровку
-        # Используем QTimer для небольшой задержки, чтобы UI успел загрузиться
-        from PyQt6.QtCore import QTimer
-        QTimer.singleShot(100, emotionMonopolarScreen.auto_start_calibration)
-        
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
 
     def __start_scan(self):
         self.searchButton.setText('Stop')
@@ -152,16 +138,12 @@ class ResistanceScreen(QMainWindow):
         self.resistButton.setText('Stop')
         brain_bit_controller.resistReceived = self.resist_received
         brain_bit_controller.start_resist()
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
         self.__is_started = True
 
     def __stop_resist(self):
         self.resistButton.setText('Start')
         brain_bit_controller.stop_resist()
         brain_bit_controller.resistReceived = None
-        # Отключаем логирование данных
-        sensorDataLogger.stop_logging()
         self.__is_started = False
 
     def resist_received(self, resist):
@@ -235,8 +217,6 @@ class SignalScreen(QMainWindow):
                 raise
         brain_bit_controller.signalReceived = self.signal_received
         brain_bit_controller.start_signal()
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
         self.__is_started = True
 
     def __stop_signal(self):
@@ -254,8 +234,6 @@ class SignalScreen(QMainWindow):
                 raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.resistReceived = None
-        # Отключаем логирование данных
-        sensorDataLogger.stop_logging()
         self.__is_started = False
 
     def __close_screen(self):
@@ -300,8 +278,6 @@ class EmotionBipolarScreen(QMainWindow):
         self.emotionController.start_calibration()
         brain_bit_controller.signalReceived = self.emotionController.process_data
         brain_bit_controller.start_signal()
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
         self.is_started = True
 
     def __stop_signal(self):
@@ -309,8 +285,6 @@ class EmotionBipolarScreen(QMainWindow):
         self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
-        # Отключаем логирование данных
-        sensorDataLogger.stop_logging()
         self.is_started = False
 
     def calibration_callback(self, progress):
@@ -331,8 +305,6 @@ class EmotionBipolarScreen(QMainWindow):
         self.relaxPercentLabel.setText(str(round(data.rel_relaxation, 2)))
         self.attentionRawLabel.setText(str(round(data.inst_attention, 2)))
         self.relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
-        # Логируем данные об эмоциях
-        sensorDataLogger.log_emotion_data("bipolar", data.rel_attention, data.rel_relaxation)
 
     def last_spectral_data_callback(self, spectral_data):
         print(f"EmotionBipolarScreen: Spectral data - Delta: {spectral_data.delta*100:.2f}%, Theta: {spectral_data.theta*100:.2f}%, Alpha: {spectral_data.alpha*100:.2f}%, Beta: {spectral_data.beta*100:.2f}%, Gamma: {spectral_data.gamma*100:.2f}%")
@@ -341,15 +313,6 @@ class EmotionBipolarScreen(QMainWindow):
         self.alphaPercentLabel.setText(str(round(spectral_data.alpha * 100, 2)) + '%')
         self.betaPercentLabel.setText(str(round(spectral_data.beta * 100, 2)) + '%')
         self.gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
-        # Логируем спектральные данные
-        spectral_dict = {
-            "delta": spectral_data.delta,
-            "theta": spectral_data.theta,
-            "alpha": spectral_data.alpha,
-            "beta": spectral_data.beta,
-            "gamma": spectral_data.gamma
-        }
-        sensorDataLogger.log_emotion_data("bipolar", 0, 0, spectral_dict)
 
     def raw_spectral_data_callback(self, spect_vals):
         print(f"EmotionBipolarScreen: Raw spectral data - Alpha: {spect_vals.alpha:.2f}, Beta: {spect_vals.beta:.2f}")
@@ -368,6 +331,8 @@ class EmotionMonopolarScreen(QMainWindow):
         self.backButton.clicked.connect(self.__close_screen)
         self.startEmotionButton.clicked.connect(self.__start_calibration)
         self.is_started = False
+        self.calibration_completed = False
+        self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
 
         self.emotionController = EmotionMonopolar()
         self.emotionController.progressCalibrationCallback = self.calibration_callback
@@ -378,8 +343,9 @@ class EmotionMonopolarScreen(QMainWindow):
         self.emotionController.rawSpectralDataCallback = self.raw_spectral_data_callback
 
     def auto_start_calibration(self):
-        """Публичный метод для автоматического запуска калибровки"""
-        self.__start_signal()
+        """Автоматический запуск калибровки после подключения устройства"""
+        if not self.is_started:
+            self.__start_signal()
 
     def __start_calibration(self):
         if self.is_started:
@@ -392,8 +358,6 @@ class EmotionMonopolarScreen(QMainWindow):
         self.emotionController.start_calibration()
         brain_bit_controller.signalReceived = self.emotionController.process_data
         brain_bit_controller.start_signal()
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
         self.is_started = True
 
     def __stop_signal(self):
@@ -401,23 +365,40 @@ class EmotionMonopolarScreen(QMainWindow):
         self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
-        # Отключаем логирование данных
-        sensorDataLogger.stop_logging()
         self.is_started = False
+        # Сбрасываем флаги калибровки при остановке
+        self.calibration_completed = False
+        self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
 
     def calibration_callback(self, progress, channel):
         print(f"EmotionMonopolarScreen: Calibration progress for {channel}: {progress}%")
         match channel:
             case 'O1':
                 self.o1calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['O1'] = True
             case 'O2':
                 self.o2calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['O2'] = True
             case 'T3':
                 self.t3calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['T3'] = True
             case 'T4':
                 self.t4calibrationProgress.setValue(progress)
+                if progress >= 100:
+                    self.calibrated_channels['T4'] = True
             case _:
                 print('Unknown channel')
+        
+        # Проверяем, завершена ли калибровка всех каналов
+        if all(self.calibrated_channels.values()) and not self.calibration_completed:
+            self.calibration_completed = True
+            print("EmotionMonopolarScreen: All channels calibrated, moving to token screen")
+            # Автоматически переходим на экран ввода токена после завершения калибровки
+            self.__stop_signal()
+            stackNavigation.setCurrentWidget(tokenScreen)
 
     def is_artifacted_sequence_callback(self, artifacted, channel):
         print(f"EmotionMonopolarScreen: Artifacted sequence for {channel}: {artifacted}")
@@ -472,8 +453,6 @@ class EmotionMonopolarScreen(QMainWindow):
                 self.t4relaxRawLabel.setText(str(round(data.inst_relaxation, 2)))
             case _:
                 print('Unknown channel')
-        # Логируем данные об эмоциях
-        sensorDataLogger.log_emotion_data(f"monopolar_{channel}", data.rel_attention, data.rel_relaxation)
 
     def last_spectral_data_callback(self, spectral_data, channel):
         print(f"EmotionMonopolarScreen: Spectral data for {channel} - Delta: {spectral_data.delta*100:.2f}%, Theta: {spectral_data.theta*100:.2f}%, Alpha: {spectral_data.alpha*100:.2f}%, Beta: {spectral_data.beta*100:.2f}%, Gamma: {spectral_data.gamma*100:.2f}%")
@@ -504,15 +483,6 @@ class EmotionMonopolarScreen(QMainWindow):
                 self.t4gammaPercentLabel.setText(str(round(spectral_data.gamma * 100, 2)) + '%')
             case _:
                 print('Unknown channel')
-        # Логируем спектральные данные
-        spectral_dict = {
-            "delta": spectral_data.delta,
-            "theta": spectral_data.theta,
-            "alpha": spectral_data.alpha,
-            "beta": spectral_data.beta,
-            "gamma": spectral_data.gamma
-        }
-        sensorDataLogger.log_emotion_data(f"monopolar_{channel}", 0, 0, spectral_dict)
 
     def raw_spectral_data_callback(self, spect_vals, channel):
         print(f"EmotionMonopolarScreen: Raw spectral data for {channel} - Alpha: {spect_vals.alpha:.2f}, Beta: {spect_vals.beta:.2f}")
@@ -535,6 +505,83 @@ class EmotionMonopolarScreen(QMainWindow):
     def __close_screen(self):
         self.__stop_signal()
         stackNavigation.setCurrentWidget(menuScreen)
+
+
+class TokenScreen(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("ui/TokenScreenRuUI.ui", self)
+        self.backButton.clicked.connect(self.__close_screen)
+        self.connectButton.clicked.connect(self.__connect_to_backend)
+        self.token = None
+
+    def __connect_to_backend(self):
+        token = self.tokenInput.text().strip()
+        if token:
+            self.token = token
+            print(f"TokenScreen: Token entered: {token}")
+            # Переходим на экран статусов
+            stackNavigation.setCurrentWidget(statusScreen)
+            # Обновляем статусы на экране статусов
+            statusScreen.update_statuses(device_connected=True, calibrated=True, backend_connected=True)
+        else:
+            print("TokenScreen: Token is empty")
+
+    def __close_screen(self):
+        stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+
+
+class StatusScreen(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("ui/StatusScreenRuUI.ui", self)
+        self.backButton.clicked.connect(self.__close_screen)
+        self.device_connected = False
+        self.calibrated = False
+        self.backend_connected = False
+
+    def update_statuses(self, device_connected=False, calibrated=False, backend_connected=False):
+        """Обновление статусов на экране"""
+        self.device_connected = device_connected
+        self.calibrated = calibrated
+        self.backend_connected = backend_connected
+        
+        # Обновляем отображение статусов
+        self.deviceStatusValue.setText("Да" if device_connected else "Нет")
+        color = "#20C997" if device_connected else "#FF6B6B"
+        self.deviceStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                font-weight: 600;
+                color: {color};
+                margin: 8px 0;
+            }}
+        """)
+        
+        self.calibrationStatusValue.setText("Да" if calibrated else "Нет")
+        color = "#20C997" if calibrated else "#FF6B6B"
+        self.calibrationStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                font-weight: 600;
+                color: {color};
+                margin: 8px 0;
+            }}
+        """)
+        
+        self.backendStatusValue.setText("Да" if backend_connected else "Нет")
+        color = "#20C997" if backend_connected else "#FF6B6B"
+        self.backendStatusValue.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                font-weight: 600;
+                color: {color};
+                margin: 8px 0;
+            }}
+        """)
+
+    def __close_screen(self):
+        stackNavigation.setCurrentWidget(tokenScreen)
 
 
 class SpectrumScreen(QMainWindow):
@@ -578,8 +625,6 @@ class SpectrumScreen(QMainWindow):
                 raise
         brain_bit_controller.signalReceived = self.__signal_received
         brain_bit_controller.start_signal()
-        # Включаем логирование данных
-        sensorDataLogger.start_logging()
         self.__is_started = True
 
     def __stop_signal(self):
@@ -597,8 +642,6 @@ class SpectrumScreen(QMainWindow):
                 raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
-        # Отключаем логирование данных
-        sensorDataLogger.stop_logging()
         self.__is_started = False
 
     def __signal_received(self, signal):
@@ -660,20 +703,6 @@ class SpectrumScreen(QMainWindow):
                 self.t4_gamma_percent.setText(str(round(waves.gamma_rel * 100)) + '%')
             case _:
                 print('Unknown channel')
-        # Логируем волновые данные
-        wave_dict = {
-            "alpha_raw": waves.alpha_raw,
-            "beta_raw": waves.beta_raw,
-            "theta_raw": waves.theta_raw,
-            "delta_raw": waves.delta_raw,
-            "gamma_raw": waves.gamma_raw,
-            "alpha_rel": waves.alpha_rel,
-            "beta_rel": waves.beta_rel,
-            "theta_rel": waves.theta_rel,
-            "delta_rel": waves.delta_rel,
-            "gamma_rel": waves.gamma_rel
-        }
-        sensorDataLogger.log_emotion_data(f"spectrum_{channel}", 0, 0, wave_dict)
 
     def __processed_spectrum(self, spectrum, channel):
         try:
@@ -718,15 +747,17 @@ resistScreen = ResistanceScreen()
 signalScreen = SignalScreen()
 emotionBipolarScreen = EmotionBipolarScreen()
 emotionMonopolarScreen = EmotionMonopolarScreen()
+tokenScreen = TokenScreen()
+statusScreen = StatusScreen()
 spectrumScreen = SpectrumScreen()
-# Создаем логгер данных с датчиков
-sensorDataLogger = SensorDataLogger()
 stackNavigation.addWidget(menuScreen)
 stackNavigation.addWidget(searchScreen)
 stackNavigation.addWidget(resistScreen)
 stackNavigation.addWidget(signalScreen)
 stackNavigation.addWidget(emotionBipolarScreen)
 stackNavigation.addWidget(emotionMonopolarScreen)
+stackNavigation.addWidget(tokenScreen)
+stackNavigation.addWidget(statusScreen)
 stackNavigation.addWidget(spectrumScreen)
 stackNavigation.setCurrentWidget(menuScreen)
 stackNavigation.show()
