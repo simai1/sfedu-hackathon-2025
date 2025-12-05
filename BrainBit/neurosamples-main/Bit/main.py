@@ -1,8 +1,19 @@
 import sys
+import os
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
 from PyQt6.uic import loadUi
 from neurosdk.cmn_types import SensorState
+
+# Определяем базовый путь для ресурсов (работает и в exe, и в обычном режиме)
+def resource_path(relative_path):
+    """Получить абсолютный путь к ресурсу, работает для dev и PyInstaller"""
+    try:
+        # PyInstaller создает временную папку и сохраняет путь в _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 from neuro_impl.brain_bit_controller import brain_bit_controller, BrainBitController
 from neuro_impl.emotions_bipolar_controller import EmotionBipolar
@@ -16,7 +27,7 @@ from ui.plots import SpectrumPlot, SignalPlot
 class MenuScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/MenuScreenWithEmulatorUI.ui", self)
+        loadUi(resource_path("ui/MenuScreenWithEmulatorUI.ui"), self)
         brain_bit_controller.sensorConnectionState.connect(self.is_sensor_connected)
         self.toResistButton.setEnabled(False)
         self.toSignalButton.setEnabled(False)
@@ -61,7 +72,7 @@ class MenuScreen(QMainWindow):
 class SearchScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/SearchScreenRuUI.ui", self)
+        loadUi(resource_path("ui/SearchScreenRuUI.ui"), self)
         self.is_searching = False
         self.sensorsList = None
         self.refreshButton.clicked.connect(self.__refresh_search)
@@ -179,7 +190,7 @@ class ResistanceScreen(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/ResistanceScreenRuUI.ui", self)
+        loadUi(resource_path("ui/ResistanceScreenRuUI.ui"), self)
         self.resistButton.setText('Start')
         self.backButton.clicked.connect(self.__close_screen)
         self.resistButton.clicked.connect(self.__resist_button_clicked)
@@ -223,7 +234,7 @@ class ResistanceScreen(QMainWindow):
 class SignalScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/SignalScreenRuUI.ui", self)
+        loadUi(resource_path("ui/SignalScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.signalButton.clicked.connect(self.__start_button_clicked)
 
@@ -312,7 +323,7 @@ class SignalScreen(QMainWindow):
 class EmotionBipolarScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/EmotionBipolarScreenRuUI.ui", self)
+        loadUi(resource_path("ui/EmotionBipolarScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.startBipolarEmotionButton.clicked.connect(self.start_calibration)
 
@@ -386,7 +397,7 @@ class EmotionBipolarScreen(QMainWindow):
 class EmotionMonopolarScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/EmotionMonopolarScreenRuUI.ui", self)
+        loadUi(resource_path("ui/EmotionMonopolarScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.refreshButton.clicked.connect(self.__refresh_calibration)
         self.is_started = False
@@ -582,7 +593,7 @@ class EmotionMonopolarScreen(QMainWindow):
 class TokenScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/TokenScreenRuUI.ui", self)
+        loadUi(resource_path("ui/TokenScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.connectButton.clicked.connect(self.__connect_to_backend)
         self.token = None
@@ -606,7 +617,7 @@ class TokenScreen(QMainWindow):
 class StatusScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/StatusScreenRuUI.ui", self)
+        loadUi(resource_path("ui/StatusScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.disconnectButton.clicked.connect(self.__disconnect_device)
         self.device_connected = False
@@ -745,7 +756,7 @@ class StatusScreen(QMainWindow):
 class SpectrumScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/SpectrumScreenRuUI.ui", self)
+        loadUi(resource_path("ui/SpectrumScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
         self.signalButton.clicked.connect(self.__start_button_clicked)
         self.o1Graph = SpectrumPlot()
@@ -897,54 +908,80 @@ class SpectrumScreen(QMainWindow):
         stackNavigation.setCurrentWidget(menuScreen)
 
 
-app = QApplication(sys.argv)
-stackNavigation = QStackedWidget()
-menuScreen = MenuScreen()
-searchScreen = SearchScreen()
-resistScreen = ResistanceScreen()
-signalScreen = SignalScreen()
-emotionBipolarScreen = EmotionBipolarScreen()
-emotionMonopolarScreen = EmotionMonopolarScreen()
-tokenScreen = TokenScreen()
-statusScreen = StatusScreen()
-spectrumScreen = SpectrumScreen()
-stackNavigation.addWidget(menuScreen)
-stackNavigation.addWidget(searchScreen)
-stackNavigation.addWidget(resistScreen)
-stackNavigation.addWidget(signalScreen)
-stackNavigation.addWidget(emotionBipolarScreen)
-stackNavigation.addWidget(emotionMonopolarScreen)
-stackNavigation.addWidget(tokenScreen)
-stackNavigation.addWidget(statusScreen)
-stackNavigation.addWidget(spectrumScreen)
-stackNavigation.setCurrentWidget(searchScreen)
-stackNavigation.show()
-app.exec()
+def main():
+    """Главная функция приложения"""
+    global stackNavigation, menuScreen, searchScreen, resistScreen, signalScreen
+    global emotionBipolarScreen, emotionMonopolarScreen, tokenScreen, statusScreen, spectrumScreen
+    
+    try:
+        app = QApplication(sys.argv)
+        stackNavigation = QStackedWidget()
+        
+        print("[INFO] Инициализация экранов...")
+        menuScreen = MenuScreen()
+        searchScreen = SearchScreen()
+        resistScreen = ResistanceScreen()
+        signalScreen = SignalScreen()
+        emotionBipolarScreen = EmotionBipolarScreen()
+        emotionMonopolarScreen = EmotionMonopolarScreen()
+        tokenScreen = TokenScreen()
+        statusScreen = StatusScreen()
+        spectrumScreen = SpectrumScreen()
+        
+        print("[INFO] Добавление виджетов в стек...")
+        stackNavigation.addWidget(menuScreen)
+        stackNavigation.addWidget(searchScreen)
+        stackNavigation.addWidget(resistScreen)
+        stackNavigation.addWidget(signalScreen)
+        stackNavigation.addWidget(emotionBipolarScreen)
+        stackNavigation.addWidget(emotionMonopolarScreen)
+        stackNavigation.addWidget(tokenScreen)
+        stackNavigation.addWidget(statusScreen)
+        stackNavigation.addWidget(spectrumScreen)
+        
+        print("[INFO] Показ главного окна...")
+        stackNavigation.setCurrentWidget(searchScreen)
+        stackNavigation.show()
+        
+        print("[INFO] Запуск приложения...")
+        exit_code = app.exec()
+        
+        # Очищаем графики перед завершением программы
+        try:
+            if hasattr(signalScreen, 'o1Graph'):
+                signalScreen.o1Graph.cleanup()
+            if hasattr(signalScreen, 'o2Graph'):
+                signalScreen.o2Graph.cleanup()
+            if hasattr(signalScreen, 't3Graph'):
+                signalScreen.t3Graph.cleanup()
+            if hasattr(signalScreen, 't4Graph'):
+                signalScreen.t4Graph.cleanup()
+            if hasattr(spectrumScreen, 'o1Graph'):
+                spectrumScreen.o1Graph.cleanup()
+            if hasattr(spectrumScreen, 'o2Graph'):
+                spectrumScreen.o2Graph.cleanup()
+            if hasattr(spectrumScreen, 't3Graph'):
+                spectrumScreen.t3Graph.cleanup()
+            if hasattr(spectrumScreen, 't4Graph'):
+                spectrumScreen.t4Graph.cleanup()
+        except Exception as e:
+            print(f"Ошибка при очистке графиков: {e}")
+        
+        # Отключаем сенсор только если он не None
+        try:
+            if brain_bit_controller is not None:
+                brain_bit_controller.disconnect_sensor()
+        except Exception as e:
+            print(f"Ошибка при отключении сенсора: {e}")
+        
+        return exit_code
+    except Exception as e:
+        print(f"[ERROR] Критическая ошибка при запуске приложения: {e}")
+        import traceback
+        traceback.print_exc()
+        input("Нажмите Enter для выхода...")
+        return 1
 
-# Очищаем графики перед завершением программы
-try:
-    if 'signalScreen' in globals():
-        if hasattr(signalScreen, 'o1Graph'):
-            signalScreen.o1Graph.cleanup()
-        if hasattr(signalScreen, 'o2Graph'):
-            signalScreen.o2Graph.cleanup()
-        if hasattr(signalScreen, 't3Graph'):
-            signalScreen.t3Graph.cleanup()
-        if hasattr(signalScreen, 't4Graph'):
-            signalScreen.t4Graph.cleanup()
-    if 'spectrumScreen' in globals():
-        if hasattr(spectrumScreen, 'o1Graph'):
-            spectrumScreen.o1Graph.cleanup()
-        if hasattr(spectrumScreen, 'o2Graph'):
-            spectrumScreen.o2Graph.cleanup()
-        if hasattr(spectrumScreen, 't3Graph'):
-            spectrumScreen.t3Graph.cleanup()
-        if hasattr(spectrumScreen, 't4Graph'):
-            spectrumScreen.t4Graph.cleanup()
-except Exception as e:
-    print(f"Ошибка при очистке графиков: {e}")
+if __name__ == "__main__":
+    sys.exit(main())
 
-# Отключаем сенсор только если он не None
-if brain_bit_controller is not None:
-    brain_bit_controller.disconnect_sensor()
-del brain_bit_controller
