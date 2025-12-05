@@ -4,7 +4,12 @@ import { apiRequest } from "./api"
 //! получение аксес через refresh token
 export const loginEndpoint = async (data: any) => {
   try {
-    const response = await apiRequest("post", LOGIN_ENDPOINT, data)
+    // Преобразуем username в email для совместимости с бэкендом
+    const requestData = {
+      email: data.username || data.email,
+      password: data.password,
+    }
+    const response = await apiRequest("post", LOGIN_ENDPOINT, requestData)
     return response.data
   } catch (error) {
     console.error("Login error:", error)

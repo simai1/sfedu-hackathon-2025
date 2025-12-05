@@ -10,15 +10,10 @@ export const apiRequest = async (
   params: Record<string, any> = {}
 ) => {
   try {
-    const finalHeaders: Record<string, string> = { ...headers }
-    if (data instanceof FormData) {
-      finalHeaders["Content-Type"] = "multipart/form-data"
-    }
-
     const config = {
       method,
       url: `${serv}${endpoint}`,
-      headers: finalHeaders,
+      headers,
       data,
       params,
     }

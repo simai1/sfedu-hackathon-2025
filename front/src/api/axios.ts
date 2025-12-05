@@ -24,9 +24,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    if (config.data instanceof FormData) {
-      config.headers["Content-Type"] = "multipart/form-data"
-    }
+    // Axios автоматически установит Content-Type: application/json для обычных объектов
     return config
   },
   (error) => Promise.reject(error)

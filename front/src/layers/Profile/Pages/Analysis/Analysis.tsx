@@ -1,8 +1,10 @@
+import ChatMessagerComponent from "../../../../core/components/ChatMessagerComponent/ChatMessagerComponent"
 import KeyIndicators from "../../modules/graphics/KeyIndicators/KeyIndicators"
 import styles from "./Analysis.module.scss"
 
 function Analysis() {
   return (
+    <div className={styles.analysisContainer}>
     <div className={styles.analysis}>
       <h1>Анализ активности</h1>
       <div className={styles.chartContainer}>
@@ -22,7 +24,12 @@ function Analysis() {
           <p>85%</p>
         </div>
       </div>
+      
     </div>
+    <div className={styles.chat}>
+    <ChatMessagerComponent />
+  </div>
+  </div>
   )
 }
 
