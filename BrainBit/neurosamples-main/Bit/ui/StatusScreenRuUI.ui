@@ -15,115 +15,164 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {
-	background-color: #00111F;
+	background: #0A0E1A;
 	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
 }
 
 QLabel {
-	color: #FFFFFF;
+	color: #E0E0E0;
 }
 
 QPushButton {
-	background-color: black;
-	border: 2px solid #B66DDB;
-	color: white;
-	font-size: 16px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
 	font-weight: 500;
-	height: 48px;
-	padding: 0 24px;
-	border-radius: 24px;
-	transition: all 0.3s ease;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 8px;
 }
 
 QPushButton:hover {
-	background-color: #333333;
-	border: 2px solid #B66DDB;
-	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
 }
 
 QPushButton:pressed {
-	background-color: #555555;
-	border: 2px solid #B66DDB;
-	transform: translateY(2px);
+	background: rgba(77, 161, 255, 0.15);
+	transform: scale(0.98);
 }
 
 QPushButton:disabled {
-	opacity: 0.5;
+	opacity: 0.4;
 }
 
 /* Header */
 QLabel#headerTitle {
-	font-size: 28px;
+	font-size: 24px;
 	font-weight: 600;
-	margin: 32px 0;
+	margin: 24px 0 8px 0;
 	text-align: center;
+	color: #4DA1FF;
 }
 
 /* Status Section */
 QWidget[statusSection="true"] {
-	background-color: rgba(0, 34, 63, 0.3);
-	border-radius: 16px;
-	margin: 15px 32px;
+	background: rgba(77, 161, 255, 0.03);
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 12px;
+	margin: 16px 24px;
 	padding: 20px;
 }
 
-/* Status Item */
+/* Status Item - Clickable */
 QWidget[statusItem="true"] {
-	margin: 16px 0;
+	margin: 12px 0;
 	padding: 16px;
-	background-color: rgba(0, 34, 63, 0.5);
-	border-radius: 12px;
+	background: rgba(77, 161, 255, 0.05);
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+QWidget[statusItem="true"]:hover {
+	background: rgba(77, 161, 255, 0.12);
+	border: 1px solid rgba(77, 161, 255, 0.3);
 }
 
 /* Status Label */
 QLabel[statusLabel="true"] {
-	font-size: 18px;
+	font-size: 14px;
 	font-weight: 500;
-	margin: 8px 0;
+	margin: 0;
+	color: #CCCCCC;
 }
 
-/* Status Value */
+/* Status Value - Success */
 QLabel[statusValue="true"] {
-	font-size: 20px;
+	font-size: 16px;
 	font-weight: 600;
-	color: #20C997;
-	margin: 8px 0;
+	color: #4DA1FF;
+	margin: 0;
+	padding: 6px 12px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.2);
+	border-radius: 6px;
 }
 
+/* Status Value - Error */
 QLabel[statusValue="false"] {
-	font-size: 20px;
+	font-size: 16px;
 	font-weight: 600;
-	color: #FF6B6B;
-	margin: 8px 0;
+	color: #999999;
+	margin: 0;
+	padding: 6px 12px;
+	background: rgba(153, 153, 153, 0.1);
+	border: 1px solid rgba(153, 153, 153, 0.2);
+	border-radius: 6px;
 }
 
-/* Back Button */
-QPushButton#backButton {
-	background-color: #00223F;
-	border-radius: 12px;
-	font-size: 18px;
-	padding: 0 20px;
+/* Status Icon Container */
+QWidget[statusIconContainer="true"] {
+	background: rgba(77, 161, 255, 0.1);
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
 	min-width: 40px;
+	min-height: 40px;
+	max-width: 40px;
+	max-height: 40px;
 }
 
-QPushButton#backButton:hover {
-	background-color: #00335F;
-	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+/* Status Icon - Success */
+QLabel[statusIcon="true"] {
+	font-size: 20px;
+	color: #4DA1FF;
+	font-weight: bold;
+}
+
+/* Status Icon - Error */
+QLabel[statusIcon="false"] {
+	font-size: 20px;
+	color: #999999;
+	font-weight: bold;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="topLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>24</number>
+      </property>
+      <property name="rightMargin">
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>24</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
         <property name="text">
          <string>&lt;</string>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer">
+       <spacer name="topSpacer">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
         </property>
@@ -134,6 +183,19 @@ QPushButton#backButton:hover {
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="disconnectButton">
+        <property name="text">
+         <string>Отключить устройство</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>180</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -147,13 +209,35 @@ QPushButton#backButton:hover {
     <item>
      <widget class="QWidget" name="statusSection" statusSection="true">
       <layout class="QVBoxLayout" name="statusLayout">
+       <property name="spacing">
+        <number>12</number>
+       </property>
        <item>
         <widget class="QWidget" name="deviceStatusItem" statusItem="true">
          <layout class="QHBoxLayout" name="deviceStatusLayout">
+          <property name="spacing">
+           <number>12</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="deviceStatusIconContainer" statusIconContainer="true">
+            <layout class="QVBoxLayout" name="deviceStatusIconLayout">
+             <item>
+              <widget class="QLabel" name="deviceStatusIcon" statusIcon="true">
+               <property name="text">
+                <string>✓</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item>
            <widget class="QLabel" name="deviceStatusLabel" statusLabel="true">
             <property name="text">
-             <string>Устройство подключено:</string>
+             <string>Устройство подключено</string>
             </property>
            </widget>
           </item>
@@ -183,10 +267,29 @@ QPushButton#backButton:hover {
        <item>
         <widget class="QWidget" name="calibrationStatusItem" statusItem="true">
          <layout class="QHBoxLayout" name="calibrationStatusLayout">
+          <property name="spacing">
+           <number>12</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="calibrationStatusIconContainer" statusIconContainer="true">
+            <layout class="QVBoxLayout" name="calibrationStatusIconLayout">
+             <item>
+              <widget class="QLabel" name="calibrationStatusIcon" statusIcon="true">
+               <property name="text">
+                <string>✓</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item>
            <widget class="QLabel" name="calibrationStatusLabel" statusLabel="true">
             <property name="text">
-             <string>Откалибровано:</string>
+             <string>Откалибровано</string>
             </property>
            </widget>
           </item>
@@ -216,10 +319,29 @@ QPushButton#backButton:hover {
        <item>
         <widget class="QWidget" name="backendStatusItem" statusItem="true">
          <layout class="QHBoxLayout" name="backendStatusLayout">
+          <property name="spacing">
+           <number>12</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="backendStatusIconContainer" statusIconContainer="true">
+            <layout class="QVBoxLayout" name="backendStatusIconLayout">
+             <item>
+              <widget class="QLabel" name="backendStatusIcon" statusIcon="true">
+               <property name="text">
+                <string>✓</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item>
            <widget class="QLabel" name="backendStatusLabel" statusLabel="true">
             <property name="text">
-             <string>Подключено к бэку:</string>
+             <string>Подключено к бэку</string>
             </property>
            </widget>
           </item>
@@ -269,4 +391,3 @@ QPushButton#backButton:hover {
  <resources/>
  <connections/>
 </ui>
-

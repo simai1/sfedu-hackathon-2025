@@ -64,9 +64,11 @@ class SearchScreen(QMainWindow):
         loadUi("ui/SearchScreenRuUI.ui", self)
         self.is_searching = False
         self.sensorsList = None
-        self.backButton.clicked.connect(self.__close_screen)
-        self.searchButton.clicked.connect(self.__search)
+        self.refreshButton.clicked.connect(self.__refresh_search)
+        self.exitButton.clicked.connect(self.__exit_application)
         self.listWidget.itemClicked.connect(self.__connect_to_sensor)
+        # Автоматически запускаем поиск при инициализации
+        self.__start_scan()
 
     def __search(self):
         if self.is_searching:
@@ -77,42 +79,68 @@ class SearchScreen(QMainWindow):
     def __sensors_founded(self, sensors):
         self.sensorsList = sensors
         self.listWidget.clear()
-        self.listWidget.addItems([sens.Name + ' (' + sens.SerialNumber + ')' for sens in sensors])
+        if sensors:
+            self.listWidget.addItems([sens.Name + ' (' + sens.SerialNumber + ')' for sens in sensors])
+            self.statusLabel.setText(f"Найдено устройств: {len(sensors)}. Нажмите на устройство для подключения")
+        else:
+            self.statusLabel.setText("Устройства не найдены. Поиск продолжается...")
 
     def __connect_to_sensor(self, item):
         item_number = self.listWidget.row(item)
+        # Показываем лоадер подключения
+        self.statusLabel.setText("Подключение к устройству...")
+        self.listWidget.setEnabled(False)
         brain_bit_controller.sensorConnectionState.connect(self.__is_sensor_connected)
         brain_bit_controller.create_and_connect(sensor_info=self.sensorsList[item_number])
 
     def __is_sensor_connected(self, sensor_state):
         if sensor_state == SensorState.StateInRange:
             # Автоматически переходим на экран монополярных эмоций и запускаем калибровку
-            self.__close_screen()
+            try:
+                brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
+            except Exception:
+                pass
+            self.__stop_scan()
             stackNavigation.setCurrentWidget(emotionMonopolarScreen)
             # Запускаем калибровку автоматически
             emotionMonopolarScreen.auto_start_calibration()
         else:
-            self.__close_screen()
+            self.statusLabel.setText("Ошибка подключения. Попробуйте снова.")
+            self.listWidget.setEnabled(True)
 
     def __start_scan(self):
-        self.searchButton.setText('Stop')
+        self.statusLabel.setText("Поиск устройств...")
         brain_bit_controller.sensorsFounded = self.__sensors_founded
         brain_bit_controller.start_scan()
         self.is_searching = True
 
     def __stop_scan(self):
-        self.searchButton.setText('Search')
         brain_bit_controller.stop_scan()
         brain_bit_controller.sensorsFounded = None
         self.is_searching = False
 
-    def __close_screen(self):
-        try:
-            brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
-        except Exception as err:
-            print(err)
-        self.__stop_scan()
-        stackNavigation.setCurrentWidget(menuScreen)
+    def __refresh_search(self):
+        """Обновление поиска устройств"""
+        # Останавливаем текущий поиск, если он идет
+        if self.is_searching:
+            self.__stop_scan()
+        # Очищаем список устройств
+        self.listWidget.clear()
+        self.sensorsList = None
+        # Включаем список обратно (на случай если он был отключен)
+        self.listWidget.setEnabled(True)
+        # Запускаем новый поиск
+        self.__start_scan()
+
+    def __exit_application(self):
+        """Закрытие приложения"""
+        # Останавливаем поиск перед выходом
+        if self.is_searching:
+            self.__stop_scan()
+        # Отключаем устройство, если подключено
+        brain_bit_controller.disconnect_sensor()
+        # Закрываем приложение
+        QApplication.instance().quit()
 
 
 class ResistanceScreen(QMainWindow):
@@ -329,7 +357,7 @@ class EmotionMonopolarScreen(QMainWindow):
         super().__init__(*args, **kwargs)
         loadUi("ui/EmotionMonopolarScreenRuUI.ui", self)
         self.backButton.clicked.connect(self.__close_screen)
-        self.startEmotionButton.clicked.connect(self.__start_calibration)
+        self.refreshButton.clicked.connect(self.__refresh_calibration)
         self.is_started = False
         self.calibration_completed = False
         self.calibrated_channels = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
@@ -347,21 +375,26 @@ class EmotionMonopolarScreen(QMainWindow):
         if not self.is_started:
             self.__start_signal()
 
-    def __start_calibration(self):
+    def __refresh_calibration(self):
+        """Обновление калибровки - прерывает процесс и начинает заново"""
+        # Останавливаем текущий процесс
         if self.is_started:
             self.__stop_signal()
-        else:
-            self.__start_signal()
+        # Сбрасываем прогресс-бары
+        self.o1calibrationProgress.setValue(0)
+        self.o2calibrationProgress.setValue(0)
+        self.t3calibrationProgress.setValue(0)
+        self.t4calibrationProgress.setValue(0)
+        # Запускаем заново
+        self.__start_signal()
 
     def __start_signal(self):
-        self.startEmotionButton.setText('Stop')
         self.emotionController.start_calibration()
         brain_bit_controller.signalReceived = self.emotionController.process_data
         brain_bit_controller.start_signal()
         self.is_started = True
 
     def __stop_signal(self):
-        self.startEmotionButton.setText('Start')
         self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
@@ -396,8 +429,8 @@ class EmotionMonopolarScreen(QMainWindow):
         if all(self.calibrated_channels.values()) and not self.calibration_completed:
             self.calibration_completed = True
             print("EmotionMonopolarScreen: All channels calibrated, moving to token screen")
-            # Автоматически переходим на экран ввода токена после завершения калибровки
-            self.__stop_signal()
+            # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
+            # Просто переключаем интерфейс на экран ввода токена
             stackNavigation.setCurrentWidget(tokenScreen)
 
     def is_artifacted_sequence_callback(self, artifacted, channel):
@@ -536,9 +569,36 @@ class StatusScreen(QMainWindow):
         super().__init__(*args, **kwargs)
         loadUi("ui/StatusScreenRuUI.ui", self)
         self.backButton.clicked.connect(self.__close_screen)
+        self.disconnectButton.clicked.connect(self.__disconnect_device)
         self.device_connected = False
         self.calibrated = False
         self.backend_connected = False
+        
+        # Делаем статусы кликабельными
+        self.deviceStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('device')
+        self.calibrationStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('calibration')
+        self.backendStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('backend')
+
+    def __on_status_clicked(self, status_type):
+        """Обработка клика на статус"""
+        if status_type == 'device':
+            # Переходим на экран поиска и обновляем
+            stackNavigation.setCurrentWidget(searchScreen)
+            searchScreen.__refresh_search()
+        elif status_type == 'calibration':
+            # Переходим на экран калибровки и обновляем
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+            emotionMonopolarScreen.__refresh_calibration()
+        elif status_type == 'backend':
+            # Переходим на экран токена
+            stackNavigation.setCurrentWidget(tokenScreen)
+
+    def __disconnect_device(self):
+        """Отключение устройства и возврат к поиску"""
+        brain_bit_controller.disconnect_sensor()
+        stackNavigation.setCurrentWidget(searchScreen)
+        # Перезапускаем поиск
+        searchScreen.__refresh_search()
 
     def update_statuses(self, device_connected=False, calibrated=False, backend_connected=False):
         """Обновление статусов на экране"""
@@ -546,37 +606,81 @@ class StatusScreen(QMainWindow):
         self.calibrated = calibrated
         self.backend_connected = backend_connected
         
-        # Обновляем отображение статусов
+        # Обновляем отображение статусов устройства
         self.deviceStatusValue.setText("Да" if device_connected else "Нет")
-        color = "#20C997" if device_connected else "#FF6B6B"
+        status_style = "true" if device_connected else "false"
+        self.deviceStatusValue.setProperty("statusValue", status_style)
+        self.deviceStatusIcon.setText("✓" if device_connected else "✗")
+        self.deviceStatusIcon.setProperty("statusIcon", status_style)
         self.deviceStatusValue.setStyleSheet(f"""
             QLabel {{
-                font-size: 20px;
+                font-size: 16px;
                 font-weight: 600;
-                color: {color};
-                margin: 8px 0;
+                color: {'#4DA1FF' if device_connected else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if device_connected else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if device_connected else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.deviceStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if device_connected else '#999999'};
+                font-weight: bold;
             }}
         """)
         
+        # Обновляем отображение статусов калибровки
         self.calibrationStatusValue.setText("Да" if calibrated else "Нет")
-        color = "#20C997" if calibrated else "#FF6B6B"
+        status_style = "true" if calibrated else "false"
+        self.calibrationStatusValue.setProperty("statusValue", status_style)
+        self.calibrationStatusIcon.setText("✓" if calibrated else "✗")
+        self.calibrationStatusIcon.setProperty("statusIcon", status_style)
         self.calibrationStatusValue.setStyleSheet(f"""
             QLabel {{
-                font-size: 20px;
+                font-size: 16px;
                 font-weight: 600;
-                color: {color};
-                margin: 8px 0;
+                color: {'#4DA1FF' if calibrated else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if calibrated else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if calibrated else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.calibrationStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if calibrated else '#999999'};
+                font-weight: bold;
             }}
         """)
         
+        # Обновляем отображение статусов бэка
         self.backendStatusValue.setText("Да" if backend_connected else "Нет")
-        color = "#20C997" if backend_connected else "#FF6B6B"
+        status_style = "true" if backend_connected else "false"
+        self.backendStatusValue.setProperty("statusValue", status_style)
+        self.backendStatusIcon.setText("✓" if backend_connected else "✗")
+        self.backendStatusIcon.setProperty("statusIcon", status_style)
         self.backendStatusValue.setStyleSheet(f"""
             QLabel {{
-                font-size: 20px;
+                font-size: 16px;
                 font-weight: 600;
-                color: {color};
-                margin: 8px 0;
+                color: {'#4DA1FF' if backend_connected else '#999999'};
+                margin: 0;
+                padding: 6px 12px;
+                background: {'rgba(77, 161, 255, 0.1)' if backend_connected else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if backend_connected else 'rgba(153, 153, 153, 0.2)'};
+                border-radius: 6px;
+            }}
+        """)
+        self.backendStatusIcon.setStyleSheet(f"""
+            QLabel {{
+                font-size: 20px;
+                color: {'#4DA1FF' if backend_connected else '#999999'};
+                font-weight: bold;
             }}
         """)
 
@@ -759,7 +863,7 @@ stackNavigation.addWidget(emotionMonopolarScreen)
 stackNavigation.addWidget(tokenScreen)
 stackNavigation.addWidget(statusScreen)
 stackNavigation.addWidget(spectrumScreen)
-stackNavigation.setCurrentWidget(menuScreen)
+stackNavigation.setCurrentWidget(searchScreen)
 stackNavigation.show()
 app.exec()
 

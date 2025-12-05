@@ -15,106 +15,104 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {
-	background-color: #00111F;
+	background: #0A0E1A;
 	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
 }
 
 QLabel {
-	color: #FFFFFF;
+	color: #E0E0E0;
 }
 
 QPushButton {
-	background-color: black;
-	border: 2px solid #B66DDB;
-	color: white;
-	font-size: 16px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
 	font-weight: 500;
-	height: 48px;
-	padding: 0 24px;
-	border-radius: 24px;
-	transition: all 0.3s ease;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 8px;
 }
 
 QPushButton:hover {
-	background-color: #333333;
-	border: 2px solid #B66DDB;
-	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
 }
 
 QPushButton:pressed {
-	background-color: #555555;
-	border: 2px solid #B66DDB;
-	transform: translateY(2px);
+	background: rgba(77, 161, 255, 0.15);
+	transform: scale(0.98);
 }
 
 QPushButton:disabled {
-	opacity: 0.5;
+	opacity: 0.4;
 }
 
 QLineEdit {
-	background-color: rgba(0, 34, 63, 0.5);
-	border: 2px solid #4DA1FF;
-	border-radius: 12px;
-	color: #FFFFFF;
-	font-size: 16px;
+	background: rgba(77, 161, 255, 0.05);
+	border: 1px solid rgba(77, 161, 255, 0.2);
+	border-radius: 8px;
+	color: #E0E0E0;
+	font-size: 14px;
 	padding: 12px 16px;
-	margin: 8px 0;
 }
 
 QLineEdit:focus {
-	border: 2px solid #B66DDB;
-	background-color: rgba(0, 34, 63, 0.7);
+	border: 1px solid rgba(77, 161, 255, 0.5);
+	background: rgba(77, 161, 255, 0.08);
+}
+
+QLineEdit::placeholder {
+	color: #999999;
 }
 
 /* Header */
 QLabel#headerTitle {
-	font-size: 28px;
+	font-size: 24px;
 	font-weight: 600;
-	margin: 32px 0;
+	margin: 24px 0 8px 0;
 	text-align: center;
-}
-
-/* Back Button */
-QPushButton#backButton {
-	background-color: #00223F;
-	border-radius: 12px;
-	font-size: 18px;
-	padding: 0 20px;
-	min-width: 40px;
-}
-
-QPushButton#backButton:hover {
-	background-color: #00335F;
-	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
-}
-
-/* Connect Button */
-QPushButton#connectButton {
-	margin: 24px 32px;
+	color: #4DA1FF;
 }
 
 /* Description Label */
 QLabel#descriptionLabel {
-	font-size: 16px;
-	margin: 16px 32px;
+	font-size: 14px;
+	font-weight: 400;
+	margin: 0 0 24px 0;
 	text-align: center;
-	color: #CCCCCC;
-}
-
-/* Token Input */
-QLineEdit#tokenInput {
-	margin: 16px 32px;
-	font-size: 18px;
+	color: #999999;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>24</number>
+      </property>
+      <property name="rightMargin">
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>24</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
         <property name="text">
          <string>&lt;</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -152,12 +150,24 @@ QLineEdit#tokenInput {
       <property name="placeholderText">
        <string>Введите токен...</string>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>44</height>
+       </size>
+      </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="connectButton">
       <property name="text">
        <string>Подключиться</string>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>40</height>
+       </size>
       </property>
      </widget>
     </item>
@@ -181,4 +191,3 @@ QLineEdit#tokenInput {
  <resources/>
  <connections/>
 </ui>
-
