@@ -37,6 +37,7 @@ class EmotionBipolar:
         self.__is_calibrated = False
         self.__force_calibration = False  # Флаг для принудительной калибровки
         self.__sample_count = 0
+        self.__is_running = False  # Флаг для отслеживания состояния работы
         self.isArtifactedSequenceCallback = None
         self.isBothSidesArtifactedCallback = None
         self.progressCalibrationCallback = None
@@ -50,8 +51,19 @@ class EmotionBipolar:
         # Сбрасываем флаг принудительной калибровки
         self.__force_calibration = False
         self.__sample_count = 0
+        self.__is_running = True
+        
+    def stop_calibration(self):
+        """Остановка калибровки"""
+        print("EmotionBipolar: Stopping calibration")
+        self.__is_running = False
+        self.__is_calibrated = False
+        self.__sample_count = 0
         
     def __process_calibration(self):
+        if not self.__is_running:
+            return
+            
         self.__sample_count += 1
         
         # Проверяем, завершена ли калибровка по данным библиотеки
@@ -80,6 +92,10 @@ class EmotionBipolar:
             print("EmotionBipolar: Calibration finished")
 
     def process_data(self, brain_bit_data: []):
+        # Проверяем, запущена ли калибровка
+        if not self.__is_running:
+            return
+            
         print(f"EmotionBipolar: Processing {len(brain_bit_data)} samples")
         bipolar_samples = []
         for sample in brain_bit_data:

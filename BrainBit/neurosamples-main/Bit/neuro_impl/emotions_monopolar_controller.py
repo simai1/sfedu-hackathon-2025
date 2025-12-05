@@ -3,7 +3,7 @@ from em_st_artifacts.utils.lib_settings import MathLibSetting, ArtifactDetectSet
     MentalAndSpectralSetting
 from em_st_artifacts.utils.support_classes import RawChannelsArray
 
-from neuro_impl.utils import BB_channels
+BB_channels = ['O1', 'O2', 'T3', 'T4']
 
 
 class EmotionMonopolar:
@@ -16,16 +16,16 @@ class EmotionMonopolar:
                              channels_number=4,
                              channel_for_analysis=0)
         ads = ArtifactDetectSetting(art_bord=110,
-                                   allowed_percent_artpoints=70,
-                                   raw_betap_limit=800_000,
-                                   global_artwin_sec=4,
-                                   num_wins_for_quality_avg=125,
-                                   hamming_win_spectrum=True,
-                                   hanning_win_spectrum=False,
-                                   total_pow_border=100,
-                                   spect_art_by_totalp=True)
+                                    allowed_percent_artpoints=70,
+                                    raw_betap_limit=800_000,
+                                    global_artwin_sec=4,
+                                    num_wins_for_quality_avg=125,
+                                    hamming_win_spectrum=True,
+                                    hanning_win_spectrum=False,
+                                    total_pow_border=100,
+                                    spect_art_by_totalp=True)
         mss = MentalAndSpectralSetting(n_sec_for_averaging=2,
-                                      n_sec_for_instant_estimation=4)
+                                       n_sec_for_instant_estimation=4)
         calibration_length = 6
         nwins_skip_after_artifact = 10
 
@@ -38,6 +38,7 @@ class EmotionMonopolar:
             self.__maths[BB_channels[i]].set_spect_normalization_by_bands_width(True)
 
         self.__is_calibrated = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
+        self.__is_running = False  # Флаг для отслеживания состояния работы
         self.isArtifactedSequenceCallback = None
         self.isBothSidesArtifactedCallback = None
         self.progressCalibrationCallback = None
@@ -49,8 +50,20 @@ class EmotionMonopolar:
         print("EmotionMonopolar: Starting calibration")
         for i in range(4):
             self.__maths[BB_channels[i]].start_calibration()
+        self.__is_running = True
+            
+    def stop_calibration(self):
+        """Остановка калибровки"""
+        print("EmotionMonopolar: Stopping calibration")
+        self.__is_running = False
+        # Сбрасываем состояние калибровки для всех каналов
+        for channel in BB_channels:
+            self.__is_calibrated[channel] = False
             
     def __process_calibration(self):
+        if not self.__is_running:
+            return
+            
         for i in range(4):
             if self.__is_calibrated[BB_channels[i]]:
                 continue
@@ -65,6 +78,10 @@ class EmotionMonopolar:
                 print(f"EmotionMonopolar: Calibration finished for {BB_channels[i]}")
 
     def process_data(self, brain_bit_data: []):
+        # Проверяем, запущена ли калибровка
+        if not self.__is_running:
+            return
+            
         print(f"EmotionMonopolar: Processing {len(brain_bit_data)} samples")
         o1Values = []
         o2Values = []
@@ -80,70 +97,44 @@ class EmotionMonopolar:
             self.__maths['O2'].push_monopolars(o2Values)
             self.__maths['T3'].push_monopolars(t3Values)
             self.__maths['T4'].push_monopolars(t4Values)
-            for i in range(4):
-                self.__maths[BB_channels[i]].process_data_arr()
-        except Exception as err:
-            print(err)
-        self.__resolve_artifacted()
+        except Exception as e:
+            print(f"Error pushing monopolars: {e}")
+            return
+
+        try:
+            self.__maths['O1'].process_data_arr()
+            self.__maths['O2'].process_data_arr()
+            self.__maths['T3'].process_data_arr()
+            self.__maths['T4'].process_data_arr()
+        except Exception as e:
+            print(f"Error processing data: {e}")
+            return
 
         # Обрабатываем калибровку
         self.__process_calibration()
-        self.__resolve_spectral_data()
-        self.__resolve_raw_spectral_data()
-        self.__resolve_mind_data()
 
-    def __resolve_artifacted(self):
         for i in range(4):
-            # sequence artifacts
-            is_artifacted_sequence = self.__maths[BB_channels[i]].is_artifacted_sequence()
-            if self.isArtifactedSequenceCallback:
-                self.isArtifactedSequenceCallback(is_artifacted_sequence, BB_channels[i])
+            channel = BB_channels[i]
+            if self.__is_calibrated[channel]:
+                # spectral data
+                spectral_values = self.__maths[channel].read_spectral_data_percents_arr()
+                if len(spectral_values) > 0:
+                    spectral_val = spectral_values[-1]
+                    print(
+                        f"EmotionMonopolar: Spectral data for {channel} - Delta: {spectral_val.delta * 100:.2f}%, Theta: {spectral_val.theta * 100:.2f}%, Alpha: {spectral_val.alpha * 100:.2f}%, Beta: {spectral_val.beta * 100:.2f}%, Gamma: {spectral_val.gamma * 100:.2f}%")
+                    if self.lastSpectralDataCallback:
+                        self.lastSpectralDataCallback(spectral_val, channel)
 
-            # both sides artifacts
-            is_both_side_artifacted = self.__maths[BB_channels[i]].is_both_sides_artifacted()
-            if self.isBothSidesArtifactedCallback:
-                self.isBothSidesArtifactedCallback(is_both_side_artifacted, BB_channels[i])
+                # raw spectral data
+                raw_spectral_values = self.__maths[channel].read_raw_spectral_vals()
+                if self.rawSpectralDataCallback:
+                    self.rawSpectralDataCallback(raw_spectral_values, channel)
 
-    def __resolve_spectral_data(self):
-        for i in range(4):
-            if not self.__is_calibrated[BB_channels[i]]:
-                continue
-            spectral_values = self.__maths[BB_channels[i]].read_spectral_data_percents_arr()
-            if len(spectral_values) > 0:
-                spectral_val = spectral_values[-1]
-                print(f"EmotionMonopolar: Spectral data for {BB_channels[i]} - Delta: {spectral_val.delta:.4f}, Theta: {spectral_val.theta:.4f}, Alpha: {spectral_val.alpha:.4f}, Beta: {spectral_val.beta:.4f}, Gamma: {spectral_val.gamma:.4f}")
-                if self.lastSpectralDataCallback:
-                    self.lastSpectralDataCallback(spectral_val, BB_channels[i])
-
-    def __resolve_raw_spectral_data(self):
-        for i in range(4):
-            if not self.__is_calibrated[BB_channels[i]]:
-                continue
-            raw_spectral_values = self.__maths[BB_channels[i]].read_raw_spectral_vals()
-            if self.rawSpectralDataCallback:
-                self.rawSpectralDataCallback(raw_spectral_values, BB_channels[i])
-
-    def __resolve_mind_data(self):
-        for i in range(4):
-            if not self.__is_calibrated[BB_channels[i]]:
-                continue
-            mental_values = self.__maths[BB_channels[i]].read_mental_data_arr()
-            if len(mental_values) > 0:
-                mind_data = mental_values[-1]
-                print(f"EmotionMonopolar: Mind data for {BB_channels[i]} - Attention: {mind_data.rel_attention:.2f}%, Relaxation: {mind_data.rel_relaxation:.2f}%")
-                if self.lastMindDataCallback:
-                    self.lastMindDataCallback(mind_data, BB_channels[i])
-            else:
-                # Даже если данных нет, отправляем нулевые значения для тестирования
-                # В реальной системе этого не должно быть
-                class MockMindData:
-                    def __init__(self):
-                        self.rel_attention = 0.0
-                        self.rel_relaxation = 0.0
-                        self.inst_attention = 0.0
-                        self.inst_relaxation = 0.0
-                
-                mock_data = MockMindData()
-                print(f"EmotionMonopolar: Mock mind data for {BB_channels[i]} - Attention: {mock_data.rel_attention:.2f}%, Relaxation: {mock_data.rel_relaxation:.2f}%")
-                if self.lastMindDataCallback:
-                    self.lastMindDataCallback(mock_data, BB_channels[i])
+                # mental data
+                mental_values = self.__maths[channel].read_mental_data_arr()
+                if len(mental_values) > 0:
+                    mind_data = mental_values[-1]
+                    print(
+                        f"EmotionMonopolar: Mind data for {channel} - Attention: {mind_data.rel_attention:.2f}%, Relaxation: {mind_data.rel_relaxation:.2f}%")
+                    if self.lastMindDataCallback:
+                        self.lastMindDataCallback(mind_data, channel)

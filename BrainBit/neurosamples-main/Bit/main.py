@@ -260,6 +260,7 @@ class EmotionBipolarScreen(QMainWindow):
 
     def __stop_signal(self):
         self.startBipolarEmotionButton.setText('Start')
+        self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.is_started = False
@@ -332,6 +333,7 @@ class EmotionMonopolarScreen(QMainWindow):
 
     def __stop_signal(self):
         self.startEmotionButton.setText('Start')
+        self.emotionController.stop_calibration()  # Останавливаем калибровку
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.is_started = False
