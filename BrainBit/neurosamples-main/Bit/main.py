@@ -194,37 +194,67 @@ class SignalScreen(QMainWindow):
             self.__start_signal()
 
     def signal_received(self, signal):
-        o1Samples = [sample.O1 for sample in signal]
-        o2Samples = [sample.O2 for sample in signal]
-        t3Samples = [sample.T3 for sample in signal]
-        t4Samples = [sample.T4 for sample in signal]
-        self.o1Graph.update_data(o1Samples)
-        self.o2Graph.update_data(o2Samples)
-        self.t3Graph.update_data(t3Samples)
-        self.t4Graph.update_data(t4Samples)
+        try:
+            o1Samples = [sample.O1 for sample in signal]
+            o2Samples = [sample.O2 for sample in signal]
+            t3Samples = [sample.T3 for sample in signal]
+            t4Samples = [sample.T4 for sample in signal]
+            self.o1Graph.update_data(o1Samples)
+            self.o2Graph.update_data(o2Samples)
+            self.t3Graph.update_data(t3Samples)
+            self.t4Graph.update_data(t4Samples)
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __start_signal(self):
         self.signalButton.setText('Stop')
-        self.o1Graph.start_draw()
-        self.o2Graph.start_draw()
-        self.t3Graph.start_draw()
-        self.t4Graph.start_draw()
+        try:
+            self.o1Graph.start_draw()
+            self.o2Graph.start_draw()
+            self.t3Graph.start_draw()
+            self.t4Graph.start_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.signalReceived = self.signal_received
         brain_bit_controller.start_signal()
         self.__is_started = True
 
     def __stop_signal(self):
         self.signalButton.setText('Start')
-        self.o1Graph.stop_draw()
-        self.o2Graph.stop_draw()
-        self.t3Graph.stop_draw()
-        self.t4Graph.stop_draw()
+        try:
+            self.o1Graph.stop_draw()
+            self.o2Graph.stop_draw()
+            self.t3Graph.stop_draw()
+            self.t4Graph.stop_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.resistReceived = None
         self.__is_started = False
 
     def __close_screen(self):
         self.__stop_signal()
+        # Очищаем графики перед закрытием экрана
+        if hasattr(self, 'o1Graph'):
+            self.o1Graph.cleanup()
+        if hasattr(self, 'o2Graph'):
+            self.o2Graph.cleanup()
+        if hasattr(self, 't3Graph'):
+            self.t3Graph.cleanup()
+        if hasattr(self, 't4Graph'):
+            self.t4Graph.cleanup()
         stackNavigation.setCurrentWidget(menuScreen)
 
 
@@ -487,26 +517,47 @@ class SpectrumScreen(QMainWindow):
 
     def __start_signal(self):
         self.signalButton.setText('Stop')
-        self.o1Graph.start_draw()
-        self.o2Graph.start_draw()
-        self.t3Graph.start_draw()
-        self.t4Graph.start_draw()
+        try:
+            self.o1Graph.start_draw()
+            self.o2Graph.start_draw()
+            self.t3Graph.start_draw()
+            self.t4Graph.start_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.signalReceived = self.__signal_received
         brain_bit_controller.start_signal()
         self.__is_started = True
 
     def __stop_signal(self):
         self.signalButton.setText('Start')
-        self.o1Graph.stop_draw()
-        self.o2Graph.stop_draw()
-        self.t3Graph.stop_draw()
-        self.t4Graph.stop_draw()
+        try:
+            self.o1Graph.stop_draw()
+            self.o2Graph.stop_draw()
+            self.t3Graph.stop_draw()
+            self.t4Graph.stop_draw()
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.__is_started = False
 
     def __signal_received(self, signal):
-        self.spectrumController.process_data(signal)
+        try:
+            self.spectrumController.process_data(signal)
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __processed_waves(self, waves, channel):
         print(f"SpectrumScreen: Waves data for {channel} - Alpha: {waves.alpha_raw:.4f}, Beta: {waves.beta_raw:.4f}, Theta: {waves.theta_raw:.4f}, Delta: {waves.delta_raw:.4f}, Gamma: {waves.gamma_raw:.4f}")
@@ -559,21 +610,37 @@ class SpectrumScreen(QMainWindow):
                 print('Unknown channel')
 
     def __processed_spectrum(self, spectrum, channel):
-        print(f"SpectrumScreen: Spectrum data for {channel}, length: {len(spectrum)}")
-        match channel:
-            case 'O1':
-                self.o1Graph.update_data(spectrum)
-            case 'O2':
-                self.o2Graph.update_data(spectrum)
-            case 'T3':
-                self.t3Graph.update_data(spectrum)
-            case 'T4':
-                self.t4Graph.update_data(spectrum)
-            case _:
-                print('Unknown channel')
+        try:
+            print(f"SpectrumScreen: Spectrum data for {channel}, length: {len(spectrum)}")
+            match channel:
+                case 'O1':
+                    self.o1Graph.update_data(spectrum)
+                case 'O2':
+                    self.o2Graph.update_data(spectrum)
+                case 'T3':
+                    self.t3Graph.update_data(spectrum)
+                case 'T4':
+                    self.t4Graph.update_data(spectrum)
+                case _:
+                    print('Unknown channel')
+        except RuntimeError as e:
+            # Игнорируем ошибки, связанные с уже удалёнными объектами
+            if "wrapped C/C++ object" in str(e):
+                pass
+            else:
+                raise
 
     def __close_screen(self):
         self.__stop_signal()
+        # Очищаем графики перед закрытием экрана
+        if hasattr(self, 'o1Graph'):
+            self.o1Graph.cleanup()
+        if hasattr(self, 'o2Graph'):
+            self.o2Graph.cleanup()
+        if hasattr(self, 't3Graph'):
+            self.t3Graph.cleanup()
+        if hasattr(self, 't4Graph'):
+            self.t4Graph.cleanup()
         stackNavigation.setCurrentWidget(menuScreen)
 
 
@@ -596,6 +663,29 @@ stackNavigation.addWidget(spectrumScreen)
 stackNavigation.setCurrentWidget(menuScreen)
 stackNavigation.show()
 app.exec()
+
+# Очищаем графики перед завершением программы
+try:
+    if 'signalScreen' in globals():
+        if hasattr(signalScreen, 'o1Graph'):
+            signalScreen.o1Graph.cleanup()
+        if hasattr(signalScreen, 'o2Graph'):
+            signalScreen.o2Graph.cleanup()
+        if hasattr(signalScreen, 't3Graph'):
+            signalScreen.t3Graph.cleanup()
+        if hasattr(signalScreen, 't4Graph'):
+            signalScreen.t4Graph.cleanup()
+    if 'spectrumScreen' in globals():
+        if hasattr(spectrumScreen, 'o1Graph'):
+            spectrumScreen.o1Graph.cleanup()
+        if hasattr(spectrumScreen, 'o2Graph'):
+            spectrumScreen.o2Graph.cleanup()
+        if hasattr(spectrumScreen, 't3Graph'):
+            spectrumScreen.t3Graph.cleanup()
+        if hasattr(spectrumScreen, 't4Graph'):
+            spectrumScreen.t4Graph.cleanup()
+except Exception as e:
+    print(f"Ошибка при очистке графиков: {e}")
 
 # Отключаем сенсор только если он не None
 if brain_bit_controller is not None:
