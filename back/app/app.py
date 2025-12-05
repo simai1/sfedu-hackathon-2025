@@ -24,7 +24,7 @@ from app.core.exception_handlers import (
     universal_exception_handler,
 )
 from app.utils.migration import upgrade
-
+from app.core.logger import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,29 +52,28 @@ def create_app():
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="static")
 
     # CORS
-    # app.add_middleware(
-    # CORSMiddleware,
-    # allow_origins=[
-    #     "http://localhost:5173",
-    #     "http://localhost:3001",  
-    #     "https://my-frontend.app",
-    # ],
-    # allow_credentials=True,
-    # allow_methods=["*"],
-    # allow_headers=["*"],
-    # )
+    app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3001",  
+        "https://my-frontend.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    )
 
     @app.middleware("http")
-    async def catch_async(request: Request, call_next):
+    async def log_exceptions(request: Request, call_next):
         try:
             response = await call_next(request)
             return response
         except Exception as exc:
+            logger.exception(f"Unexpected error: {exc}")  # Логируем исключение
             return JSONResponse(
                 content={
-                    "detail": str(exc)
-                    if settings.NODE_ENV != "production"
-                    else "Internal server error",
+                    "detail": str(exc),
                     "error_type": type(exc).__name__,
                 },
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
