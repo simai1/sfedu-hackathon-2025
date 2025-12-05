@@ -1,0 +1,55 @@
+.analysis {
+  background-color: var(--blue-500);
+  padding: 2rem;
+  border-radius: 0.75rem;
+
+  h1 {
+    color: #f3f4f6;
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .chartContainer {
+    margin-bottom: 2rem;
+    height: 500px; // Increased height to accommodate both charts better
+
+    .chartPlaceholder {
+      height: 400px; // Adjusted to match new height
+      background-color: #374151;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      p {
+        color: #d1d5db;
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+
+    .statItem {
+      background-color: #374151;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+
+      h3 {
+        color: #d1d5db;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+
+      p {
+        color: #f3f4f6;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+:root {
+  /* Base colors */
+  --purple-base: 182, 109, 219; /* #b66ddb */
+  --green-base: 186, 239, 88; /* #baef58 */
+  --black-base: 0, 17, 31; /* #00111f */
+  --tifany-base: 0, 72, 82; /* #004852 */
+  --white-base: 255, 255, 255; /* #ffffff */
+  --red-base: 239, 68, 68; /* #ef4444 */
+  --blue-base: 31, 41, 55; /* #1f2937 */
+
+  /* Purple */
+  --purple-100: rgba(var(--purple-base), 0.15);
+  --purple-200: rgba(var(--purple-base), 0.3);
+  --purple-300: rgba(var(--purple-base), 0.5);
+  --purple-400: rgba(var(--purple-base), 0.7);
+  --purple-500: rgba(var(--purple-base), 1);
+
+  /* Green */
+  --green-100: rgba(var(--green-base), 0.15);
+  --green-200: rgba(var(--green-base), 0.3);
+  --green-300: rgba(var(--green-base), 0.5);
+  --green-400: rgba(var(--green-base), 0.7);
+  --green-500: rgba(var(--green-base), 1);
+
+  /* Black */
+  --black-100: rgba(var(--black-base), 0.15);
+  --black-200: rgba(var(--black-base), 0.3);
+  --black-300: rgba(var(--black-base), 0.5);
+  --black-400: rgba(var(--black-base), 0.7);
+  --black-500: rgba(var(--black-base), 1);
+
+  /* Tiffany */
+  --tifany-100: rgba(var(--tifany-base), 0.15);
+  --tifany-200: rgba(var(--tifany-base), 0.3);
+  --tifany-300: rgba(var(--tifany-base), 0.5);
+  --tifany-400: rgba(var(--tifany-base), 0.7);
+  --tifany-500: rgba(var(--tifany-base), 1);
+
+  /* Red */
+  --red-100: rgba(var(--red-base), 0.15);
+  --red-200: rgba(var(--red-base), 0.3);
+  --red-300: rgba(var(--red-base), 0.5);
+  --red-400: rgba(var(--red-base), 0.7);
+  --red-500: rgba(var(--red-base), 1);
+
+  /* White */
+  --white-100: rgba(var(--white-base), 0.15);
+  --white-200: rgba(var(--white-base), 0.3);
+  --white-300: rgba(var(--white-base), 0.5);
+  --white-400: rgba(var(--white-base), 0.7);
+  --white-500: rgba(var(--white-base), 1);
+
+  /* Blue */
+  --blue-100: rgba(var(--blue-base), 0.15);
+  --blue-200: rgba(var(--blue-base), 0.3);
+  --blue-300: rgba(var(--blue-base), 0.5);
+  --blue-400: rgba(var(--blue-base), 0.7);
+  --blue-500: rgba(var(--blue-base), 1);
+
+  --bg: var(--black-500);
+  --text: var(--white-500);
+  --img-filter: invert(0%);
+  --main-black: var(--black-500);
+}

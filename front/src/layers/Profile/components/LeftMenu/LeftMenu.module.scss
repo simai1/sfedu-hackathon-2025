@@ -1,0 +1,53 @@
+.leftMenu {
+  width: 250px;
+  background-color: var(--blue-500);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+
+  nav {
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      .menuItem {
+        margin-bottom: 0.5rem;
+
+        .link {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          color: #d1d5db;
+          text-decoration: none;
+          border-radius: 0.5rem;
+          transition: all 0.2s ease;
+
+          .icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .label {
+            font-size: 1rem;
+          }
+
+          &:hover {
+            background-color: #374151;
+            color: #f3f4f6;
+          }
+
+          &.active {
+            background-color: #a78bfa;
+            color: #111827;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+}

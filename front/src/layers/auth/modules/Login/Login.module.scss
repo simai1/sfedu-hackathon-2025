@@ -1,0 +1,139 @@
+.loginPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 0.75rem;
+  background-color: var(--blue-500);
+  padding: 2rem;
+  color: var(--text);
+  border: 1px solid #374151;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.75rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--purple-500);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    color: #d1d5db;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #4b5563;
+  outline: 0;
+  background-color: var(--black-500);
+  padding: 0.875rem 1.125rem;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--purple-500);
+    box-shadow: 0 0 0 3px rgba(var(--purple-base), 0.3);
+  }
+
+  &.error {
+    border-color: var(--red-500);
+  }
+}
+
+.errorMessage {
+  color: var(--red-500);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.submitButton {
+  display: block;
+  width: 100%;
+  background-color: var(--purple-500);
+  padding: 0.875rem;
+  text-align: center;
+  color: var(--black-500);
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 0.5rem;
+
+  &:hover {
+    background-color: #8b5cf6;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.forgotPassword {
+  text-align: right;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.forgotLink {
+  color: var(--purple-500);
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.switchText {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #9ca3af;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #374151;
+}
+
+.switchButton {
+  background: none;
+  border: none;
+  color: var(--purple-500);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  &:hover {
+    color: #8b5cf6;
+  }
+}
