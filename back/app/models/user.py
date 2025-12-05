@@ -1,12 +1,14 @@
 import datetime
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base
-
+if TYPE_CHECKING:
+    from app.models.pair_token import PairTokenModel
 
 
 class UserModel(Base):
@@ -24,6 +26,8 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    users_pair_tokens: Mapped[list["PairTokenModel"]] = relationship(back_populates="user")
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         server_default=text("TIMEZONE('utc', now())"), nullable=False

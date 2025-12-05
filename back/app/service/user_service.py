@@ -6,7 +6,7 @@ from app.adapters.sqlalchemy.user_repo import UserRepo
 from app.service.token_service import TokenService
 from app.core.errors import NotFoundError
 from app.domains.auth import AuthUser
-from app.core.errors import NotFoundError, InvalidDataError
+from app.core.errors import InvalidDataError
 
 class UserService():
     def __init__(self, repo: UserRepo, token_service: TokenService):
