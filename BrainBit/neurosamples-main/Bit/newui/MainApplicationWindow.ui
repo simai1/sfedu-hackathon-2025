@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainApplicationWindow</class>
+ <widget class="QMainWindow" name="MainApplicationWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string></string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: &quot;Segoe UI&quot;, &quot;Roboto&quot;, &quot;Helvetica Neue&quot;, sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: #B66DDB;
+	border-radius: 24px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+}
+
+QPushButton:hover {
+	background-color: #A05CC4;
+}
+
+QPushButton:pressed {
+	background-color: #8A4BB0;
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Top Bar */
+QToolBar#topBar {
+	background-color: #00111F;
+	border: none;
+	border-bottom: 1px solid #FFFFFF;
+	spacing: 16px;
+}
+
+QToolButton {
+	background-color: transparent;
+	border: none;
+	border-radius: 8px;
+	color: #FFFFFF;
+	font-size: 14px;
+	height: 36px;
+	margin: 8px;
+	padding: 0 16px;
+}
+
+QToolButton:hover {
+	background-color: #00223F;
+}
+
+/* Status Bar */
+QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #FFFFFF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}
+
+/* Stacked Widget */
+QStackedWidget {
+	background-color: transparent;
+}
+</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <!-- Screens will be added here dynamically -->
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="topBar">
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionDisconnect"/>
+   <addaction name="separator"/>
+   <addaction name="actionCalibration"/>
+   <addaction name="actionMonopolarCalibration"/>
+   <addaction name="actionToken"/>
+   <addaction name="separator"/>
+   <addaction name="actionExit"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionDisconnect">
+   <property name="text">
+    <string>Отключить устройство</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Выйти</string>
+   </property>
+  </action>
+  <action name="actionCalibration">
+   <property name="text">
+    <string>Биполярная калибровка</string>
+   </property>
+  </action>
+  <action name="actionMonopolarCalibration">
+   <property name="text">
+    <string>Монополярная калибровка</string>
+   </property>
+  </action>
+  <action name="actionToken">
+   <property name="text">
+    <string>Перейти к токену</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
