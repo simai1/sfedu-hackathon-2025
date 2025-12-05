@@ -6,28 +6,222 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>597</width>
-    <height>708</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Спектр</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QPushButton {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
+	border-radius: 24px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border: 2px solid #B66DDB;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #A05CC4, stop: 1 #7A3BA0);
+	border: 2px solid #A05CC4;
+	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+}
+
+QPushButton:pressed {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #8A4BB0, stop: 1 #6A2B90);
+	border: 2px solid #8A4BB0;
+	transform: translateY(2px);
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 28px;
+	font-weight: 600;
+	margin: 24px 0;
+	text-align: center;
+	color: #FFFFFF;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background-color: #00223F;
+	border-radius: 12px;
+	font-size: 18px;
+	padding: 0 20px;
+	min-width: 40px;
+}
+
+QPushButton#backButton:hover {
+	background-color: #00335F;
+	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+}
+
+/* Start Button */
+QPushButton#signalButton {
+	margin: 0 32px 24px 32px;
+}
+
+/* Tab Widget */
+QTabWidget::pane {
+	border: 2px solid #4DA1FF;
+	border-radius: 16px;
+	margin: 20px 32px;
+	background-color: rgba(0, 34, 63, 0.5);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+QTabWidget::tab-bar {
+	alignment: center;
+}
+
+QTabBar::tab {
+	background-color: #00223F;
+	border: 2px solid #4DA1FF;
+	border-bottom: none;
+	border-top-left-radius: 12px;
+	border-top-right-radius: 12px;
+	color: #FFFFFF;
+	font-size: 16px;
+	font-weight: 500;
+	padding: 16px 32px;
+	margin: 4px;
+	transition: all 0.3s ease;
+}
+
+QTabBar::tab:selected {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
+	border-color: #B66DDB;
+	font-weight: 600;
+}
+
+QTabBar::tab:hover:!selected {
+	background-color: #00335F;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Data Grids */
+QGridLayout {
+	margin: 24px;
+	spacing: 20px;
+}
+
+/* Grid Headers */
+QLabel[gridHeader="true"] {
+	font-weight: 600;
+	font-size: 18px;
+	color: #4DA1FF;
+	text-align: center;
+	background-color: rgba(77, 161, 255, 0.1);
+	border-radius: 8px;
+	padding: 12px;
+}
+
+/* Value Labels */
+QLabel[valueLabel="true"] {
+	font-weight: 600;
+	font-size: 18px;
+	color: #20C997;
+	text-align: center;
+	background-color: rgba(0, 34, 63, 0.7);
+	border-radius: 12px;
+	padding: 12px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Graph Containers */
+QVBoxLayout[graphLayout="true"] {
+	background-color: rgba(0, 34, 63, 0.7);
+	border-radius: 16px;
+	margin: 16px;
+	padding: 16px;
+	box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Status Bar */
+QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item alignment="Qt::AlignTop">
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Спектральный анализ биосигналов</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+      <property name="leftMargin">
+       <number>32</number>
+      </property>
+      <property name="rightMargin">
+       <number>32</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>48</height>
+         </size>
+        </property>
         <property name="text">
-         <string>&lt;</string>
+         <string>← Назад</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="signalButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>60</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Старт</string>
+         <string>Начать спектральный анализ</string>
         </property>
        </widget>
       </item>
@@ -38,17 +232,35 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>500</height>
+       </size>
+      </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>O1</string>
+        <string>Канал O1</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,0,0,0">
+          <property name="horizontalSpacing">
+           <number>15</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>15</number>
+          </property>
           <item row="3" column="2">
            <widget class="QLabel" name="o1_theta_percent">
             <property name="text">
              <string>0.00%</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="property" stdset="0">
+             <string>valueLabel=true</string>
             </property>
            </widget>
           </item>
@@ -84,6 +296,12 @@
            <widget class="QLabel" name="label_24">
             <property name="text">
              <string>Альфа</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="property" stdset="0">
+             <string>gridHeader=true</string>
             </property>
            </widget>
           </item>
@@ -165,7 +383,11 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="6">
-           <layout class="QVBoxLayout" name="o1_graphLayout"/>
+           <layout class="QVBoxLayout" name="o1_graphLayout">
+            <property name="property" stdset="0">
+             <string>graphLayout=true</string>
+            </property>
+           </layout>
           </item>
          </layout>
         </item>
@@ -173,11 +395,17 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>O2</string>
+        <string>Канал O2</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0">
+          <property name="horizontalSpacing">
+           <number>15</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>15</number>
+          </property>
           <item row="3" column="2">
            <widget class="QLabel" name="o2_theta_percent">
             <property name="text">
@@ -298,7 +526,11 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="6">
-           <layout class="QVBoxLayout" name="o2_graphLayout"/>
+           <layout class="QVBoxLayout" name="o2_graphLayout">
+            <property name="property" stdset="0">
+             <string>graphLayout=true</string>
+            </property>
+           </layout>
           </item>
          </layout>
         </item>
@@ -306,11 +538,17 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>T3</string>
+        <string>Канал T3</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0,0">
+          <property name="horizontalSpacing">
+           <number>15</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>15</number>
+          </property>
           <item row="1" column="2">
            <widget class="QLabel" name="label_13">
             <property name="text">
@@ -368,7 +606,11 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="6">
-           <layout class="QVBoxLayout" name="t3_graphLayout"/>
+           <layout class="QVBoxLayout" name="t3_graphLayout">
+            <property name="property" stdset="0">
+             <string>graphLayout=true</string>
+            </property>
+           </layout>
           </item>
           <item row="2" column="3">
            <widget class="QLabel" name="t3_alpha_raw">
@@ -439,11 +681,17 @@
       </widget>
       <widget class="QWidget" name="t4Tab">
        <attribute name="title">
-        <string>T4</string>
+        <string>Канал T4</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0">
+          <property name="horizontalSpacing">
+           <number>15</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>15</number>
+          </property>
           <item row="3" column="2">
            <widget class="QLabel" name="t4_theta_percent">
             <property name="text">
@@ -564,7 +812,11 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="6">
-           <layout class="QVBoxLayout" name="t4_graphLayout"/>
+           <layout class="QVBoxLayout" name="t4_graphLayout">
+            <property name="property" stdset="0">
+             <string>graphLayout=true</string>
+            </property>
+           </layout>
           </item>
          </layout>
         </item>
@@ -574,7 +826,20 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="styleSheet">
+    <string notr="true">QStatusBar {
+	background-color: #00111F;
+	border: none;
+	border-top: 1px solid #4DA1FF;
+}
+
+QStatusBar QLabel {
+	color: #FFFFFF;
+	font-size: 14px;
+}</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
