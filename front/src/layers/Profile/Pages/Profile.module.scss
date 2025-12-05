@@ -1,0 +1,15 @@
+.Profile {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+
+  .content {
+    display: flex;
+    gap: 2rem;
+    flex: 1;
+
+    .mainContent {
+      flex: 1;
+    }
+  }
+}

@@ -1,10 +1,9 @@
 .Header {
   position: fixed;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   z-index: 1000;
-
+  width: 100%;
+  box-sizing: border-box;
   :root {
     --linear-ease: linear(
       0,
@@ -40,212 +39,157 @@
     --color-4: #d94fd5;
   }
 
-  .gooey-nav-container {
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 100vw;
-    padding: 10px 20px;
-  }
-
-  .gooey-nav-container nav {
+  .headerContainer {
     display: flex;
-    position: relative;
-    transform: translate3d(0, 0, 0.01px);
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 30px;
+    box-sizing: border-box;
   }
 
-  .gooey-nav-container nav ul {
-    display: flex;
-    gap: 2em;
-    list-style: none;
-    padding: 0 1em;
-    margin: 0;
-    position: relative;
-    z-index: 3;
-    color: white;
-    text-shadow: 0 1px 1px hsl(205deg 30% 10% / 0.2);
-  }
-
-  .gooey-nav-container nav ul li {
-    border-radius: 100vw;
-    position: relative;
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #f3f4f6;
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease,
-      box-shadow 0.3s ease;
-    box-shadow: 0 0 0.5px 1.5px transparent;
-    color: white;
+    z-index: 1001;
   }
 
-  .gooey-nav-container nav ul li a {
-    display: inline-block;
-    padding: 0.6em 1em;
-    text-decoration: none;
-    color: inherit;
-    font-weight: 500;
-  }
+  .HeaderContainerInner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    background: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    width: fit-content;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
-  .gooey-nav-container nav ul li:focus-within:has(:focus-visible) {
-    box-shadow: 0 0 0.5px 1.5px white;
-  }
+    nav {
+      ul {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
 
-  .gooey-nav-container nav ul li::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    background: white;
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.3s ease;
-    z-index: -1;
-  }
+        li {
+          position: relative;
+          margin: 0 1rem;
 
-  .gooey-nav-container nav ul li.active {
-    color: black;
-    text-shadow: none;
-  }
+          a {
+            position: relative;
+            display: block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: #d1d5db;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            z-index: 2;
 
-  .gooey-nav-container nav ul li.active::after {
-    opacity: 1;
-    transform: scale(1);
-  }
+            &:hover {
+              color: #f3f4f6;
+            }
+          }
 
-  .gooey-nav-container .effect {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    opacity: 1;
-    pointer-events: none;
-    display: grid;
-    place-items: center;
-    z-index: 1;
-  }
+          &.active a {
+            color: #f3f4f6;
+          }
+        }
+      }
+    }
 
-  .gooey-nav-container .effect.text {
-    transition: color 0.3s ease;
-  }
+    .effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
 
-  .gooey-nav-container .effect.text.active {
-    color: black;
-  }
+      &.text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.3s ease;
 
-  .gooey-nav-container .effect.filter {
-    filter: blur(7px) contrast(100) blur(0);
-    mix-blend-mode: lighten;
-  }
+        &.active {
+          opacity: 1;
+        }
+      }
 
-  .gooey-nav-container .effect.filter::before {
-    content: "";
-    position: absolute;
-    inset: -75px;
-    z-index: -2;
-    background: black;
-  }
-
-  .gooey-nav-container .effect.filter::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: white;
-    transform: scale(0);
-    opacity: 0;
-    z-index: -1;
-    border-radius: 100vw;
-  }
-
-  .gooey-nav-container .effect.active::after {
-    animation: pill 0.3s ease both;
-  }
-
-  @keyframes pill {
-    to {
-      transform: scale(1);
-      opacity: 1;
+      &.filter {
+        filter: url("#goo");
+      }
     }
   }
 
-  .particle,
-  .point {
-    display: block;
-    opacity: 0;
-    width: 20px;
-    height: 20px;
-    border-radius: 100%;
-    transform-origin: center;
+  .profileIcon {
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.3s ease;
+    z-index: 1001;
+    background-color: var(--bg);
+    padding: 10px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-self: center;
+    align-items: center;
+    &:hover {
+      color: #f3f4f6;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(var(--purple-base), 0.3);
+    }
   }
 
   .particle {
-    --time: 5s;
-    position: absolute;
-    top: calc(50% - 8px);
-    left: calc(50% - 8px);
-    animation: particle calc(var(--time)) ease 1 -350ms;
-  }
+    --start-x: 0px;
+    --start-y: 0px;
+    --end-x: 0px;
+    --end-y: 0px;
+    --time: 0ms;
+    --scale: 1;
+    --color: white;
+    --rotate: 0deg;
 
-  .point {
-    background: var(--color);
-    opacity: 1;
-    animation: point calc(var(--time)) ease 1 -350ms;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: particle var(--time) ease-out forwards;
+
+    .point {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--color);
+      transform: scale(var(--scale)) rotate(var(--rotate));
+    }
   }
 
   @keyframes particle {
     0% {
-      transform: rotate(0deg)
-        translate(calc(var(--start-x)), calc(var(--start-y)));
-      opacity: 1;
-      animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-    }
-
-    70% {
-      transform: rotate(calc(var(--rotate) * 0.5))
-        translate(calc(var(--end-x) * 1.2), calc(var(--end-y) * 1.2));
-      opacity: 1;
-      animation-timing-function: ease;
-    }
-
-    85% {
-      transform: rotate(calc(var(--rotate) * 0.66))
-        translate(calc(var(--end-x)), calc(var(--end-y)));
+      transform: translate(var(--start-x), var(--start-y));
       opacity: 1;
     }
-
     100% {
-      transform: rotate(calc(var(--rotate) * 1.2))
-        translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5));
-      opacity: 1;
-    }
-  }
-
-  @keyframes point {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-      animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-    }
-
-    25% {
-      transform: scale(calc(var(--scale) * 0.25));
-    }
-
-    38% {
-      opacity: 1;
-    }
-
-    65% {
-      transform: scale(var(--scale));
-      opacity: 1;
-      animation-timing-function: ease;
-    }
-
-    85% {
-      transform: scale(var(--scale));
-      opacity: 1;
-    }
-
-    100% {
-      transform: scale(0);
+      transform: translate(var(--end-x), var(--end-y));
       opacity: 0;
     }
   }

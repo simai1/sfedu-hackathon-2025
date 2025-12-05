@@ -1,11 +1,16 @@
-import styles from "./ButtonBlack.module.scss";
+import styles from "./ButtonBlack.module.scss"
 
-function ButtonBlack({ text }: { text: string }) {
-  return (
-    <div className={styles.ButtonBlack}>
-      <button>{text}</button>
-    </div>
-  );
+interface ButtonBlackProps {
+  text: string
+  onClick?: () => void
 }
 
-export default ButtonBlack;
+function ButtonBlack({ text, onClick }: ButtonBlackProps) {
+  return (
+    <div className={styles.ButtonBlack}>
+      <button onClick={onClick}>{text}</button>
+    </div>
+  )
+}
+
+export default ButtonBlack

@@ -1,9 +1,10 @@
 import { useState } from "react"
 import type { ChangeEvent, FormEvent } from "react"
+import { useNavigate } from "react-router-dom"
 
 import ButtonBlack from "../../core/components/ButtonBlack/ButtonBlack"
 import styles from "./MainPage.module.scss"
-import photoMan from "img/photos/men.svg"
+import photoMan from "img/photos/men2.svg"
 import setka from "img/photos/setka.svg"
 import block_second from "img/photos/block_second.png"
 import { motion } from "framer-motion"
@@ -16,6 +17,7 @@ import graf from "img/photos/graf.png"
 import graf2 from "img/photos/graf2.png"
 import graf3 from "img/photos/graf3.png"
 import Header from "../../core/components/Header/Header"
+import { useUserStore } from "../../store/userStore"
 
 function MainPage() {
   const [formData, setFormData] = useState({
@@ -23,6 +25,8 @@ function MainPage() {
     email: "",
     question: "",
   })
+  const { token } = useUserStore()
+  const navigate = useNavigate()
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -46,13 +50,20 @@ function MainPage() {
     })
   }
 
+  const handleStartClick = () => {
+    if (token) {
+      navigate("/profile")
+    } else {
+      navigate("/authorization")
+    }
+  }
+
   return (
     <div className={styles.MainPage}>
       <Header
         items={[
           { label: "Главная", href: "#home" },
           { label: "О нас", href: "#about" },
-          { label: "Портфолио", href: "#portfolio" },
           { label: "Контакты", href: "#contact" },
         ]}
       />
@@ -64,6 +75,7 @@ function MainPage() {
         baseScale={0.9}
       >
         <motion.div
+          id="home"
           className={styles.head}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -80,7 +92,7 @@ function MainPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Нейроаналиьика
+              Нейроаналитика
             </motion.h1>
             <motion.h2
               initial={{ y: -50, opacity: 0 }}
@@ -103,7 +115,7 @@ function MainPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 1 }}
             >
-              <ButtonBlack text="НАЧАТЬ" />
+              <ButtonBlack text="НАЧАТЬ" onClick={handleStartClick} />
             </motion.div>
           </motion.div>
           <motion.div
@@ -126,6 +138,7 @@ function MainPage() {
           />
         </motion.div>
         <motion.div
+          id="about"
           className={styles.blok_second}
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -141,7 +154,7 @@ function MainPage() {
                 Система BrainBit анализирует мозговую активность зрителей и
                 выявляет, что захватывает внимание
               </p>
-              <ButtonBlack text="Попробовать" />
+              <ButtonBlack text="Попробовать" onClick={handleStartClick} />
             </div>
             <div className={styles.box_right}>
               <img src={graf} alt="graf" />
@@ -155,7 +168,7 @@ function MainPage() {
                 Нейросеть определяет моменты падения внимания и помогает
                 улучшить структуру видео для удержания зрителе
               </p>
-              <ButtonBlack text="Попробовать" />
+              <ButtonBlack text="Попробовать" onClick={handleStartClick} />
             </div>
             <div className={styles.box_right}>
               <img src={graf2} alt="graf" />
@@ -169,61 +182,85 @@ function MainPage() {
                 BrainBit позволяет тестировать ролики до публикации, показывая,
                 какие фрагменты вызывают наибольшую вовлечённость
               </p>
-              <ButtonBlack text="Попробовать" />
+              <ButtonBlack text="Попробовать" onClick={handleStartClick} />
             </div>
             <div className={styles.box_right}>
               <img src={graf3} alt="graf" />
             </div>
           </div>
         </ScrollStackItem>
+
         <ScrollStackItem>
-          <div className={styles.blok_bottom}>
-            <div className={styles.infoSection}>
-              <h1>Остались вопросы?</h1>
+          <div id="contact" className={styles.contactsSection}>
+            <div className={styles.contactsInfo}>
+              <h1>Контактная информация</h1>
               <p>
-                Мы расскажем, как BrainBit поможет улучшить ваш контент и
-                увеличить вовлечённость аудитории.
+                Свяжитесь с нами любым удобным способом. Мы всегда рады помочь!
               </p>
+
+              <div className={styles.contactsGrid}>
+                <div className={styles.contactsItem}>
+                  <h3>Адрес</h3>
+                  <p>г. Ростов-на-Дону, ул. Пушкинская, 123</p>
+                </div>
+                <div className={styles.contactsItem}>
+                  <h3>Телефон</h3>
+                  <p>+7 (863) 123-45-67</p>
+                </div>
+                <div className={styles.contactsItem}>
+                  <h3>Email</h3>
+                  <p>info@brainbit.ru</p>
+                </div>
+              </div>
             </div>
-            <div className={styles.formSection}>
-              <form onSubmit={handleSubmit} className={styles.questionForm}>
-                <div className={styles.formGroup}>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Ваше имя"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className={styles.formInput}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Ваш email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={styles.formInput}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <textarea
-                    name="question"
-                    placeholder="Ваш вопрос"
-                    value={formData.question}
-                    onChange={handleInputChange}
-                    className={styles.formTextarea}
-                    rows={4}
-                    required
-                  />
-                </div>
-                <button type="submit" className={styles.submitButton}>
-                  Отправить
-                </button>
-              </form>
+
+            <div className={styles.contactsFormWrapper}>
+              <div className={styles.questionContent}>
+                <h2>Остались вопросы?</h2>
+                <p>
+                  Мы готовы ответить на все ваши вопросы о системе BrainBit и
+                  помочь вам начать работу.
+                </p>
+
+                <form onSubmit={handleSubmit} className={styles.contactsForm}>
+                  <div className={styles.formGroup}>
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Ваше имя"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Ваш email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <textarea
+                      name="question"
+                      placeholder="Ваш вопрос"
+                      rows={4}
+                      value={formData.question}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" className={styles.submitButton}>
+                    Отправить
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </ScrollStackItem>

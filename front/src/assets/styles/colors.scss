@@ -6,6 +6,7 @@
   --tifany-base: 0, 72, 82; /* #004852 */
   --white-base: 255, 255, 255; /* #ffffff */
   --red-base: 239, 68, 68; /* #ef4444 */
+  --blue-base: 31, 41, 55; /* #1f2937 */
 
   /* Purple */
   --purple-100: rgba(var(--purple-base), 0.15);
@@ -48,6 +49,13 @@
   --white-300: rgba(var(--white-base), 0.5);
   --white-400: rgba(var(--white-base), 0.7);
   --white-500: rgba(var(--white-base), 1);
+
+  /* Blue */
+  --blue-100: rgba(var(--blue-base), 0.15);
+  --blue-200: rgba(var(--blue-base), 0.3);
+  --blue-300: rgba(var(--blue-base), 0.5);
+  --blue-400: rgba(var(--blue-base), 0.7);
+  --blue-500: rgba(var(--blue-base), 1);
 
   --bg: var(--black-500);
   --text: var(--white-500);

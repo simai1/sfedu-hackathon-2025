@@ -1,0 +1,209 @@
+.profileMain {
+  background-color: var(--blue-500);
+  padding: 2rem;
+  border-radius: 0.75rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      color: #f3f4f6;
+      font-size: 1.75rem;
+    }
+
+    .editButton {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #7e6bc9; // More muted purple
+      color: #f3f4f6;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #6b5bb3; // Slightly darker on hover
+      }
+    }
+
+    .actionButtons {
+      display: flex;
+      gap: 0.5rem;
+
+      .saveButton,
+      .cancelButton {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .saveButton {
+        background-color: #059669; // Darker, more muted green
+        color: #f3f4f6;
+
+        &:hover {
+          background-color: #047857; // Slightly darker on hover
+        }
+      }
+
+      .cancelButton {
+        background-color: #b91c1c; // Darker, more muted red
+        color: #f3f4f6;
+
+        &:hover {
+          background-color: #991b1b; // Slightly darker on hover
+        }
+      }
+    }
+  }
+
+  .profileInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .infoItem {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        color: #9ca3af;
+        font-weight: 600;
+      }
+
+      span {
+        color: #f3f4f6;
+        font-size: 1.1rem;
+      }
+
+      .aboutText {
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+
+      .editInput,
+      .editTextarea {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #4b5563;
+        background-color: #111827;
+        color: #f3f4f6;
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #a78bfa;
+          box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+        }
+      }
+
+      .editTextarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+    }
+  }
+
+  .apiTokenContainer {
+    background-color: #111827;
+    border: 1px solid #4b5563;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+
+    h2 {
+      color: #f3f4f6;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tokenDescription {
+      color: #9ca3af;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .tokenField {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+
+      .tokenInput {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #4b5563;
+        background-color: var(--blue-500);
+        color: #f3f4f6;
+        font-family: monospace;
+        font-size: 1rem;
+        letter-spacing: 1px;
+
+        &:focus {
+          outline: none;
+          border-color: #a78bfa;
+          box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+        }
+      }
+
+      .tokenActions {
+        display: flex;
+        gap: 0.5rem;
+
+        .tokenButton {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          background-color: var(--blue-500);
+          border: 1px solid #4b5563;
+          border-radius: 0.5rem;
+          color: #f3f4f6;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: #374151;
+            border-color: #6b7280;
+          }
+        }
+      }
+    }
+
+    .tokenButtons {
+      .refreshButton {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: #7e6bc9; // More muted purple to match edit button
+        color: #f3f4f6;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #6b5bb3; // Slightly darker on hover
+        }
+      }
+    }
+  }
+}

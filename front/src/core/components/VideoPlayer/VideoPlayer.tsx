@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react"
-import { Player } from "video-react"
+import ReactPlayer from "react-player"
 import styles from "./VideoPlayer.module.scss"
 
 const VideoPlayer: React.FC = () => {
-  const playerRef = useRef<any | null>(null)
+  const playerRef = useRef<any>(null)
   const [videoURL, setVideoURL] = useState<string | null>(null)
   const [screenshots, setScreenshots] = useState<string[]>([])
   const [fileName, setFileName] = useState<string>("")
@@ -43,20 +43,22 @@ const VideoPlayer: React.FC = () => {
     if (!playerRef.current) return
 
     try {
-      const videoElement = playerRef.current.video.video as HTMLVideoElement
+      // Получаем доступ к видео элементу через ref
+      const playerElement =
+        playerRef.current.getInternalPlayer() as HTMLVideoElement
 
       if (
-        !videoElement ||
-        !videoElement.videoWidth ||
-        !videoElement.videoHeight
+        !playerElement ||
+        !playerElement.videoWidth ||
+        !playerElement.videoHeight
       ) {
         setError("Видео не готово для создания скриншота")
         return
       }
 
       const canvas = document.createElement("canvas")
-      canvas.width = videoElement.videoWidth
-      canvas.height = videoElement.videoHeight
+      canvas.width = playerElement.videoWidth
+      canvas.height = playerElement.videoHeight
 
       const ctx = canvas.getContext("2d")
       if (!ctx) {
@@ -64,7 +66,7 @@ const VideoPlayer: React.FC = () => {
         return
       }
 
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(playerElement, 0, 0, canvas.width, canvas.height)
 
       const img = canvas.toDataURL("image/png")
       setScreenshots((prev) => [...prev, img])
@@ -86,10 +88,10 @@ const VideoPlayer: React.FC = () => {
 
         {videoURL && (
           <div style={{ marginTop: "10px" }}>
-            <Player
+            <ReactPlayer
               ref={playerRef}
-              src={videoURL}
-              fluid={false}
+              // url={videoURL}
+              controls
               width={640}
               height={360}
             />
