@@ -16,6 +16,11 @@ export const serverStatic = getServerUrl() + "/static"
 const api = axios.create({
   baseURL: server,
   withCredentials: true,
+  maxRedirects: 5, // Разрешаем следовать редиректам
+  validateStatus: (status) => {
+    // Разрешаем обработку статусов 200-399 (включая редиректы)
+    return status >= 200 && status < 400
+  },
 })
 
 api.interceptors.request.use(

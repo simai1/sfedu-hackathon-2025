@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import styles from "./Login.module.scss"
 import { loginEndpoint } from "../../../../api/login"
 import { useUserStore } from "../../../../store/userStore"
@@ -9,6 +10,7 @@ interface LoginProps {
 }
 
 const Login = ({ onSwitchToRegister }: LoginProps) => {
+  const navigate = useNavigate()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState({
@@ -66,9 +68,13 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
         const response = await loginEndpoint({ username, password })
         console.log("Login response:", response)
 
-        // Set token and user data in the store
+        // Set token and user data in the store (persist middleware автоматически сохранит в localStorage)
         setToken(response.token)
-        setUser(response.user)
+        setUser({
+          id: response.id,
+          name: response.name,
+          email: response.email,
+        })
 
         // Clear form and errors
         setUsername("")
@@ -77,6 +83,10 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
           username: "",
           password: "",
         })
+
+        // Редирект в профиль
+        toast.success("Успешный вход!")
+        navigate("/profile")
       } catch (error: any) {
         console.error("Login error:", error)
         const errorMessage =

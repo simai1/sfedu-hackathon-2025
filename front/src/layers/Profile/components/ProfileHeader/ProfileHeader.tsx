@@ -3,16 +3,23 @@ import { Copy, Wifi, WifiOff } from "lucide-react"
 import styles from "./ProfileHeader.module.scss"
 import { User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useUserStore } from "../../../../store/userStore"
+import { usePairToken } from "../../../../hooks/usePairToken"
+
 function ProfileHeader() {
   const [copied, setCopied] = useState(false)
   const isConnected = true // В реальном приложении это будет состояние подключения
 
-  const apiToken = "sk-abcdefgh-ijklmnop-qrstuvwx-yz123456"
+  const { user } = useUserStore()
+  // Используем React Query для получения токена (автоматически обновится при изменении)
+  const { data: apiToken = "" } = usePairToken()
 
   const handleCopyToken = () => {
-    navigator.clipboard.writeText(apiToken)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (apiToken) {
+      navigator.clipboard.writeText(apiToken)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   const navigate = useNavigate()
@@ -29,8 +36,8 @@ function ProfileHeader() {
           <User size={40} />
         </div>
         <div className={styles.userDetails}>
-          <h3 className={styles.userName}>Иван Иванов</h3>
-          <p className={styles.userEmail}>ivan@example.com</p>
+          <h3 className={styles.userName}>{user?.name || "Пользователь"}</h3>
+          <p className={styles.userEmail}>{user?.email || ""}</p>
         </div>
       </div>
 
@@ -39,7 +46,7 @@ function ProfileHeader() {
           <span className={styles.tokenLabel}>API Токен:</span>
           <div className={styles.tokenField}>
             <span className={styles.tokenValue}>
-              {apiToken.substring(0, 12)}...
+              {apiToken ? `${apiToken.substring(0, 12)}...` : "Нет токена"}
             </span>
             <button
               className={styles.copyButton}

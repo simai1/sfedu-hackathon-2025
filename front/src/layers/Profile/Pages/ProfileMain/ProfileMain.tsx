@@ -1,20 +1,40 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Edit, Save, X, Copy, RefreshCw, Eye, EyeOff } from "lucide-react"
 import styles from "./ProfileMain.module.scss"
+import { useUserStore } from "../../../../store/userStore"
+import { usePairToken, useGeneratePairToken } from "../../../../hooks/usePairToken"
 
 function ProfileMain() {
+  const { user, setUser } = useUserStore()
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
-    name: "Иван Иванов",
-    email: "ivan@example.com",
+    name: user?.name || "",
+    email: user?.email || "",
     registrationDate: "01.01.2023",
   })
 
-  const [apiToken, setApiToken] = useState(
-    "sk-abcdefgh-ijklmnop-qrstuvwx-yz123456"
-  )
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || "",
+        email: user.email || "",
+        registrationDate: "01.01.2023",
+      })
+    }
+  }, [user])
+
   const [showToken, setShowToken] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Используем React Query для получения токена
+  const {
+    data: apiToken = "",
+    isLoading: isLoadingToken,
+    error: tokenError,
+  } = usePairToken()
+
+  // Используем React Query для генерации нового токена
+  const generateTokenMutation = useGeneratePairToken()
 
   const handleEdit = () => {
     setIsEditing(true)
@@ -27,6 +47,13 @@ function ProfileMain() {
   const handleSave = () => {
     // Здесь будет логика сохранения данных
     console.log("Saving profile data:", profileData)
+    if (user) {
+      setUser({
+        ...user,
+        name: profileData.name,
+        email: profileData.email,
+      })
+    }
     setIsEditing(false)
   }
 
@@ -44,14 +71,8 @@ function ProfileMain() {
   }
 
   const handleRefreshToken = () => {
-    // Генерируем новый токен (в реальном приложении это будет API вызов)
-    const newToken =
-      "sk-" +
-      Math.random().toString(36).substring(2, 15) +
-      "-" +
-      Math.random().toString(36).substring(2, 15)
-    setApiToken(newToken)
     setCopied(false)
+    generateTokenMutation.mutate()
   }
 
   const toggleTokenVisibility = () => {
@@ -127,9 +148,14 @@ function ProfileMain() {
         <div className={styles.tokenField}>
           <input
             type={showToken ? "text" : "password"}
-            value={apiToken}
+            value={
+              isLoadingToken || generateTokenMutation.isPending
+                ? "Загрузка..."
+                : apiToken
+            }
             readOnly
             className={styles.tokenInput}
+            disabled={isLoadingToken || generateTokenMutation.isPending}
           />
           <div className={styles.tokenActions}>
             <button
@@ -149,10 +175,25 @@ function ProfileMain() {
           </div>
         </div>
 
+        {(tokenError || generateTokenMutation.isError) && (
+          <p className={styles.tokenError} style={{ color: "red", marginTop: "10px" }}>
+            {tokenError
+              ? "Не удалось загрузить токен"
+              : generateTokenMutation.isError
+              ? "Не удалось сгенерировать токен"
+              : ""}
+          </p>
+        )}
         <div className={styles.tokenButtons}>
-          <button className={styles.refreshButton} onClick={handleRefreshToken}>
+          <button
+            className={styles.refreshButton}
+            onClick={handleRefreshToken}
+            disabled={isLoadingToken || generateTokenMutation.isPending}
+          >
             <RefreshCw size={18} />
-            Обновить токен
+            {isLoadingToken || generateTokenMutation.isPending
+              ? "Обновление..."
+              : "Обновить токен"}
           </button>
         </div>
       </div>
