@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form
 from app.composites.auth_composite import get_controller
 from app.adapters.rest.v1.controllers.auth import AuthController
 from app.domains.user import CreateUser, ValidateUser
+from back.app.domains.auth import AuthUser
 
 router = APIRouter()
 
-@router.post("/login")
+@router.post("/login", response_model=AuthUser)
 async def post_login(
     email: str = Form(...),
     password: str = Form(...),
@@ -14,7 +15,7 @@ async def post_login(
     validate_user = ValidateUser(email=email, password=password)
     return await controller.login(validate_user)
 
-@router.post("/register")
+@router.post("/register", response_model=AuthUser)
 async def register(
     email: str = Form(...),
     password: str = Form(...),
