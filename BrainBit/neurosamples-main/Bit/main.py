@@ -16,7 +16,7 @@ from ui.plots import SpectrumPlot, SignalPlot
 class MenuScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loadUi("ui/MenuScreenRuUI.ui", self)
+        loadUi("ui/MenuScreenWithEmulatorUI.ui", self)
         brain_bit_controller.sensorConnectionState.connect(self.is_sensor_connected)
         self.toResistButton.setEnabled(False)
         self.toSignalButton.setEnabled(False)

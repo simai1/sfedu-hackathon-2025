@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DeviceSearchScreen</class>
+ <widget class="QMainWindow" name="DeviceSearchScreen">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Поиск устройств</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color: #00111F;
+	font-family: &quot;Segoe UI&quot;, &quot;Roboto&quot;, &quot;Helvetica Neue&quot;, sans-serif;
+}
+
+QLabel {
+	color: #FFFFFF;
+}
+
+QLineEdit {
+	background-color: white;
+	border: 1px solid #DEE2E6;
+	border-radius: 8px;
+	color: #212529;
+	font-size: 16px;
+	height: 48px;
+	padding: 0 16px;
+}
+
+QLineEdit:focus {
+	border: 2px solid #B66DDB;
+}
+
+QPushButton {
+	background-color: #B66DDB;
+	border-radius: 24px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+}
+
+QPushButton:hover {
+	background-color: #A05CC4;
+}
+
+QPushButton:pressed {
+	background-color: #8A4BB0;
+}
+
+QPushButton:disabled {
+	opacity: 0.5;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0;
+	text-align: center;
+}
+
+/* Search Bar */
+QLineEdit#searchBar {
+	margin: 0 32px 24px 32px;
+}
+
+/* Search Button */
+QPushButton#searchButton {
+	margin: 0 32px 24px 32px;
+}
+
+/* Status Label */
+QLabel#statusLabel {
+	font-size: 16px;
+	margin: 16px 0;
+	text-align: center;
+}
+
+/* Device List */
+QListWidget#devicesList {
+	background-color: white;
+	border: 1px solid #000000;
+	border-radius: 8px;
+	margin: 0 32px;
+	padding: 8px;
+	color: #000000;
+}
+
+QListWidget#devicesList::item {
+	padding: 12px 16px;
+	border-bottom: 1px solid #000000;
+	color: #000000;
+}
+
+QListWidget#devicesList::item:last-child {
+	border-bottom: none;
+}
+
+QListWidget#devicesList::item:hover {
+	background-color: #f8f9fa;
+}
+
+QListWidget#devicesList::item:selected {
+	background-color: #000000;
+	color: white;
+}
+
+/* Loader */
+QProgressBar#loader {
+	background-color: #DEE2E6;
+	border: none;
+	border-radius: 8px;
+	height: 8px;
+	margin: 16px 32px;
+	text-align: center;
+}
+
+QProgressBar#loader::chunk {
+	background-color: #B66DDB;
+	border-radius: 8px;
+}
+
+/* Scroll Area */
+QScrollArea {
+	background-color: transparent;
+	border: none;
+}
+
+QWidget#scrollWidget {
+	background-color: transparent;
+}
+</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item alignment="Qt::AlignTop">
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Поиск устройств</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="searchBar">
+      <property name="placeholderText">
+       <string>Введите имя устройства...</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="searchButton">
+      <property name="text">
+       <string>Поиск</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="statusLabel">
+      <property name="text">
+       <string>Поиск устройств начнется автоматически...</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="loader">
+      <property name="maximum">
+       <number>0</number>
+      </property>
+      <property name="value">
+       <number>-1</number>
+      </property>
+      <property name="textVisible">
+       <bool>false</bool>
+      </property>
+      <property name="visible">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QListWidget" name="devicesList">
+      <property name="visible">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
