@@ -5,7 +5,7 @@ export const apiRequest = async (
   method: "get" | "post" | "put" | "delete" | "patch",
   endpoint: string,
   data: any = null,
-  headers = {},
+  headers: Record<string, string> = {},
   serv = server,
   params: Record<string, any> = {}
 ) => {
@@ -15,7 +15,7 @@ export const apiRequest = async (
       url: `${serv}${endpoint}`,
       headers,
       data,
-      params, // Add params support for query parameters
+      params,
     }
 
     const response = await api(config)

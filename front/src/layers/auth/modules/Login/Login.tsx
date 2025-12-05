@@ -1,5 +1,8 @@
 import { useState } from "react"
 import styles from "./Login.module.scss"
+import { loginEndpoint } from "../../../../api/login"
+import { useUserStore } from "../../../../store/userStore"
+import { toast } from "react-toastify"
 
 interface LoginProps {
   onSwitchToRegister: () => void
@@ -12,6 +15,23 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
     username: "",
     password: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const { setToken, setUser } = useUserStore()
+
+  // Функции для сброса ошибок при вводе
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value)
+    if (errors.username) {
+      setErrors((prev) => ({ ...prev, username: "" }))
+    }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: "" }))
+    }
+  }
 
   const validateForm = () => {
     let isValid = true
@@ -37,15 +57,38 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
     return isValid
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // Здесь будет логика отправки данных на сервер
-      console.log("Login with:", { username, password })
-      // Очищаем форму после успешной отправки
-      setUsername("")
-      setPassword("")
+      setIsLoading(true)
+      try {
+        const response = await loginEndpoint({ username, password })
+        console.log("Login response:", response)
+
+        // Set token and user data in the store
+        setToken(response.token)
+        setUser(response.user)
+
+        // Clear form and errors
+        setUsername("")
+        setPassword("")
+        setErrors({
+          username: "",
+          password: "",
+        })
+      } catch (error: any) {
+        console.error("Login error:", error)
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Неверное имя пользователя или пароль"
+
+        // Показываем ошибку только в тосте, так как не знаем точно, какое поле неверно
+        toast.error(errorMessage)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -60,7 +103,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
               type="text"
               id="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={handleUsernameChange}
               className={`${styles.input} ${
                 errors.username ? styles.error : ""
               }`}
@@ -77,7 +120,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               className={`${styles.input} ${
                 errors.password ? styles.error : ""
               }`}
@@ -88,8 +131,12 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
             )}
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Войти
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? "Вход..." : "Войти"}
           </button>
         </form>
 

@@ -1,33 +1,73 @@
 import { useState } from "react"
 import styles from "./Register.module.scss"
+import { registerEndpoint } from "../../../../api/login"
+import { useUserStore } from "../../../../store/userStore"
+import { toast } from "react-toastify"
 
 interface RegisterProps {
   onSwitchToLogin: () => void
 }
 
 const Register = ({ onSwitchToLogin }: RegisterProps) => {
-  const [username, setUsername] = useState("")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [errors, setErrors] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const { setToken, setUser } = useUserStore()
+
+  // Функции для сброса ошибок при вводе
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value)
+    if (errors.name) {
+      setErrors((prev) => ({ ...prev, name: "" }))
+    }
+  }
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: "" }))
+    }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: "" }))
+    }
+    // Также сбрасываем ошибку подтверждения пароля при изменении пароля
+    if (errors.confirmPassword && e.target.value === confirmPassword) {
+      setErrors((prev) => ({ ...prev, confirmPassword: "" }))
+    }
+  }
+
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setConfirmPassword(e.target.value)
+    if (errors.confirmPassword) {
+      setErrors((prev) => ({ ...prev, confirmPassword: "" }))
+    }
+  }
 
   const validateForm = () => {
     let isValid = true
     const newErrors = {
-      username: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
     }
 
-    if (!username.trim()) {
-      newErrors.username = "Введите имя пользователя"
+    if (!name.trim()) {
+      newErrors.name = "Введите имя пользователя"
       isValid = false
     }
 
@@ -59,17 +99,60 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
     return isValid
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // Здесь будет логика отправки данных на сервер
-      console.log("Register with:", { username, email, password })
-      // Очищаем форму после успешной отправки
-      setUsername("")
-      setEmail("")
-      setPassword("")
-      setConfirmPassword("")
+      setIsLoading(true)
+      try {
+        const response = await registerEndpoint({ name, email, password })
+        console.log("Register response:", response)
+
+        // Set token and user data in the store
+        setToken(response.token)
+        setUser(response.user)
+
+        // Clear form and errors
+        setName("")
+        setEmail("")
+        setPassword("")
+        setConfirmPassword("")
+        setErrors({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        })
+      } catch (error: any) {
+        console.error("Registration error:", error)
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Ошибка при регистрации."
+
+        // Определяем, в какое поле показать ошибку на основе содержимого сообщения
+        const errorMessageLower = errorMessage.toLowerCase()
+        const newErrors = {
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        }
+
+        if (errorMessageLower.includes("email") || errorMessageLower.includes("почт")) {
+          newErrors.email = errorMessage
+        } else if (errorMessageLower.includes("password") || errorMessageLower.includes("парол")) {
+          newErrors.password = errorMessage
+        } else if (errorMessageLower.includes("name") || errorMessageLower.includes("имя") || errorMessageLower.includes("фио")) {
+          newErrors.name = errorMessage
+        }
+        // Если ошибка не связана с конкретным полем, показываем только в тосте
+
+        setErrors(newErrors)
+        toast.error(errorMessage)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -79,19 +162,17 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
         <h2 className={styles.title}>Регистрация</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label htmlFor="reg-username">Имя пользователя</label>
+            <label htmlFor="reg-name">ФИО</label>
             <input
               type="text"
-              id="reg-username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className={`${styles.input} ${
-                errors.username ? styles.error : ""
-              }`}
-              placeholder="Введите имя пользователя"
+              id="reg-name"
+              value={name}
+              onChange={handleNameChange}
+              className={`${styles.input} ${errors.name ? styles.error : ""}`}
+              placeholder="Введите ФИО"
             />
-            {errors.username && (
-              <span className={styles.errorMessage}>{errors.username}</span>
+            {errors.name && (
+              <span className={styles.errorMessage}>{errors.name}</span>
             )}
           </div>
 
@@ -101,7 +182,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               type="email"
               id="reg-email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               className={`${styles.input} ${errors.email ? styles.error : ""}`}
               placeholder="Введите email"
             />
@@ -116,7 +197,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               type="password"
               id="reg-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               className={`${styles.input} ${
                 errors.password ? styles.error : ""
               }`}
@@ -133,7 +214,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               type="password"
               id="reg-confirm-password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={handleConfirmPasswordChange}
               className={`${styles.input} ${
                 errors.confirmPassword ? styles.error : ""
               }`}
@@ -146,8 +227,12 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
             )}
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Зарегистрироваться
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? "Регистрация..." : "Зарегистрироваться"}
           </button>
         </form>
 
