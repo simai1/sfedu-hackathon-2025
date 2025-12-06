@@ -49,7 +49,7 @@
   .connectionInfo {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 
     .tokenContainer {
       display: flex;
@@ -130,6 +130,12 @@
           animation: pulseRed 2s ease-in-out infinite;
         }
 
+        &.error {
+          background-color: var(--red-500);
+          color: var(--white-500);
+          animation: pulseRed 1s ease-in-out infinite;
+        }
+
         .spinning {
           animation: spin 1s linear infinite;
         }
@@ -139,6 +145,26 @@
         color: var(--profile-text);
         font-size: 0.9rem;
         transition: color 0.3s ease;
+      }
+    }
+
+    .helpButton {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: transparent;
+      border: 1px solid var(--profile-border);
+      border-radius: 0.5rem;
+      color: var(--profile-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: var(--profile-hover-bg);
+        color: var(--profile-text);
+        border-color: var(--purple-400);
       }
     }
   }

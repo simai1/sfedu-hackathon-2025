@@ -277,7 +277,6 @@
 
     .chartContainer {
       margin-bottom: 2rem;
-      height: 500px;
 
       .chartPlaceholder {
         height: 400px;
@@ -368,7 +367,7 @@
 
       .saveButton {
         background-color: var(--green-500);
-        color: var(--white-500);
+        color: var(--black-500);
 
         &:hover {
           background-color: var(--green-400);
