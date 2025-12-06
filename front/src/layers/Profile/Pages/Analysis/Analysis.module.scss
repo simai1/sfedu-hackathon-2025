@@ -33,6 +33,16 @@
         display: flex;
         justify-content: center;
       }
+
+      .uploadStatus {
+        color: var(--profile-text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .uploadError {
+        color: var(--red-500);
+        font-size: 0.95rem;
+      }
     }
 
     // Секция готовности

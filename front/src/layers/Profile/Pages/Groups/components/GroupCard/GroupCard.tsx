@@ -1,16 +1,17 @@
 import { useState } from "react"
-import { Users, Video, Plus, BarChart3, X, CheckCircle, Clock } from "lucide-react"
+import { Users, Video, Plus, BarChart3, X, CheckCircle, Clock, Loader2 } from "lucide-react"
 import { type Group, type GroupMember, type GroupSession } from "./../../Groups"
 import styles from "./GroupCard.module.scss"
 
 interface GroupCardProps {
   group: Group
   onAddMember: (groupId: string, email: string) => void
-  onAddSession: (groupId: string, videoFile: File) => void
+  onAddSession: (groupId: string, videoFile: File) => Promise<void> | void
   onAnalyze: (groupId: string, sessionId: string) => void
+  isUploading?: boolean
 }
 
-function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardProps) {
+function GroupCard({ group, onAddMember, onAddSession, onAnalyze, isUploading }: GroupCardProps) {
   const [isAddingMember, setIsAddingMember] = useState(false)
   const [memberEmail, setMemberEmail] = useState("")
   const [isAddingSession, setIsAddingSession] = useState(false)
@@ -154,9 +155,16 @@ function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardPro
                 <button
                   type="submit"
                   className={styles.submitSmallButton}
-                  disabled={!selectedFile}
+                  disabled={!selectedFile || isUploading}
                 >
-                  Загрузить
+                  {isUploading ? (
+                    <>
+                      <Loader2 size={16} className={styles.loader} />
+                      Загрузка...
+                    </>
+                  ) : (
+                    "Загрузить"
+                  )}
                 </button>
                 <button
                   type="button"
