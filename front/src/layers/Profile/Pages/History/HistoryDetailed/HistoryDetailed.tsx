@@ -102,7 +102,7 @@ function HistoryDetailed() {
           <div className={styles.videoContainer}>
             {data.videoUrl ? (
               <ReactPlayer
-                url={data.videoUrl}
+                // url={data.videoUrl}
                 controls
                 width="100%"
                 height="100%"
@@ -157,7 +157,7 @@ function HistoryDetailed() {
                   </span>
                 </div>
                 <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>Вовлеченность</span>
+                  <span className={styles.metricLabel}>Расслабленность</span>
                   <span className={styles.metricValue}>
                     {data.metrics.engagement}%
                   </span>

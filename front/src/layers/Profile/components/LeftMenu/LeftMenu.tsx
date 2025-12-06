@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
 
 interface MenuItem {
@@ -21,6 +21,11 @@ function LeftMenu() {
       label: "Анализ",
       path: "/profile/analysis",
       icon: <BarChart3 size={20} />,
+    },
+    {
+      label: "Графики",
+      path: "/profile/graphics",
+      icon: <ChartSpline size={20} />,
     },
     {
       label: "Отчеты",
