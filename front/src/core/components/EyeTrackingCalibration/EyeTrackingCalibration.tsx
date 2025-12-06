@@ -24,14 +24,12 @@ function EyeTrackingCalibration({
   onCancel,
 }: EyeTrackingCalibrationProps) {
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
-  const [isCollecting, setIsCollecting] = useState(false);
-  const [calibrationPoints, setCalibrationPoints] = useState<CalibrationPoint[]>(
-    []
-  );
+  const [clickCount, setClickCount] = useState(0);
+  const [calibrationPoints, setCalibrationPoints] = useState<
+    CalibrationPoint[]
+  >([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const gazeDataRef = useRef<Array<{ x: number; y: number; timestamp: number }>>(
-    []
-  );
+  const pointRef = useRef<HTMLDivElement>(null);
 
   // Точки калибровки (9 точек в сетке 3x3)
   const calibrationTargets = [
@@ -54,131 +52,112 @@ function EyeTrackingCalibration({
         completed: false,
       }))
     );
+    setClickCount(0);
   }, []);
 
+  // Сброс счетчика при переходе к новой точке
   useEffect(() => {
-    if (currentPointIndex >= calibrationTargets.length) {
-      // Калибровка завершена
-      const calibrationData = {
-        points: calibrationPoints,
-        gazeSamples: gazeDataRef.current,
-        timestamp: Date.now(),
-      };
-      onCalibrationComplete(calibrationData);
-      return;
-    }
+    setClickCount(0);
+  }, [currentPointIndex]);
 
-    // Начинаем сбор данных для текущей точки через 1 секунду после появления
-    const timer = setTimeout(() => {
-      setIsCollecting(true);
-      gazeDataRef.current = [];
-
-      // Собираем данные в течение 2 секунд
-      const collectionTimer = setTimeout(() => {
-        setIsCollecting(false);
-        setCalibrationPoints((prev) => {
-          const updated = [...prev];
-          updated[currentPointIndex] = {
-            ...updated[currentPointIndex],
-            completed: true,
-          };
-          return updated;
-        });
-
-        // Переходим к следующей точке через 0.5 секунды
-        setTimeout(() => {
-          setCurrentPointIndex((prev) => prev + 1);
-        }, 500);
-      }, 2000);
-
-      return () => clearTimeout(collectionTimer);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [currentPointIndex, calibrationTargets.length]);
-
-  // Отслеживание взгляда через webgazer
+  // Инициализация WebGazer
   useEffect(() => {
-    if (!isCollecting || !containerRef.current) return;
-
-    const collectGazeData = async () => {
+    const initWebGazer = async () => {
       try {
-        // Инициализируем webgazer, если еще не инициализирован
         if (!window.webgazer) {
           const webgazerModule = await import("webgazer");
           window.webgazer = webgazerModule.default || webgazerModule;
         }
 
-        if (!window.webgazer) {
-          // Если webgazer недоступен, используем мышь как fallback
-          const handleMouseMove = (e: MouseEvent) => {
-            if (!containerRef.current) return;
-            const rect = containerRef.current.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
+        // Инициализируем WebGazer - он будет автоматически собирать данные при кликах
+        if (window.webgazer) {
+          await window.webgazer
+            .setGazeListener(() => {}) // Пустой listener для инициализации
+            .begin();
 
-            gazeDataRef.current.push({
-              x,
-              y,
-              timestamp: Date.now(),
-            });
-          };
-
-          window.addEventListener("mousemove", handleMouseMove);
-          return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-          };
+          // Включаем сохранение данных между сессиями
+          window.webgazer.saveDataAcrossSessions(true);
         }
-
-        // Используем webgazer для получения координат взгляда
-        const gazeInterval = setInterval(() => {
-          window.webgazer?.getCurrentPrediction().then((prediction: any) => {
-            if (prediction && prediction.x !== null && prediction.y !== null && containerRef.current) {
-              const rect = containerRef.current.getBoundingClientRect();
-              const x = Math.max(0, Math.min(1, (prediction.x - rect.left) / rect.width));
-              const y = Math.max(0, Math.min(1, (prediction.y - rect.top) / rect.height));
-
-              gazeDataRef.current.push({
-                x,
-                y,
-                timestamp: Date.now(),
-              });
-            }
-          }).catch(() => {
-            // Игнорируем ошибки
-          });
-        }, 100);
-
-        return () => {
-          clearInterval(gazeInterval);
-        };
       } catch (err) {
-        // Fallback на мышь, если webgazer недоступен
-        const handleMouseMove = (e: MouseEvent) => {
-          if (!containerRef.current) return;
-          const rect = containerRef.current.getBoundingClientRect();
-          const x = (e.clientX - rect.left) / rect.width;
-          const y = (e.clientY - rect.top) / rect.height;
-
-          gazeDataRef.current.push({
-            x,
-            y,
-            timestamp: Date.now(),
-          });
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => {
-          window.removeEventListener("mousemove", handleMouseMove);
-        };
+        console.error("Ошибка инициализации WebGazer:", err);
       }
     };
 
-    const cleanup = collectGazeData();
-    return () => {
-      cleanup.then((fn) => fn && fn());
-    };
-  }, [isCollecting]);
+    initWebGazer();
+  }, []);
+
+  // Обработка клика на точку калибровки
+  const handlePointClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!pointRef.current || !window.webgazer) return;
+
+    const rect = pointRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    // WebGazer автоматически собирает данные при клике
+    // Но мы можем явно записать позицию для калибровки
+    const newClickCount = clickCount + 1;
+    setClickCount(newClickCount);
+
+    // После 5 кликов переходим к следующей точке
+    if (newClickCount >= 5) {
+      setCalibrationPoints((prev) => {
+        const updated = [...prev];
+        updated[currentPointIndex] = {
+          ...updated[currentPointIndex],
+          completed: true,
+        };
+        return updated;
+      });
+
+      // Переходим к следующей точке через небольшую задержку
+      setTimeout(() => {
+        if (currentPointIndex + 1 >= calibrationTargets.length) {
+          // Калибровка завершена
+          finishCalibration();
+        } else {
+          setCurrentPointIndex((prev) => prev + 1);
+          setClickCount(0);
+        }
+      }, 300);
+    }
+  };
+
+  // Завершение калибровки
+  const finishCalibration = async () => {
+    try {
+      if (window.webgazer) {
+        // Сохраняем калибровку в WebGazer
+        window.webgazer.saveDataAcrossSessions(true);
+
+        const calibrationData = {
+          webgazerCalibrated: true,
+          points: calibrationPoints,
+          timestamp: Date.now(),
+        };
+
+        onCalibrationComplete(calibrationData);
+      } else {
+        const calibrationData = {
+          webgazerCalibrated: false,
+          points: calibrationPoints,
+          timestamp: Date.now(),
+        };
+        onCalibrationComplete(calibrationData);
+      }
+    } catch (err) {
+      console.error("Ошибка завершения калибровки:", err);
+      const calibrationData = {
+        webgazerCalibrated: false,
+        points: calibrationPoints,
+        timestamp: Date.now(),
+      };
+      onCalibrationComplete(calibrationData);
+    }
+  };
 
   const currentTarget = calibrationTargets[currentPointIndex];
   const progress = ((currentPointIndex + 1) / calibrationTargets.length) * 100;
@@ -201,16 +180,20 @@ function EyeTrackingCalibration({
 
       {currentPointIndex < calibrationTargets.length && currentTarget && (
         <div
-          className={`${styles.calibrationPoint} ${
-            isCollecting ? styles.collecting : ""
-          }`}
+          ref={pointRef}
+          className={styles.calibrationPoint}
           style={{
             left: `${currentTarget.x * 100}%`,
             top: `${currentTarget.y * 100}%`,
             transform: "translate(-50%, -50%)",
+            cursor: "pointer",
           }}
+          onClick={handlePointClick}
         >
           <div className={styles.pointInner} />
+          {clickCount > 0 && (
+            <div className={styles.clickCounter}>{clickCount}/5</div>
+          )}
         </div>
       )}
 
@@ -222,9 +205,12 @@ function EyeTrackingCalibration({
 
       <div className={styles.instructions}>
         <p>
-          {isCollecting
-            ? "Смотрите на точку..."
-            : "Подготовьтесь к следующей точке"}
+          {currentPointIndex < calibrationTargets.length
+            ? `Смотрите на точку и кликните на неё 5 раз (${clickCount}/5)`
+            : "Калибровка завершена!"}
+        </p>
+        <p style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "0.5rem" }}>
+          Убедитесь, что ваше лицо хорошо освещено и находится в центре кадра
         </p>
       </div>
     </div>
@@ -232,4 +218,3 @@ function EyeTrackingCalibration({
 }
 
 export default EyeTrackingCalibration;
-

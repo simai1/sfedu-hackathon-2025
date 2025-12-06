@@ -31,7 +31,7 @@ function EyeTracking() {
 
   const handleCameraPermissionGranted = (stream: MediaStream) => {
     cameraStreamRef.current = stream;
-    
+
     // Подключаем поток к видео элементу для отслеживания
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
@@ -39,7 +39,7 @@ function EyeTracking() {
         // Тихая ошибка
       });
     }
-    
+
     setState("calibration");
   };
 
@@ -130,14 +130,18 @@ function EyeTracking() {
               <div className={styles.statusItem}>
                 <span className={styles.statusLabel}>Координаты:</span>
                 <span className={styles.statusValue}>
-                  X: {gazePosition.x.toFixed(1)}%, Y: {gazePosition.y.toFixed(1)}%
+                  X: {gazePosition.x.toFixed(1)}%, Y:{" "}
+                  {gazePosition.y.toFixed(1)}%
                 </span>
               </div>
             )}
             {error && (
               <div className={styles.statusItem}>
                 <span className={styles.statusLabel}>Ошибка:</span>
-                <span className={styles.statusValue} style={{ color: "#ef4444" }}>
+                <span
+                  className={styles.statusValue}
+                  style={{ color: "#ef4444" }}
+                >
                   {error}
                 </span>
               </div>
@@ -145,7 +149,10 @@ function EyeTracking() {
             {!gazePosition && !error && (
               <div className={styles.statusItem}>
                 <span className={styles.statusLabel}>Информация:</span>
-                <span className={styles.statusValue} style={{ color: "#f59e0b" }}>
+                <span
+                  className={styles.statusValue}
+                  style={{ color: "#f59e0b" }}
+                >
                   Инициализация отслеживания...
                 </span>
               </div>
@@ -163,4 +170,3 @@ function EyeTracking() {
 }
 
 export default EyeTracking;
-
