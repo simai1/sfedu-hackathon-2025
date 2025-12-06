@@ -1,23 +1,10 @@
 import React, { useState, useRef, useEffect } from "react"
 import styles from "./ChatMessagerComponent.module.scss"
 import { NEURO_ASSISTANT_CHAT } from "../../../utils/apiPath"
-
-interface Message {
-  id: string
-  text: string
-  sender: "user" | "bot"
-  timestamp: Date
-}
+import { useChatAssistantStore, type ChatMessage } from "../../../store/chatAssistantStore"
 
 function ChatMessagerComponent() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Привет! Я нейро-помощник по вопросам обработки видео. Спроси меня, например: «Как осветлить тени в видео?»",
-      sender: "bot",
-      timestamp: new Date(),
-    },
-  ])
+  const { messages, addMessage } = useChatAssistantStore()
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +25,21 @@ function ChatMessagerComponent() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  const buildPayload = (history: Message[], userText: string) => {
+  const escapeHtml = (str: string) =>
+    str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+
+  const formatMarkdown = (text: string) => {
+    const escaped = escapeHtml(text)
+    const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    return withBold.replace(/\n/g, "<br/>")
+  }
+
+  const buildPayload = (history: ChatMessage[], userText: string) => {
     const mapped = history.map((m) => ({
       role: m.sender === "user" ? "user" : "assistant",
       content: m.text,
@@ -61,14 +62,14 @@ function ChatMessagerComponent() {
   const handleSendMessage = async () => {
     if (inputValue.trim() === "" || isLoading) return
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: inputValue,
       sender: "user",
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    addMessage(userMessage)
     setInputValue("")
     setIsLoading(true)
     setError(null)
@@ -89,14 +90,14 @@ function ChatMessagerComponent() {
         data?.message ||
         "Извините, не удалось получить ответ."
 
-      const botMessage: Message = {
+      const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: botText,
         sender: "bot",
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       }
 
-      setMessages((prev) => [...prev, botMessage])
+      addMessage(botMessage)
     } catch (err: any) {
       setError(err?.message || "Не удалось получить ответ")
     } finally {
@@ -123,9 +124,12 @@ function ChatMessagerComponent() {
               message.sender === "user" ? styles.userMessage : styles.botMessage
             }`}
           >
-            <div className={styles.messageText}>{message.text}</div>
+            <div
+              className={styles.messageText}
+              dangerouslySetInnerHTML={{ __html: formatMarkdown(message.text) }}
+            />
             <div className={styles.messageTime}>
-              {formatTime(message.timestamp)}
+              {formatTime(new Date(message.timestamp))}
             </div>
           </div>
         ))}
