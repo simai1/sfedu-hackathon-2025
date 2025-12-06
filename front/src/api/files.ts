@@ -1,10 +1,20 @@
 import { apiRequest } from "./api"
-import { VIDEO_UPLOAD_ENDPOINT, VIDEO_BY_ID_ENDPOINT, PHOTO_UPLOAD_ENDPOINT } from "../utils/apiPath"
+import { VIDEO_UPLOAD_ENDPOINT, VIDEO_BY_ID_ENDPOINT, AUDIO_UPLOAD_ENDPOINT, AUDIO_BY_ID_ENDPOINT, PHOTO_UPLOAD_ENDPOINT } from "../utils/apiPath"
 
 export const uploadVideo = (file: File) => {
   const formData = new FormData()
   formData.append("file", file)
   return apiRequest("post", VIDEO_UPLOAD_ENDPOINT, formData)
+}
+
+export const uploadAudio = (file: File) => {
+  const formData = new FormData()
+  formData.append("file", file)
+  return apiRequest("post", AUDIO_UPLOAD_ENDPOINT, formData)
+}
+
+export const getAudioById = (audioId: string) => {
+  return apiRequest("get", `${AUDIO_BY_ID_ENDPOINT.replace("{id}", audioId)}`)
 }
 
 export const getVideoById = (videoId: string) => {

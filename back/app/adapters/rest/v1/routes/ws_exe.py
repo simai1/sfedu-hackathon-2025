@@ -82,7 +82,11 @@ async def device_ws(
                 })
                 logger.debug("Device WS: forwarded eeg_sample to clients user_id=%s", user_id)
 
-                frame = engagement_tracker.handle_sample(user_id, eeg_data)
+                # Получаем текущий таймкод аудио, если есть
+                state = engagement_tracker.user_states.get(user_id)
+                audio_timecode = state.current_audio_timecode if state else None
+
+                frame = engagement_tracker.handle_sample(user_id, eeg_data, audio_timecode)
                 if frame:
                     logger.debug(
                         "Device WS: engagement frame detected user_id=%s timecode=%s",
@@ -140,6 +144,51 @@ async def client_ws(
                 engagement_tracker.end_video(user_id)
                 logger.debug("Client WS: video tracking ended user_id=%s", user_id)
                 await websocket.send_json({"type": "video_tracking_ended"})
+            elif msg_type == "audio_start":
+                engagement_tracker.start_audio(user_id)
+                logger.debug("Client WS: audio tracking started user_id=%s", user_id)
+                await websocket.send_json({"type": "audio_tracking_started"})
+            elif msg_type == "audio_end":
+                engagement_tracker.end_audio(user_id)
+                events = engagement_tracker.get_audio_events(user_id)
+                logger.debug("Client WS: audio tracking ended user_id=%s events_count=%s", user_id, len(events))
+                await websocket.send_json({"type": "audio_tracking_ended", "events": events})
+            elif msg_type == "audio_timecode":
+                timecode = message.get("timecode")
+                audio_id_raw = message.get("audio_id")
+                
+                if timecode is not None:
+                    # Сохраняем текущий таймкод для обработки в handle_sample
+                    state = engagement_tracker.user_states.get(user_id)
+                    if state and state.active_audio:
+                        state.current_audio_timecode = float(timecode)
+                        
+                        # Сохраняем engagement для аудио
+                        if audio_id_raw:
+                            try:
+                                audio_id = uuid.UUID(audio_id_raw)
+                                # Получаем последние значения концентрации
+                                if state.last_concentration is not None:
+                                    # Получаем последние значения из последнего события или используем дефолтные
+                                    last_event = state.concentration_events[-1] if state.concentration_events else None
+                                    concentration = last_event["concentration"] if last_event else state.last_concentration
+                                    relaxation = last_event["relaxation"] if last_event else 50.0
+                                    
+                                    engagement = await engagement_service.create(
+                                        audio_id=audio_id,
+                                        relaxation=relaxation,
+                                        concentration=concentration,
+                                        screenshot_url=None,
+                                        timecode=str(timecode),
+                                    )
+                                    logger.debug(
+                                        "Client WS: audio engagement saved user_id=%s audio_id=%s timecode=%s",
+                                        user_id, audio_id, timecode
+                                    )
+                            except (ValueError, TypeError) as e:
+                                logger.debug("Client WS: invalid audio_id user_id=%s error=%s", user_id, e)
+                
+                await websocket.send_json({"type": "audio_timecode_received"})
             elif msg_type == "video_frame":
                 timecode_raw = message.get("timecode") or message.get("time_code")
                 video_id_raw = message.get("video_id")

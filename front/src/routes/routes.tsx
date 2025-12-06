@@ -9,6 +9,7 @@ import Report from "../layers/Profile/Pages/Report/Report"
 import ReportDetailed from "../layers/Profile/Pages/Report/ReportDetailed/ReportDetailed"
 import ProfileMain from "../layers/Profile/Pages/ProfileMain/ProfileMain"
 import Analysis from "../layers/Profile/Pages/Analysis/Analysis"
+import AudioAnalysis from "../layers/Profile/Pages/AudioAnalysis/AudioAnalysis"
 import Settings from "../layers/Profile/Pages/Settings/Settings"
 import Graphics from "../layers/Profile/Pages/Graphics/Graphics"
 import Groups from "../layers/Profile/Pages/Groups/Groups"
@@ -28,6 +29,7 @@ export const routes = [
     children: [
       { index: true, element: <ProfileMain /> },
       { path: "analysis", element: <Analysis /> },
+      { path: "audio-analysis", element: <AudioAnalysis /> },
       { path: "settings", element: <Settings /> },
       { path: "graphics", element: <Graphics /> },
       { path: "history", element: <History /> },

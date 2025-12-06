@@ -1,38 +1,60 @@
 import styles from "./UploadFile.module.scss";
 import { useState, useRef, useEffect } from "react";
-import { Upload, X, Play, FileVideo } from "lucide-react";
+import { Upload, X, Play, FileVideo, Music } from "lucide-react";
 
 interface UploadFileProps {
   onFileSelect?: (file: File | null) => void;
+  fileType?: "video" | "audio" | "both";
 }
 
-function UploadFile({ onFileSelect }: UploadFileProps) {
+function UploadFile({ onFileSelect, fileType = "both" }: UploadFileProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Создаем превью видео
+  // Определяем тип файла на основе пропа
+  const isVideoType = fileType === "video" || fileType === "both";
+  const isAudioType = fileType === "audio" || fileType === "both";
+  const isVideoFile = selectedFile?.type.startsWith("video/");
+  const isAudioFile = selectedFile?.type.startsWith("audio/");
+
+  // Создаем превью для видео или аудио
   useEffect(() => {
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
-      const url = URL.createObjectURL(selectedFile);
-      setVideoPreview(url);
-
-      return () => {
-        URL.revokeObjectURL(url);
-      };
+    if (selectedFile) {
+      if (isVideoFile && isVideoType) {
+        const url = URL.createObjectURL(selectedFile);
+        setPreview(url);
+        return () => {
+          URL.revokeObjectURL(url);
+        };
+      } else if (isAudioFile && isAudioType) {
+        const url = URL.createObjectURL(selectedFile);
+        setPreview(url);
+        return () => {
+          URL.revokeObjectURL(url);
+        };
+      } else {
+        setPreview(null);
+      }
     } else {
-      setVideoPreview(null);
+      setPreview(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, isVideoType, isAudioType]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    if (file && file.type.startsWith("video/")) {
-      setSelectedFile(file);
-      if (onFileSelect) {
-        onFileSelect(file);
+    if (file) {
+      const isValidVideo = isVideoType && file.type.startsWith("video/");
+      const isValidAudio = isAudioType && file.type.startsWith("audio/");
+      
+      if (isValidVideo || isValidAudio) {
+        setSelectedFile(file);
+        if (onFileSelect) {
+          onFileSelect(file);
+        }
       }
     }
   };
@@ -40,7 +62,7 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
   const handleRemoveFile = (event: React.MouseEvent) => {
     event.stopPropagation();
     setSelectedFile(null);
-    setVideoPreview(null);
+    setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -65,7 +87,10 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith("video/")) {
+      const isValidVideo = isVideoType && file.type.startsWith("video/");
+      const isValidAudio = isAudioType && file.type.startsWith("audio/");
+      
+      if (isValidVideo || isValidAudio) {
         setSelectedFile(file);
         if (onFileSelect) {
           onFileSelect(file);
@@ -104,14 +129,34 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
               <Upload size={48} />
             </div>
             <h3 className={styles.uploadTitle}>
-              {isDragOver ? "Отпустите файл здесь" : "Загрузите видео файл"}
+              {isDragOver
+                ? "Отпустите файл здесь"
+                : fileType === "audio"
+                ? "Загрузите аудио файл"
+                : fileType === "video"
+                ? "Загрузите видео файл"
+                : "Загрузите файл"}
             </h3>
             <p className={styles.uploadDescription}>
               Перетащите файл сюда или нажмите для выбора
             </p>
             <div className={styles.uploadHint}>
-              <FileVideo size={16} />
-              <span>Поддерживаются видео файлы</span>
+              {fileType === "audio" ? (
+                <>
+                  <Music size={16} />
+                  <span>Поддерживаются аудио файлы</span>
+                </>
+              ) : fileType === "video" ? (
+                <>
+                  <FileVideo size={16} />
+                  <span>Поддерживаются видео файлы</span>
+                </>
+              ) : (
+                <>
+                  <FileVideo size={16} />
+                  <span>Поддерживаются видео и аудио файлы</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -120,7 +165,7 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
         <div className={styles.filePreview}>
           <div className={styles.previewHeader}>
             <div className={styles.fileInfo}>
-              <FileVideo size={20} />
+              {isAudioFile ? <Music size={20} /> : <FileVideo size={20} />}
               <div className={styles.fileDetails}>
                 <p className={styles.fileName}>{selectedFile.name}</p>
                 <p className={styles.fileSize}>{formatFileSize(selectedFile.size)}</p>
@@ -136,11 +181,11 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
             </button>
           </div>
 
-          {videoPreview && (
+          {preview && isVideoFile && (
             <div className={styles.videoPreview}>
               <video
                 ref={videoRef}
-                src={videoPreview}
+                src={preview}
                 controls
                 className={styles.video}
                 preload="metadata"
@@ -154,6 +199,18 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
                   <Play size={24} fill="currentColor" />
                 </button>
               </div>
+            </div>
+          )}
+
+          {preview && isAudioFile && (
+            <div className={styles.audioPreview}>
+              <audio
+                ref={audioRef}
+                src={preview}
+                controls
+                className={styles.audio}
+                preload="metadata"
+              />
             </div>
           )}
 
@@ -173,7 +230,13 @@ function UploadFile({ onFileSelect }: UploadFileProps) {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept="video/*"
+        accept={
+          fileType === "audio"
+            ? "audio/*"
+            : fileType === "video"
+            ? "video/*"
+            : "video/*,audio/*"
+        }
         className={styles.hiddenInput}
       />
     </div>

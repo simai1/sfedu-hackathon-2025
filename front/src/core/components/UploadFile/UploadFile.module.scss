@@ -265,6 +265,23 @@
     }
   }
 
+  .audioPreview {
+    width: 100%;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: var(--black-500);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .audio {
+      width: 100%;
+      max-width: 100%;
+      outline: none;
+    }
+  }
+
   .changeFileButton {
     display: flex;
     align-items: center;

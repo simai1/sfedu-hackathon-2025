@@ -740,7 +740,7 @@ function Analysis() {
           <div className={styles.uploadSection}>
             <p className={styles.uploadPrompt}>Загрузите видео файл</p>
             <div className={styles.uploadWrapper}>
-              <UploadFile onFileSelect={handleFileSelect} />
+              <UploadFile onFileSelect={handleFileSelect} fileType="video" />
             </div>
             {isUploading && (
               <p className={styles.uploadStatus}>
