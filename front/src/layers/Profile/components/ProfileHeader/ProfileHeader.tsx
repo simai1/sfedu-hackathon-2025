@@ -1,17 +1,18 @@
-import { useState } from "react"
-import { Copy, Wifi, WifiOff } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Copy, Wifi, WifiOff, Loader2 } from "lucide-react"
 import styles from "./ProfileHeader.module.scss"
 import { User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useUserStore } from "../../../../store/userStore"
 import { usePairToken } from "../../../../hooks/usePairToken"
 
+type ConnectionStatus = "connected" | "connecting" | "disconnected"
+
 function ProfileHeader() {
   const [copied, setCopied] = useState(false)
-  const isConnected = true // В реальном приложении это будет состояние подключения
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connected")
 
   const { user } = useUserStore()
-  // Используем React Query для получения токена (автоматически обновится при изменении)
   const { data: apiToken = "" } = usePairToken()
 
   const handleCopyToken = () => {
@@ -23,6 +24,39 @@ function ProfileHeader() {
   }
 
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setConnectionStatus("connected")
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "Подключен к BrainBit"
+      case "connecting":
+        return "Подключение к BrainBit..."
+      case "disconnected":
+        return "Не подключен к BrainBit"
+      default:
+        return "Не подключен к BrainBit"
+    }
+  }
+
+  const getStatusIcon = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return <Wifi size={16} />
+      case "connecting":
+        return <Loader2 size={16} className={styles.spinning} />
+      case "disconnected":
+        return <WifiOff size={16} />
+      default:
+        return <WifiOff size={16} />
+    }
+  }
 
   return (
     <div className={styles.profileHeader}>
@@ -60,15 +94,11 @@ function ProfileHeader() {
 
         <div className={styles.connectionStatus}>
           <div
-            className={`${styles.statusIndicator} ${
-              isConnected ? styles.connected : styles.disconnected
-            }`}
+            className={`${styles.statusIndicator} ${styles[connectionStatus]}`}
           >
-            {isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+            {getStatusIcon()}
           </div>
-          <span className={styles.statusText}>
-            {isConnected ? "Подключен к BrainBit" : "Не подключен"}
-          </span>
+          <span className={styles.statusText}>{getStatusText()}</span>
         </div>
       </div>
     </div>

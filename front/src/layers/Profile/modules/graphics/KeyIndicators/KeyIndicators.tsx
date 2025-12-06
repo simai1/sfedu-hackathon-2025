@@ -147,12 +147,9 @@ function KeyIndicators() {
     }
   }, [])
 
-  // Simulate real-time data updates
   useEffect(() => {
-    // Start data simulation
     intervalRef.current = setInterval(() => {
       if (chartInstanceRef.current) {
-        // Add new data point
         const newTime =
           timeData.length > 0 ? timeData[timeData.length - 1] + 1 : 0
         const newConcentration = Math.max(

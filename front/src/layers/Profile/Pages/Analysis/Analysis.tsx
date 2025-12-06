@@ -18,7 +18,6 @@ function Analysis() {
   const [capturedScreenshots, setCapturedScreenshots] = useState<any[]>([])
   const videoDurationRef = useRef<number>(0)
 
-  // Обработка загрузки файла
   const handleFileSelect = (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
       setVideoFile(file)
@@ -26,33 +25,26 @@ function Analysis() {
       setVideoURL(url)
       setState("ready")
       
-      // Получаем длительность видео
       const video = document.createElement("video")
       video.preload = "metadata"
       video.src = url
       video.onloadedmetadata = () => {
         videoDurationRef.current = video.duration
-        // Генерируем триггеры сразу при загрузке метаданных
         const triggers = generateScreenshotTriggers(video.duration)
         setScreenshotTriggers(triggers)
         video.remove()
       }
       
-      // Хардкод подключения к сокетам
       connectToSocket()
     }
   }
 
-  // Хардкод подключения к сокетам
   const connectToSocket = () => {
-    // Имитация подключения к сокетам
     setTimeout(() => {
       setIsSocketConnected(true)
-      console.log("Соединение с сервером установлено (хардкод)")
+      console.log("Соединение с сервером установлено")
     }, 1000)
   }
-
-  // Генерация триггеров для скриншотов каждые 2 секунды
   const generateScreenshotTriggers = (duration: number) => {
     const triggers: ScreenshotTrigger[] = []
     for (let time = 0; time < duration; time += 2) {
@@ -65,14 +57,11 @@ function Analysis() {
     return triggers
   }
 
-  // Начать просмотр
   const handleStartWatching = () => {
     if (videoURL && isSocketConnected) {
       setState("watching")
       setIsAnalyzing(true)
       
-      // Триггеры уже должны быть сгенерированы при загрузке метаданных
-      // Если по какой-то причине их нет, генерируем заново
       if (screenshotTriggers.length === 0 && videoDurationRef.current > 0) {
         const triggers = generateScreenshotTriggers(videoDurationRef.current)
         setScreenshotTriggers(triggers)
@@ -80,26 +69,21 @@ function Analysis() {
     }
   }
 
-  // Обработка окончания видео
   const handleVideoEnd = () => {
     setIsAnalyzing(false)
     setState("finished")
   }
 
-  // Генерация отчета
   const handleGenerateReport = async () => {
     setIsReportGenerating(true)
     
-    // Имитация генерации отчета
     setTimeout(() => {
       setIsReportGenerating(false)
       setState("reportGenerated")
     }, 2000)
   }
 
-  // Сохранение отчета
   const handleSaveReport = async () => {
-    // Здесь будет логика сохранения отчета
     console.log("Сохранение отчета:", {
       screenshots: capturedScreenshots,
       stats: {
@@ -109,17 +93,13 @@ function Analysis() {
       },
     })
     
-    // Имитация сохранения
     alert("Отчет успешно сохранен!")
   }
-
-  // Обработка создания скриншота
   const handleScreenshot = (screenshot: any) => {
     setCapturedScreenshots((prev) => [...prev, screenshot])
     console.log("Скриншот создан:", screenshot)
   }
 
-  // Сброс всего процесса
   const handleReset = () => {
     if (videoURL) {
       URL.revokeObjectURL(videoURL)
@@ -136,7 +116,6 @@ function Analysis() {
   }
 
 
-  // Очистка при размонтировании
   useEffect(() => {
     return () => {
       if (videoURL) {
@@ -150,7 +129,6 @@ function Analysis() {
       <div className={styles.analysis}>
         <h1>Анализ активности</h1>
 
-        {/* Состояние загрузки файла */}
         {state === "upload" && (
           <div className={styles.uploadSection}>
             <p className={styles.uploadPrompt}>Загрузите видео файл</p>
@@ -160,7 +138,6 @@ function Analysis() {
           </div>
         )}
 
-        {/* Состояние готовности к просмотру */}
         {state === "ready" && (
           <div className={styles.readySection}>
             <div className={styles.connectionStatus}>
@@ -203,7 +180,6 @@ function Analysis() {
           </div>
         )}
 
-        {/* Состояние просмотра */}
         {state === "watching" && (
           <div className={styles.watchingSection}>
             <div className={styles.videoPlayerContainer}>
@@ -239,9 +215,22 @@ function Analysis() {
           </div>
         )}
 
-        {/* Состояние после просмотра */}
         {state === "finished" && (
           <div className={styles.finishedSection}>
+            <div className={styles.videoPlayerContainer}>
+              {videoURL && (
+                <VideoPlayer
+                  videoURL={videoURL}
+                  triggers={screenshotTriggers}
+                  autoCapture={false}
+                  autoPlay={false}
+                  showManualCapture={false}
+                  onVideoEnd={handleVideoEnd}
+                  onScreenshot={handleScreenshot}
+                />
+              )}
+            </div>
+
             <div className={styles.chartContainer}>
               <KeyIndicators />
             </div>
@@ -276,7 +265,6 @@ function Analysis() {
           </div>
         )}
 
-        {/* Состояние после генерации отчета */}
         {state === "reportGenerated" && (
           <div className={styles.reportSection}>
             <div className={styles.reportHeader}>
@@ -349,7 +337,6 @@ function Analysis() {
         )}
       </div>
 
-      {/* Чат показывается только после генерации отчета */}
       {state === "reportGenerated" && (
         <div className={styles.chat}>
           <ChatMessagerComponent />

@@ -3,6 +3,7 @@ import { Edit, Save, X, Copy, RefreshCw, Eye, EyeOff } from "lucide-react"
 import styles from "./ProfileMain.module.scss"
 import { useUserStore } from "../../../../store/userStore"
 import { usePairToken, useGeneratePairToken } from "../../../../hooks/usePairToken"
+import SubscriptionPlans from "../../components/SubscriptionPlans/SubscriptionPlans"
 
 function ProfileMain() {
   const { user, setUser } = useUserStore()
@@ -26,14 +27,12 @@ function ProfileMain() {
   const [showToken, setShowToken] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Используем React Query для получения токена
   const {
     data: apiToken = "",
     isLoading: isLoadingToken,
     error: tokenError,
   } = usePairToken()
 
-  // Используем React Query для генерации нового токена
   const generateTokenMutation = useGeneratePairToken()
 
   const handleEdit = () => {
@@ -45,7 +44,6 @@ function ProfileMain() {
   }
 
   const handleSave = () => {
-    // Здесь будет логика сохранения данных
     console.log("Saving profile data:", profileData)
     if (user) {
       setUser({
@@ -137,7 +135,6 @@ function ProfileMain() {
         </div>
       </div>
 
-      {/* API Token Container */}
       <div className={styles.apiTokenContainer}>
         <h2>API Токен</h2>
         <p className={styles.tokenDescription}>
@@ -197,6 +194,8 @@ function ProfileMain() {
           </button>
         </div>
       </div>
+
+      <SubscriptionPlans currentPlan="free" />
     </div>
   )
 }

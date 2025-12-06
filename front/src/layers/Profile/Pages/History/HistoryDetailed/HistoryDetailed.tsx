@@ -2,7 +2,6 @@ import { useParams, useNavigate } from "react-router-dom"
 import ReactPlayer from "react-player"
 import styles from "./HistoryDetailed.module.scss"
 
-// Моковые данные для детальной страницы
 const mockDetailedData: Record<string, any> = {
   "1": {
     id: "1",

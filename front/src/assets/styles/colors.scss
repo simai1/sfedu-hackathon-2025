@@ -62,3 +62,47 @@
   --img-filter: invert(0%);
   --main-black: var(--black-500);
 }
+
+/* Переменные для профиля - по умолчанию темная тема (если data-theme не установлен) */
+:root {
+  --profile-bg: var(--blue-500);
+  --profile-text: var(--white-500);
+  --profile-text-secondary: #9ca3af;
+  --profile-text-muted: #d1d5db;
+  --profile-border: #4b5563;
+  --profile-input-bg: #111827;
+  --profile-card-bg: #111827;
+  --profile-hover-bg: #374151;
+  --profile-active-bg: #a78bfa;
+  --profile-active-text: #111827;
+}
+
+/* Светлая тема для профиля - применяется к элементу и всем дочерним */
+[data-theme="light"],
+[data-theme="light"] * {
+  --profile-bg: var(--white-500) !important;
+  --profile-text: var(--black-500) !important;
+  --profile-text-secondary: #6b7280 !important;
+  --profile-text-muted: #4b5563 !important;
+  --profile-border: #d1d5db !important;
+  --profile-input-bg: #f9fafb !important;
+  --profile-card-bg: #f3f4f6 !important;
+  --profile-hover-bg: #e5e7eb !important;
+  --profile-active-bg: #a78bfa !important;
+  --profile-active-text: var(--white-500) !important;
+}
+
+/* Темная тема для профиля - применяется к элементу и всем дочерним */
+[data-theme="dark"],
+[data-theme="dark"] * {
+  --profile-bg: var(--blue-500) !important;
+  --profile-text: var(--white-500) !important;
+  --profile-text-secondary: #9ca3af !important;
+  --profile-text-muted: #d1d5db !important;
+  --profile-border: #4b5563 !important;
+  --profile-input-bg: #111827 !important;
+  --profile-card-bg: #111827 !important;
+  --profile-hover-bg: #374151 !important;
+  --profile-active-bg: #a78bfa !important;
+  --profile-active-text: #111827 !important;
+}

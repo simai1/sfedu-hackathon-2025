@@ -2,7 +2,6 @@ import { useState } from "react"
 import HistoryCard, { type HistoryItem } from "./components/HistoryCard/HistoryCard"
 import styles from "./History.module.scss"
 
-// Моковые данные для примера
 const mockHistoryItems: HistoryItem[] = [
   {
     id: "1",
@@ -11,7 +10,6 @@ const mockHistoryItems: HistoryItem[] = [
     duration: "15:32",
     description: "Полный анализ эмоционального состояния во время презентации",
     status: "completed",
-    thumbnail: "https://via.placeholder.com/200x120",
   },
   {
     id: "2",

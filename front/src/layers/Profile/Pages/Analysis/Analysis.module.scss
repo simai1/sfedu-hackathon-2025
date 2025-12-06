@@ -4,12 +4,12 @@
   gap: 2rem;
 
   .analysis {
-    background-color: var(--blue-500);
+    background-color: var(--profile-bg);
     padding: 2rem;
     border-radius: 0.75rem;
 
     h1 {
-      color: var(--white-500);
+      color: var(--profile-text);
       margin-bottom: 2rem;
       font-size: 1.75rem;
       font-weight: 600;
@@ -24,7 +24,7 @@
       padding: 2rem 0;
 
       .uploadPrompt {
-        color: var(--white-500);
+        color: var(--profile-text);
         font-size: 1.2rem;
         font-weight: 500;
       }
@@ -46,9 +46,9 @@
         align-items: center;
         gap: 0.5rem;
         padding: 1rem;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--profile-card-bg);
         border-radius: 0.5rem;
-        color: var(--white-500);
+        color: var(--profile-text);
         font-size: 0.9rem;
 
         .statusDot {
@@ -60,25 +60,25 @@
 
         .statusConnected {
           .statusDot {
-            background-color: #10b981;
+            background-color: var(--green-500);
             animation: pulse 2s infinite;
           }
         }
 
         .statusConnecting {
           .statusDot {
-            background-color: #f59e0b;
+            background-color: var(--tifany-500);
             animation: pulse 1s infinite;
           }
         }
       }
 
       .videoInfo {
-        color: var(--white-500);
+        color: var(--profile-text);
         font-size: 0.9rem;
         opacity: 0.8;
         padding: 1rem;
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--profile-card-bg);
         border-radius: 0.5rem;
 
         p {
@@ -115,17 +115,17 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: var(--white-500);
+        color: var(--profile-text);
         font-size: 0.9rem;
         padding: 1rem;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--profile-card-bg);
         border-radius: 0.5rem;
 
         .analyzingDot {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background-color: #8b5cf6;
+          background-color: var(--purple-500);
           animation: pulse 1s infinite;
         }
       }
@@ -147,18 +147,18 @@
       .reportHeader {
         text-align: center;
         padding: 1.5rem;
-        background-color: rgba(16, 185, 129, 0.2);
+        background-color: var(--green-100);
         border-radius: 0.5rem;
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        border: 1px solid var(--green-300);
 
         h2 {
-          color: var(--white-500);
+          color: var(--profile-text);
           margin-bottom: 0.5rem;
           font-size: 1.5rem;
         }
 
         p {
-          color: var(--white-500);
+          color: var(--profile-text);
           opacity: 0.9;
           font-size: 1rem;
         }
@@ -169,7 +169,7 @@
         margin-top: 1rem;
 
         h3 {
-          color: var(--white-500);
+          color: var(--profile-text);
           font-size: 1.25rem;
           font-weight: 600;
           margin-bottom: 1rem;
@@ -203,17 +203,17 @@
         }
 
         .screenshotCard {
-          background-color: rgba(255, 255, 255, 0.05);
+          background-color: var(--profile-card-bg);
           border: 1px solid var(--purple-200);
           border-radius: 0.75rem;
           overflow: hidden;
           transition: all 0.3s ease;
 
           &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: var(--profile-hover-bg);
             border-color: var(--purple-300);
             transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(182, 109, 219, 0.2);
+            box-shadow: 0 8px 16px var(--purple-200);
           }
         }
 
@@ -221,7 +221,7 @@
           position: relative;
           width: 100%;
           aspect-ratio: 16 / 9;
-          background-color: var(--black-500);
+          background-color: var(--profile-input-bg);
           overflow: hidden;
 
           img {
@@ -235,8 +235,8 @@
             position: absolute;
             bottom: 0.5rem;
             left: 0.5rem;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: var(--white-500);
+            background-color: var(--profile-card-bg);
+            color: var(--profile-text);
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             font-size: 0.75rem;
@@ -255,7 +255,7 @@
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          color: var(--white-500);
+          color: var(--profile-text);
           font-size: 0.9rem;
           font-weight: 500;
 
@@ -265,10 +265,10 @@
         }
 
         .screenshotValue {
-          color: var(--white-300);
+          color: var(--profile-text-secondary);
           font-size: 0.85rem;
           padding: 0.25rem 0.5rem;
-          background-color: rgba(182, 109, 219, 0.1);
+          background-color: var(--purple-100);
           border-radius: 0.25rem;
           border: 1px solid var(--purple-200);
         }
@@ -281,14 +281,14 @@
 
       .chartPlaceholder {
         height: 400px;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--profile-card-bg);
         border-radius: 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
 
         p {
-          color: var(--white-500);
+          color: var(--profile-text);
           font-size: 1.2rem;
           opacity: 0.7;
         }
@@ -301,14 +301,14 @@
       gap: 1.5rem;
 
       .statItem {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--profile-card-bg);
         padding: 1.5rem;
         border-radius: 0.5rem;
         text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--profile-border);
 
         h3 {
-          color: var(--white-500);
+          color: var(--profile-text);
           margin-bottom: 1rem;
           font-size: 1.1rem;
           font-weight: 500;
@@ -316,7 +316,7 @@
         }
 
         p {
-          color: var(--white-500);
+          color: var(--profile-text);
           font-size: 1.5rem;
           font-weight: 600;
         }
@@ -347,42 +347,42 @@
       }
 
       .startButton {
-        background-color: #10b981;
-        color: white;
+        background-color: var(--green-500);
+        color: var(--white-500);
 
         &:hover:not(:disabled) {
-          background-color: #059669;
+          background-color: var(--green-400);
           transform: translateY(-2px);
         }
       }
 
       .generateButton {
-        background-color: #8b5cf6;
-        color: white;
+        background-color: var(--purple-500);
+        color: var(--white-500);
 
         &:hover:not(:disabled) {
-          background-color: #7c3aed;
+          background-color: var(--purple-400);
           transform: translateY(-2px);
         }
       }
 
       .saveButton {
-        background-color: #10b981;
-        color: white;
+        background-color: var(--green-500);
+        color: var(--white-500);
 
         &:hover {
-          background-color: #059669;
+          background-color: var(--green-400);
           transform: translateY(-2px);
         }
       }
 
       .resetButton {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: var(--white-500);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background-color: var(--profile-card-bg);
+        color: var(--profile-text);
+        border: 1px solid var(--profile-border);
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.2);
+          background-color: var(--profile-hover-bg);
           transform: translateY(-2px);
         }
       }
