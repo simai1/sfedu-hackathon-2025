@@ -297,7 +297,7 @@ function Analysis() {
                 }
 
                 if (!screenshotUrl) {
-                  console.error("❌ URL не найден в ответе сервера!", {
+                  console.error("URL не найден в ответе сервера!", {
                     photoResponse,
                     photoData,
                     responseKeys: photoResponse
@@ -311,12 +311,23 @@ function Analysis() {
                 console.log("=== Photo URL получен ===");
                 console.log("screenshotUrl:", screenshotUrl);
 
+                // Получаем текущее время видео для time_code
+                const currentVideoTime =
+                  videoPlayerRef.current?.getCurrentTime() || 0;
+                const timeCode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
+
+                console.log("Таймкод видео:", {
+                  currentVideoTime,
+                  timeCode,
+                });
+
                 // Отправляем video_frame на сервер
                 const videoFrameMessage = {
                   type: "video_frame",
                   timestamp: timestamp.toString(),
                   video_id: currentVideoId,
                   screenshot_url: screenshotUrl,
+                  time_code: timeCode,
                 };
 
                 console.log("=== Отправка video_frame в WebSocket ===");
@@ -326,20 +337,17 @@ function Analysis() {
                 if (wsRef.current?.readyState === WebSocket.OPEN) {
                   wsRef.current.send(JSON.stringify(videoFrameMessage));
                   console.log(
-                    "✅ video_frame успешно отправлен:",
+                    "video_frame успешно отправлен:",
                     videoFrameMessage
                   );
                 } else {
-                  console.error(
-                    "❌ WebSocket не готов для отправки video_frame",
-                    {
-                      readyState: wsRef.current?.readyState,
-                      wsExists: !!wsRef.current,
-                    }
-                  );
+                  console.error("WebSocket не готов для отправки video_frame", {
+                    readyState: wsRef.current?.readyState,
+                    wsExists: !!wsRef.current,
+                  });
                 }
               } catch (error) {
-                console.error("❌ Ошибка загрузки фото:", error);
+                console.error("Ошибка загрузки фото:", error);
                 if (error instanceof Error) {
                   console.error("Сообщение об ошибке:", error.message);
                   console.error("Стек ошибки:", error.stack);
@@ -347,7 +355,7 @@ function Analysis() {
               }
             } else {
               console.warn(
-                "⚠️ uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
+                "uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
               );
               console.warn("Текущее состояние:", {
                 uploadedVideoId,
@@ -794,8 +802,6 @@ function Analysis() {
                 {uploadedVideoUrl && <p>Ссылка: {uploadedVideoUrl}</p>}
               </div>
             )}
-
-           
 
             <div className={styles.actionButtons}>
               <button
