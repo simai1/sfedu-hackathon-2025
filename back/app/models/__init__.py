@@ -4,9 +4,11 @@ Base = declarative_base()
 
 from app.models.user import UserModel
 from app.models.pair_token import PairTokenModel
+from app.models.video import VideoModel
 
 __all__ = [
     "Base",
     "UserModel",
-    "PairTokenModel"
+    "PairTokenModel",
+    "VideoModel",
 ]
