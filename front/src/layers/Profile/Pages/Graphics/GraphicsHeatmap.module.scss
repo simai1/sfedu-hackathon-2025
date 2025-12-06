@@ -1,0 +1,168 @@
+.container {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: var(--profile-bg);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    color: var(--profile-text);
+    font-size: 1.6rem;
+  }
+}
+
+.subtitle {
+  color: var(--profile-text-secondary);
+  margin: 0.25rem 0 0 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  h2 {
+    margin: 0;
+    color: var(--profile-text);
+  }
+}
+
+.sectionSubtitle {
+  margin: 0;
+  color: var(--profile-text-secondary);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.selector {
+  min-width: 260px;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--profile-border);
+  background-color: var(--profile-card-bg);
+  color: var(--profile-text);
+  font-size: 0.95rem;
+}
+
+.metaBlock {
+  background: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  h2 {
+    margin: 0;
+    color: var(--profile-text);
+  }
+}
+
+.description {
+  margin: 0;
+  color: var(--profile-text-secondary);
+}
+
+.hint {
+  margin: 0;
+  color: var(--profile-text);
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.heatmapCard {
+  background: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heatmapHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--profile-text);
+  font-weight: 600;
+}
+
+.badge {
+  background: var(--purple-500);
+  color: white;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.heatmapPlaceholder {
+  position: relative;
+  height: 360px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(56, 189, 248, 0.08));
+  border: 1px solid var(--profile-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 40%, rgba(255, 0, 0, 0.35), transparent 35%),
+    radial-gradient(circle at 70% 60%, rgba(255, 165, 0, 0.3), transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(0, 200, 255, 0.25), transparent 45%);
+  filter: blur(12px);
+}
+
+.placeholderLabel {
+  position: relative;
+  color: var(--profile-text);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  z-index: 1;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--profile-text);
+  font-size: 0.9rem;
+}
+
+.legendBar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4ade80, #fbbf24, #ef4444);
+}
+

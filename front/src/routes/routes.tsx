@@ -11,6 +11,7 @@ import ProfileMain from "../layers/Profile/Pages/ProfileMain/ProfileMain"
 import Analysis from "../layers/Profile/Pages/Analysis/Analysis"
 import Settings from "../layers/Profile/Pages/Settings/Settings"
 import Graphics from "../layers/Profile/Pages/Graphics/Graphics"
+import GraphicsHeatmap from "../layers/Profile/Pages/Graphics/GraphicsHeatmap"
 import Groups from "../layers/Profile/Pages/Groups/Groups"
 import Assistant from "../layers/Profile/Pages/Assistant/Assistant"
 import Employees from "../layers/Profile/Pages/Employees/Employees"
@@ -29,7 +30,7 @@ export const routes = [
       { index: true, element: <ProfileMain /> },
       { path: "analysis", element: <Analysis /> },
       { path: "settings", element: <Settings /> },
-      { path: "graphics", element: <Graphics /> },
+      { path: "graphics", element: <GraphicsHeatmap /> },
       { path: "history", element: <History /> },
       { path: "history/:id", element: <HistoryDetailed /> },
       { path: "report", element: <Report /> },

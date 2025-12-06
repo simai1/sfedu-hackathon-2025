@@ -1,0 +1,49 @@
+.heatmapCard {
+  background: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heatmapHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--profile-text);
+  font-weight: 600;
+}
+
+.badge {
+  background: var(--green-500);
+  color: var(--black-500);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid var(--profile-border);
+  background: #0f172a;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--profile-text);
+  font-size: 0.9rem;
+}
+
+.legendBar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4ade80, #fbbf24, #ef4444);
+}
+
