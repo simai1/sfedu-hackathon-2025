@@ -26,7 +26,7 @@ class EmotionMonopolar:
                                     spect_art_by_totalp=True)
         mss = MentalAndSpectralSetting(n_sec_for_averaging=2,
                                        n_sec_for_instant_estimation=4)
-        calibration_length = 6
+        calibration_length = 10
         nwins_skip_after_artifact = 10
 
         self.__maths = {BB_channels[i]: EmotionalMath(mls, ads, mss) for i in range(4)}

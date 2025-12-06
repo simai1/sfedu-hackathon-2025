@@ -1,63 +1,74 @@
-import { useEffect, useRef, useState } from "react"
-import * as echarts from "echarts"
-import { useWebSocketStore } from "../../../../../../../store/websocketStore"
-import styles from "./ConcentrationEngagementChart.module.scss"
+import { useEffect, useRef, useState } from "react";
+import * as echarts from "echarts";
+import { useWebSocketStore } from "../../../../../../../store/websocketStore";
+import styles from "./ConcentrationEngagementChart.module.scss";
 
 interface ChannelData {
-  mind: {   
-    instant_attention: number
-    instant_relaxation: number
-  }
+  mind: {
+    relative_attention: number;
+    relative_relaxation: number;
+    instant_attention: number;
+    instant_relaxation: number;
+  };
 }
 
 function ConcentrationEngagementChart() {
-  const chartRef = useRef<HTMLDivElement>(null)
-  const chartInstanceRef = useRef<echarts.EChartsType | null>(null)
-  const { lastMessage } = useWebSocketStore()
-  
-  const [concentrationData, setConcentrationData] = useState<number[]>([])
-  const [engagementData, setEngagementData] = useState<number[]>([])
-  const [timeData, setTimeData] = useState<number[]>([])
-  const timeCounterRef = useRef(0)
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<echarts.EChartsType | null>(null);
+  const { lastMessage } = useWebSocketStore();
+
+  const [concentrationData, setConcentrationData] = useState<number[]>([]);
+  const [relaxationData, setRelaxationData] = useState<number[]>([]);
+  const [timeData, setTimeData] = useState<number[]>([]);
+  const timeCounterRef = useRef(0);
 
   const extractDataFromMessage = (message: any) => {
-    const channels = message?.data?.channels || message?.channels
-    
+    const channels = message?.data?.channels || message?.channels;
+
     if (!channels) {
-      return null
+      return null;
     }
 
-    const channelKeys = Object.keys(channels)
+    const channelKeys = Object.keys(channels);
     if (channelKeys.length === 0) {
-      return null
+      return null;
     }
 
-    let totalAttention = 0
-    let totalRelaxation = 0
-    let validChannels = 0
+    let totalAttention = 0;
+    let totalRelaxation = 0;
+    let validChannels = 0;
 
     channelKeys.forEach((key) => {
-      const channel = channels[key] as ChannelData
+      const channel = channels[key] as ChannelData;
       if (channel?.mind) {
-        totalAttention += channel.mind.instant_attention ?? 0
-        totalRelaxation += channel.mind.instant_relaxation ?? 0
-        validChannels++
+        // relative_attention соответствует concentration из BrainBit SDK
+        // relative_relaxation соответствует relaxation из BrainBit SDK
+        // Формула работает для обоих типов калибровки:
+        // - Монополярная: усредняет разные значения по каналам (O1, O2, T3, T4)
+        // - Биполярная: все каналы имеют одинаковые значения, среднее = одно значение
+        totalAttention += channel.mind.relative_attention ?? 0;
+        totalRelaxation += channel.mind.relative_relaxation ?? 0;
+        validChannels++;
       }
-    })
+    });
 
     if (validChannels === 0) {
-      return null
+      return null;
     }
 
     return {
+      // attention = concentration (концентрация) из BrainBit SDK
+      // Среднее значение по всем каналам (работает для монополярной и биполярной калибровки)
       attention: totalAttention / validChannels,
+      // relaxation (расслабление) из BrainBit SDK
+      // Среднее значение по всем каналам (работает для монополярной и биполярной калибровки)
       relaxation: totalRelaxation / validChannels,
-    }
-  }
+    };
+  };
 
   useEffect(() => {
     if (chartRef.current) {
-      chartInstanceRef.current = echarts.init(chartRef.current)
+      chartInstanceRef.current = echarts.init(chartRef.current);
 
       const option = {
         backgroundColor: "transparent",
@@ -138,7 +149,7 @@ function ConcentrationEngagementChart() {
           {
             name: "Расслабленность",
             type: "line",
-            data: engagementData,
+            data: relaxationData,
             smooth: true,
             symbol: "circle",
             symbolSize: 6,
@@ -150,53 +161,60 @@ function ConcentrationEngagementChart() {
             },
           },
         ],
-      }
+      };
 
-      chartInstanceRef.current.setOption(option)
+      chartInstanceRef.current.setOption(option);
 
       const handleResize = () => {
-        chartInstanceRef.current?.resize()
-      }
+        chartInstanceRef.current?.resize();
+      };
 
-      window.addEventListener("resize", handleResize)
+      window.addEventListener("resize", handleResize);
 
       return () => {
-        window.removeEventListener("resize", handleResize)
-        chartInstanceRef.current?.dispose()
-      }
+        window.removeEventListener("resize", handleResize);
+        chartInstanceRef.current?.dispose();
+      };
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (!lastMessage || !chartInstanceRef.current) {
-      return
+      return;
     }
 
-    const extractedData = extractDataFromMessage(lastMessage)
-    
+    const extractedData = extractDataFromMessage(lastMessage);
+
     if (!extractedData) {
-      return
+      return;
     }
 
-    const newTime = timeCounterRef.current++
-    const newConcentration = Math.max(0, Math.min(100, extractedData.attention))
-    const newRelaxation = Math.max(0, Math.min(100, extractedData.relaxation))
+    const newTime = timeCounterRef.current++;
+    // Концентрация = relative_attention из библиотеки em_st_artifacts
+    // Соответствует concentration из BrainBit SDK
+    const newConcentration = Math.max(
+      0,
+      Math.min(100, extractedData.attention)
+    );
+    // Расслабленность = relative_relaxation из библиотеки em_st_artifacts
+    // Соответствует relaxation из BrainBit SDK
+    const newRelaxation = Math.max(0, Math.min(100, extractedData.relaxation));
 
     setTimeData((prev) => {
-      const updated = [...prev, newTime]
-      return updated.length > 50 ? updated.slice(-50) : updated
-    })
+      const updated = [...prev, newTime];
+      return updated.length > 50 ? updated.slice(-50) : updated;
+    });
 
     setConcentrationData((prev) => {
-      const updated = [...prev, newConcentration]
-      return updated.length > 50 ? updated.slice(-50) : updated
-    })
+      const updated = [...prev, newConcentration];
+      return updated.length > 50 ? updated.slice(-50) : updated;
+    });
 
-    setEngagementData((prev) => {
-      const updated = [...prev, newRelaxation]
-      return updated.length > 50 ? updated.slice(-50) : updated
-    })
-  }, [lastMessage])
+    setRelaxationData((prev) => {
+      const updated = [...prev, newRelaxation];
+      return updated.length > 50 ? updated.slice(-50) : updated;
+    });
+  }, [lastMessage]);
 
   useEffect(() => {
     if (chartInstanceRef.current && timeData.length > 0) {
@@ -211,19 +229,18 @@ function ConcentrationEngagementChart() {
           },
           {
             name: "Расслабленность",
-            data: engagementData,
+            data: relaxationData,
           },
         ],
-      })
+      });
     }
-  }, [timeData, concentrationData, engagementData])
+  }, [timeData, concentrationData, relaxationData]);
 
   return (
     <div className={styles.chartContainer}>
       <div ref={chartRef} style={{ width: "100%", height: "400px" }}></div>
     </div>
-  )
+  );
 }
 
-export default ConcentrationEngagementChart
-
+export default ConcentrationEngagementChart;

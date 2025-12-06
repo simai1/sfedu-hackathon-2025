@@ -174,7 +174,7 @@ class SearchScreen(QMainWindow):
 
     def __is_sensor_connected(self, sensor_state):
         if sensor_state == SensorState.StateInRange:
-            # Автоматически переходим на экран монополярных эмоций и запускаем калибровку
+            # Автоматически переходим на экран выбора калибровки
             try:
                 brain_bit_controller.sensorConnectionState.disconnect(self.__is_sensor_connected)
             except Exception:
@@ -183,9 +183,7 @@ class SearchScreen(QMainWindow):
             # Сохраняем текущий экран в статусах для возврата
             if hasattr(statusScreen, 'previous_screen'):
                 statusScreen.previous_screen = self
-            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
-            # Запускаем калибровку автоматически
-            emotionMonopolarScreen.auto_start_calibration()
+            stackNavigation.setCurrentWidget(calibrationChoiceScreen)
         else:
             self.statusLabel.setText("Ошибка подключения. Попробуйте снова.")
             self.listWidget.setEnabled(True)
@@ -360,6 +358,38 @@ class SignalScreen(QMainWindow):
         stackNavigation.setCurrentWidget(menuScreen)
 
 
+class CalibrationChoiceScreen(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi(resource_path("ui/CalibrationChoiceScreenRuUI.ui"), self)
+        self.backButton.clicked.connect(self.__close_screen)
+        self.bipolarButton.clicked.connect(self.__go_to_bipolar)
+        self.monopolarButton.clicked.connect(self.__go_to_monopolar)
+
+    def __go_to_bipolar(self):
+        """Переход на экран биполярной калибровки"""
+        # Сохраняем текущий экран в статусах для возврата
+        if hasattr(statusScreen, 'previous_screen'):
+            statusScreen.previous_screen = self
+        stackNavigation.setCurrentWidget(emotionBipolarScreen)
+        # Запускаем калибровку автоматически
+        emotionBipolarScreen.auto_start_calibration()
+
+    def __go_to_monopolar(self):
+        """Переход на экран монополярной калибровки"""
+        # Сохраняем текущий экран в статусах для возврата
+        if hasattr(statusScreen, 'previous_screen'):
+            statusScreen.previous_screen = self
+        stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+        # Запускаем калибровку автоматически
+        emotionMonopolarScreen.auto_start_calibration()
+
+    def __close_screen(self):
+        """Возврат на предыдущий экран"""
+        # Возвращаемся на экран поиска устройств
+        stackNavigation.setCurrentWidget(searchScreen)
+
+
 class EmotionBipolarScreen(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -376,6 +406,12 @@ class EmotionBipolarScreen(QMainWindow):
         self.emotionController.rawSpectralDataCallback = self.raw_spectral_data_callback
 
         self.is_started = False
+        self.calibration_completed = False
+
+    def auto_start_calibration(self):
+        """Автоматический запуск калибровки после подключения устройства"""
+        if not self.is_started:
+            self.__start_signal()
 
     def start_calibration(self):
         if self.is_started:
@@ -396,9 +432,29 @@ class EmotionBipolarScreen(QMainWindow):
         brain_bit_controller.stop_signal()
         brain_bit_controller.signalReceived = None
         self.is_started = False
+        # Сбрасываем флаг калибровки при остановке
+        self.calibration_completed = False
 
     def calibration_callback(self, progress):
         self.calibrationProgress.setValue(progress)
+        # Проверяем, завершена ли калибровка
+        if progress >= 100 and not self.calibration_completed:
+            self.calibration_completed = True
+            # Собираем данные калибровки для отправки на сервер
+            calibration_data = self.__collect_calibration_data()
+            tokenScreen.set_calibration_data(calibration_data)
+            # НЕ останавливаем сигнал - данные продолжают выводиться в консоль
+            # Сохраняем текущий экран в статусах для возврата
+            if hasattr(statusScreen, 'previous_screen'):
+                statusScreen.previous_screen = self
+            # Просто переключаем интерфейс на экран ввода токена
+            stackNavigation.setCurrentWidget(tokenScreen)
+            
+    def __collect_calibration_data(self) -> dict:
+        """Сбор всех данных после калибровки"""
+        if hasattr(self.emotionController, 'get_calibration_data'):
+            return self.emotionController.get_calibration_data()
+        return {"calibration_completed": True, "channels": {}}
 
     def is_artifacted_sequence_callback(self, artifacted):
         self.artSequenceLabel.setText('Artefacted sequence: ' + str(artifacted))
@@ -425,7 +481,12 @@ class EmotionBipolarScreen(QMainWindow):
 
     def __close_screen(self):
         self.__stop_signal()
-        stackNavigation.setCurrentWidget(menuScreen)
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на экран выбора калибровки
+        if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
+            stackNavigation.setCurrentWidget(statusScreen.previous_screen)
+            statusScreen.previous_screen = None
+        else:
+            stackNavigation.setCurrentWidget(calibrationChoiceScreen)
 
 
 class EmotionMonopolarScreen(QMainWindow):
@@ -674,13 +735,13 @@ class EmotionMonopolarScreen(QMainWindow):
             pass
 
     def __close_screen(self):
-        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на статусы
+        # Возвращаемся на предыдущий экран, если он был сохранен, иначе на экран выбора калибровки
         if hasattr(statusScreen, 'previous_screen') and statusScreen.previous_screen:
             stackNavigation.setCurrentWidget(statusScreen.previous_screen)
             statusScreen.previous_screen = None
         else:
             self.__stop_signal()
-            stackNavigation.setCurrentWidget(statusScreen)
+            stackNavigation.setCurrentWidget(calibrationChoiceScreen)
 
 
 class TokenScreen(QMainWindow):
@@ -807,24 +868,68 @@ class TokenScreen(QMainWindow):
             
     def __setup_realtime_data_sending(self):
         """Настройка отправки данных в реальном времени"""
-        # Подключаемся к callback'ам для отправки данных
-        if hasattr(emotionMonopolarScreen, 'emotionController'):
+        # Определяем, какой контроллер использовать (монополярный или биполярный)
+        controller = None
+        is_bipolar = False
+        
+        if hasattr(emotionBipolarScreen, 'emotionController') and emotionBipolarScreen.is_started:
+            controller = emotionBipolarScreen.emotionController
+            is_bipolar = True
+        elif hasattr(emotionMonopolarScreen, 'emotionController') and emotionMonopolarScreen.is_started:
             controller = emotionMonopolarScreen.emotionController
+            is_bipolar = False
+        
+        if not controller:
+            return
             
-            # Сохраняем оригинальные callback'и
-            original_mind_callback = controller.lastMindDataCallback
-            original_spectral_callback = controller.lastSpectralDataCallback
-            
-            # Инициализируем структуру данных для всех каналов
-            self.eeg_data_buffer = {
-                "channels": {
-                    "O1": {"mind": None, "spectral": None},
-                    "O2": {"mind": None, "spectral": None},
-                    "T3": {"mind": None, "spectral": None},
-                    "T4": {"mind": None, "spectral": None}
-                }
+        # Сохраняем оригинальные callback'и
+        original_mind_callback = controller.lastMindDataCallback
+        original_spectral_callback = controller.lastSpectralDataCallback
+        
+        # Инициализируем структуру данных для всех каналов
+        self.eeg_data_buffer = {
+            "channels": {
+                "O1": {"mind": None, "spectral": None},
+                "O2": {"mind": None, "spectral": None},
+                "T3": {"mind": None, "spectral": None},
+                "T4": {"mind": None, "spectral": None}
             }
+        }
+        
+        if is_bipolar:
+            # Для биполярной калибровки callback'и не принимают channel параметр
+            def collect_mind_data_bipolar(data):
+                # Вызываем оригинальный callback
+                if original_mind_callback:
+                    original_mind_callback(data)
+                # Сохраняем данные в буфер для всех каналов (биполярные данные применяются ко всем)
+                for channel in self.eeg_data_buffer["channels"]:
+                    self.eeg_data_buffer["channels"][channel]["mind"] = {
+                        "relative_attention": float(data.rel_attention),
+                        "relative_relaxation": float(data.rel_relaxation),
+                        "instant_attention": float(data.inst_attention),
+                        "instant_relaxation": float(data.inst_relaxation)
+                    }
             
+            def collect_spectral_data_bipolar(spectral_data):
+                # Вызываем оригинальный callback
+                if original_spectral_callback:
+                    original_spectral_callback(spectral_data)
+                # Сохраняем данные в буфер для всех каналов
+                for channel in self.eeg_data_buffer["channels"]:
+                    self.eeg_data_buffer["channels"][channel]["spectral"] = {
+                        "delta": float(spectral_data.delta),
+                        "theta": float(spectral_data.theta),
+                        "alpha": float(spectral_data.alpha),
+                        "beta": float(spectral_data.beta),
+                        "gamma": float(spectral_data.gamma)
+                    }
+            
+            # Устанавливаем новые callback'и
+            controller.lastMindDataCallback = collect_mind_data_bipolar
+            controller.lastSpectralDataCallback = collect_spectral_data_bipolar
+        else:
+            # Для монополярной калибровки callback'и принимают channel параметр
             def collect_mind_data(data, channel):
                 # Вызываем оригинальный callback
                 if original_mind_callback:
@@ -855,11 +960,11 @@ class TokenScreen(QMainWindow):
             # Устанавливаем новые callback'и
             controller.lastMindDataCallback = collect_mind_data
             controller.lastSpectralDataCallback = collect_spectral_data
-            
-            # Создаем таймер для отправки данных раз в секунду
-            self.send_timer = QTimer()
-            self.send_timer.timeout.connect(self.__send_eeg_data_periodically)
-            self.send_timer.start(1000)  # Отправляем каждую секунду (1000 мс)
+        
+        # Создаем таймер для отправки данных раз в секунду
+        self.send_timer = QTimer()
+        self.send_timer.timeout.connect(self.__send_eeg_data_periodically)
+        self.send_timer.start(1000)  # Отправляем каждую секунду (1000 мс)
     
     def __send_eeg_data_periodically(self):
         """Периодическая отправка накопленных данных"""
@@ -897,7 +1002,11 @@ class TokenScreen(QMainWindow):
         if self.ws_client:
             self.ws_client.stop()
             self.ws_client = None
-        stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+        # Возвращаемся на экран калибровки (биполярный или монополярный)
+        if hasattr(emotionBipolarScreen, 'is_started') and emotionBipolarScreen.is_started:
+            stackNavigation.setCurrentWidget(emotionBipolarScreen)
+        else:
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
 
 
 class StatusScreen(QMainWindow):
@@ -1197,6 +1306,7 @@ def main():
     """Главная функция приложения"""
     global stackNavigation, menuScreen, searchScreen, resistScreen, signalScreen
     global emotionBipolarScreen, emotionMonopolarScreen, tokenScreen, statusScreen, spectrumScreen
+    global calibrationChoiceScreen
     
     try:
         app = QApplication(sys.argv)
@@ -1206,6 +1316,7 @@ def main():
         searchScreen = SearchScreen()
         resistScreen = ResistanceScreen()
         signalScreen = SignalScreen()
+        calibrationChoiceScreen = CalibrationChoiceScreen()
         emotionBipolarScreen = EmotionBipolarScreen()
         emotionMonopolarScreen = EmotionMonopolarScreen()
         tokenScreen = TokenScreen()
@@ -1216,6 +1327,7 @@ def main():
         stackNavigation.addWidget(searchScreen)
         stackNavigation.addWidget(resistScreen)
         stackNavigation.addWidget(signalScreen)
+        stackNavigation.addWidget(calibrationChoiceScreen)
         stackNavigation.addWidget(emotionBipolarScreen)
         stackNavigation.addWidget(emotionMonopolarScreen)
         stackNavigation.addWidget(tokenScreen)

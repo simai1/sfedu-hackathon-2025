@@ -15,140 +15,157 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {
-	background-color: #00111F;
+	background: #0A0E1A;
 	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
 }
 
 QLabel {
-	color: #FFFFFF;
+	color: #E0E0E0;
 }
 
 QPushButton {
-	background-color: black;
-	border: 2px solid #B66DDB;
-	color: white;
-	font-size: 16px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
 	font-weight: 500;
-	height: 48px;
-	padding: 0 24px;
-	border-radius: 24px;
-	transition: all 0.3s ease;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 8px;
 }
 
 QPushButton:hover {
-	background-color: #333333;
-	border: 2px solid #B66DDB;
-	box-shadow: 0 4px 8px rgba(182, 109, 219, 0.4);
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
 }
 
 QPushButton:pressed {
-	background-color: #555555;
-	border: 2px solid #B66DDB;
-	transform: translateY(2px);
+	background: rgba(77, 161, 255, 0.15);
+	transform: scale(0.98);
 }
 
 QPushButton:disabled {
-	opacity: 0.5;
+	opacity: 0.4;
 }
 
 /* Header */
 QLabel#headerTitle {
 	font-size: 24px;
 	font-weight: 600;
-	margin: 24px 0;
+	margin: 24px 0 8px 0;
 	text-align: center;
+	color: #4DA1FF;
 }
 
 /* Back Button */
 QPushButton#backButton {
-	background-color: #00223F;
-	border-radius: 12px;
-	font-size: 18px;
-	padding: 0 20px;
-	min-width: 40px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	border-radius: 8px;
+	font-size: 14px;
+	padding: 0 16px;
+	min-width: 60px;
+	height: 40px;
 }
 
 QPushButton#backButton:hover {
-	background-color: #00335F;
-	box-shadow: 0 2px 4px rgba(0, 34, 63, 0.4);
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
 }
 
 /* Start Button */
 QPushButton#startBipolarEmotionButton {
-	margin: 0 32px 24px 32px;
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	border-radius: 8px;
+	font-size: 14px;
+	padding: 0 20px;
+	min-width: 120px;
+	height: 40px;
+}
+
+QPushButton#startBipolarEmotionButton:hover {
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
 }
 
 /* Section Headers */
-QLabel#sectionHeader {
-	font-size: 20px;
-	font-weight: 600;
-	color: #B66DDB;
-	margin: 15px 0 5px 0;
+QLabel[objectName="sectionHeader"] {
+	font-size: 13px;
+	font-weight: 500;
+	color: #999999;
+	margin: 8px 0 4px 0;
 }
 
 /* Progress Bar */
 QProgressBar#calibrationProgress {
-	border: 2px solid #4DA1FF;
-	border-radius: 10px;
-	background-color: rgba(0, 34, 63, 0.5);
-	margin: 10px 32px;
-	height: 20px;
+	border: 1px solid rgba(77, 161, 255, 0.2);
+	border-radius: 6px;
+	background: rgba(77, 161, 255, 0.05);
+	margin: 8px 24px;
+	height: 8px;
 	text-align: center;
 }
 
 QProgressBar#calibrationProgress::chunk {
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #B66DDB, stop: 1 #8A4BB0);
-	border-radius: 8px;
+	background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #4DA1FF, stop: 1 #6BB5FF);
+	border-radius: 5px;
 }
 
 /* Status Labels */
 QLabel#artSequenceLabel, QLabel#artBothSidesLabel {
-	font-size: 16px;
-	margin: 5px 32px;
-	padding: 8px;
-	border-radius: 8px;
-	background-color: rgba(0, 34, 63, 0.3);
+	font-size: 12px;
+	margin: 4px 24px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	background: rgba(77, 161, 255, 0.05);
+	border: 1px solid rgba(77, 161, 255, 0.1);
+	color: #CCCCCC;
 }
 
 /* Data Grids */
 QGridLayout {
-	margin: 10px 32px;
-	spacing: 10px;
+	margin: 8px 24px;
+	spacing: 8px;
 }
 
 /* Grid Headers */
-QLabel[labelType="gridHeader"] {
-	font-weight: 600;
-	font-size: 16px;
-	color: #4DA1FF;
+QLabel[property*="labelType=gridHeader"] {
+	font-weight: 500;
+	font-size: 12px;
+	color: #999999;
 	text-align: center;
 }
 
 /* Value Labels */
-QLabel[labelType="value"] {
+QLabel[property*="labelType=value"] {
 	font-weight: 600;
-	font-size: 18px;
-	color: #20C997;
+	font-size: 14px;
+	color: #4DA1FF;
 	text-align: center;
-	background-color: rgba(0, 34, 63, 0.3);
-	border-radius: 8px;
-	padding: 8px;
+	background: rgba(77, 161, 255, 0.08);
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 6px;
+	padding: 6px 10px;
 }
 
 /* Status Bar */
 QStatusBar {
-	background-color: #00111F;
+	background: #0A0E1A;
 	border: none;
-	border-top: 1px solid #4DA1FF;
+	border-top: 1px solid rgba(77, 161, 255, 0.15);
 }
 
 QStatusBar QLabel {
-	color: #FFFFFF;
-	font-size: 14px;
+	color: #999999;
+	font-size: 12px;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -173,18 +190,27 @@ QStatusBar QLabel {
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+      <property name="spacing">
+       <number>12</number>
+      </property>
       <property name="leftMargin">
-       <number>32</number>
+       <number>24</number>
       </property>
       <property name="rightMargin">
-       <number>32</number>
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
       </property>
       <item>
        <widget class="QPushButton" name="backButton">
         <property name="minimumSize">
          <size>
           <width>60</width>
-          <height>48</height>
+          <height>40</height>
          </size>
         </property>
         <property name="text">
@@ -197,7 +223,7 @@ QStatusBar QLabel {
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>60</height>
+          <height>40</height>
          </size>
         </property>
         <property name="text">
@@ -212,8 +238,8 @@ QStatusBar QLabel {
       <property name="text">
        <string>Калибровка:</string>
       </property>
-      <property name="objectName">
-       <string>sectionHeader</string>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
       </property>
      </widget>
     </item>
@@ -225,7 +251,7 @@ QStatusBar QLabel {
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>30</height>
+        <height>8</height>
        </size>
       </property>
      </widget>
@@ -255,18 +281,21 @@ QStatusBar QLabel {
       <property name="text">
        <string>Спектральные данные:</string>
       </property>
-      <property name="objectName">
-       <string>sectionHeader</string>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
       </property>
      </widget>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="property" stdset="0">
+       <string>dataGrid=true</string>
+      </property>
       <property name="horizontalSpacing">
-       <number>15</number>
+       <number>8</number>
       </property>
       <property name="verticalSpacing">
-       <number>15</number>
+       <number>8</number>
       </property>
       <item row="0" column="2">
        <widget class="QLabel" name="label_7">
@@ -431,18 +460,21 @@ QStatusBar QLabel {
       <property name="text">
        <string>Данные о состоянии разума:</string>
       </property>
-      <property name="objectName">
-       <string>sectionHeader</string>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
       </property>
      </widget>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_2">
+      <property name="property" stdset="0">
+       <string>dataGrid=true</string>
+      </property>
       <property name="horizontalSpacing">
-       <number>15</number>
+       <number>8</number>
       </property>
       <property name="verticalSpacing">
-       <number>15</number>
+       <number>8</number>
       </property>
       <item row="0" column="1">
        <widget class="QLabel" name="label_5">
@@ -565,20 +597,7 @@ QStatusBar QLabel {
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar">
-   <property name="styleSheet">
-    <string notr="true">QStatusBar {
-	background-color: #00111F;
-	border: none;
-	border-top: 1px solid #4DA1FF;
-}
-
-QStatusBar QLabel {
-	color: #FFFFFF;
-	font-size: 14px;
-}</string>
-   </property>
-  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>
