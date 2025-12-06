@@ -22,7 +22,7 @@ function MyGroups() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleWatchVideo = () => {
-    toast.warning("Функция доступна с тарифом PRO")
+    toast.warning("Функция будет доступна позже")
   }
   useEffect(() => {
     const load = async () => {
