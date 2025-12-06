@@ -9,6 +9,7 @@ import {
   Users,
   MessageCircle,
   Music,
+  Eye,
 } from "lucide-react";
 import styles from "./LeftMenu.module.scss";
 import { Role, useUserStore } from "../../../../store/userStore";
@@ -51,6 +52,11 @@ function LeftMenu() {
       label: "Анализ аудио",
       path: "/profile/audio-analysis",
       icon: <Music size={20} />,
+    },
+    {
+      label: "Отслеживание взгляда",
+      path: "/profile/eye-tracking",
+      icon: <Eye size={20} />,
     },
     {
       label: "Графики",

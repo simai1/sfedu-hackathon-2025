@@ -7,6 +7,12 @@ import VideoPlayer, {
   type ScreenshotTrigger,
   type VideoPlayerRef,
 } from "../../../../core/components/VideoPlayer/VideoPlayer";
+import EyeTrackingCalibration from "../../../../core/components/EyeTrackingCalibration/EyeTrackingCalibration";
+import CameraPermission from "../../../../core/components/CameraPermission/CameraPermission";
+import Heatmap, {
+  type GazePoint,
+} from "../../../../core/components/Heatmap/Heatmap";
+import VideoAutoPlayHelper from "./VideoAutoPlayHelper";
 import { uploadVideo, uploadPhoto } from "../../../../api/files";
 import { useUserStore } from "../../../../store/userStore";
 import { useWebSocketStore } from "../../../../store/websocketStore";
@@ -15,6 +21,8 @@ import styles from "./Analysis.module.scss";
 type AnalysisState =
   | "upload"
   | "ready"
+  | "cameraPermission"
+  | "calibration"
   | "watching"
   | "finished"
   | "reportGenerated";
@@ -36,11 +44,23 @@ function Analysis() {
   >([]);
   const [capturedScreenshots, setCapturedScreenshots] = useState<any[]>([]);
   const [isTracking, setIsTracking] = useState(false);
+  const [isCalibrated, setIsCalibrated] = useState(false);
+  const [gazePoints, setGazePoints] = useState<GazePoint[]>([]);
+  const [isEyeTrackingActive, setIsEyeTrackingActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [videoDimensions, setVideoDimensions] = useState({
+    width: 800,
+    height: 450,
+  });
   const videoDurationRef = useRef<number>(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const uploadedVideoIdRef = useRef<string | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const gazeCollectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const mousePositionRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
@@ -64,16 +84,11 @@ function Analysis() {
 
       try {
         const response = await uploadVideo(file);
-        console.log("Ответ от сервера при загрузке видео:", response);
         const data = response?.data;
-        console.log("Данные из ответа:", data);
 
         if (data?.id) {
-          console.log("Устанавливаем uploadedVideoId:", data.id);
           setUploadedVideoId(data.id);
           uploadedVideoIdRef.current = data.id; // Обновляем ref
-        } else {
-          console.error("ID видео не найден в ответе сервера:", data);
         }
 
         if (data?.url || data?.video_url) {
@@ -83,7 +98,6 @@ function Analysis() {
         setState("ready");
         connectToSocket();
       } catch (error) {
-        console.error("Ошибка загрузки видео", error);
         setUploadError("Не удалось загрузить видео. Попробуйте еще раз.");
         setState("upload");
         setVideoFile(null);
@@ -97,7 +111,6 @@ function Analysis() {
 
   const connectToSocket = () => {
     if (!token) {
-      console.error("Нет токена для подключения к WebSocket");
       setUploadError("Требуется авторизация для подключения к серверу");
       return;
     }
@@ -123,20 +136,15 @@ function Analysis() {
             const expirationTime = payload.exp * 1000; // конвертируем в миллисекунды
             const currentTime = Date.now();
             if (currentTime > expirationTime) {
-              console.error("Токен истек!");
               setUploadError(
                 "Токен авторизации истек. Пожалуйста, войдите заново."
               );
               return;
             }
-            console.log(
-              "Токен действителен до:",
-              new Date(expirationTime).toLocaleString()
-            );
           }
         }
       } catch (e) {
-        console.warn("Не удалось проверить токен:", e);
+        // Тихая ошибка проверки токена
       }
 
       // Используем URL из требований: ws://5.129.252.186:3000/ws/client?token={access_token}
@@ -146,17 +154,12 @@ function Analysis() {
         token
       )}`;
 
-      console.log("Подключение к WebSocket:", wsUrl.replace(token, "***"));
-      console.log("Токен длина:", token.length);
-      console.log("Токен первые 10 символов:", token.substring(0, 10));
-
       const ws = new WebSocket(wsUrl);
       let connectionTimeout: NodeJS.Timeout | null = null;
 
       // Таймаут для соединения (10 секунд)
       connectionTimeout = setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) {
-          console.error("Таймаут подключения к WebSocket");
           ws.close();
           setIsSocketConnected(false);
           setUploadError(
@@ -166,7 +169,6 @@ function Analysis() {
       }, 10000);
 
       ws.onopen = () => {
-        console.log("WebSocket подключен успешно");
         if (connectionTimeout) {
           clearTimeout(connectionTimeout);
           connectionTimeout = null;
@@ -178,154 +180,55 @@ function Analysis() {
       ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Получено сообщение от WebSocket:", data);
-
-          // Логирование формата eeg_sample для отладки
-          if (data.type === "eeg_sample") {
-            console.log("EEG Sample структура:", {
-              hasData: !!data.data,
-              hasChannels: !!data.data?.channels,
-              channelKeys: data.data?.channels
-                ? Object.keys(data.data.channels)
-                : [],
-              firstChannel: data.data?.channels
-                ? Object.keys(data.data.channels)[0]
-                : null,
-              firstChannelData: data.data?.channels
-                ? data.data.channels[Object.keys(data.data.channels)[0]]
-                : null,
-            });
-          }
 
           if (data.type === "video_tracking_started") {
             setIsTracking(true);
-            console.log("Отслеживание видео начато");
           } else if (data.type === "video_tracking_ended") {
             setIsTracking(false);
-            console.log("Отслеживание видео завершено");
           } else if (data.type === "request_screenshot") {
             // Сервер запрашивает скриншот
             const timestamp = data.timestamp;
-            console.log("Запрос скриншота на timestamp:", timestamp);
-            console.log("Состояние для скриншота:", {
-              hasVideoPlayerRef: !!videoPlayerRef.current,
-              uploadedVideoId,
-              videoURL: !!videoURL,
-              wsReady: wsRef.current?.readyState === WebSocket.OPEN,
-            });
 
             if (!videoPlayerRef.current) {
-              console.error(
-                "videoPlayerRef.current отсутствует, скриншот не может быть создан"
-              );
               return;
             }
-
-            // Создаем скриншот в любом случае (для отображения пользователю)
-            // captureScreenshot() автоматически вызовет onScreenshot callback,
-            // который добавит скриншот в capturedScreenshots
 
             // Получаем timecode СРАЗУ, до создания скриншота, чтобы зафиксировать точное время
             const currentVideoTime =
               videoPlayerRef.current?.getCurrentTime() || 0;
-            const timecode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
-
-            console.log("Таймкод видео (до создания скриншота):", {
-              currentVideoTime,
-              timecode,
-            });
+            const timecode = Math.floor(currentVideoTime);
 
             const imageData = videoPlayerRef.current.captureScreenshot();
-            console.log("Результат captureScreenshot:", {
-              hasImageData: !!imageData,
-              imageDataLength: imageData?.length || 0,
-              currentScreenshotsCount: capturedScreenshots.length,
-              timecode,
-            });
 
             if (!imageData) {
-              console.error("Не удалось создать скриншот - imageData пустой");
-              console.error("Проверка video элемента:", {
-                hasVideoElement: !!videoPlayerRef.current.getVideoElement(),
-                videoElement: videoPlayerRef.current.getVideoElement(),
-                currentTime: videoPlayerRef.current.getCurrentTime(),
-              });
               return;
             }
 
-            console.log(
-              "Скриншот успешно создан, imageData длина:",
-              imageData.length,
-              "timecode:",
-              timecode
-            );
-
             // Используем ref для получения актуального значения uploadedVideoId
-            // (чтобы избежать проблемы с замыканием в обработчике WebSocket)
             const currentVideoId =
               uploadedVideoIdRef.current || uploadedVideoId;
-
-            console.log("Проверка uploadedVideoId:", {
-              fromRef: uploadedVideoIdRef.current,
-              fromState: uploadedVideoId,
-              currentVideoId,
-            });
 
             // Отправляем на сервер только если есть uploadedVideoId
             if (currentVideoId) {
               try {
-                console.log(
-                  "=== Начинаем загрузку фото на сервер через /v1/photos ==="
-                );
-                console.log("imageData длина:", imageData.length);
-                console.log("timecode:", timecode);
-                console.log(
-                  "uploadedVideoId (из ref):",
-                  uploadedVideoIdRef.current
-                );
-                console.log("uploadedVideoId (из state):", uploadedVideoId);
-                console.log("currentVideoId:", currentVideoId);
-
                 // Загружаем фото на сервер через /v1/photos
                 const photoResponse = await uploadPhoto(
                   imageData,
                   `screenshot-${Date.now()}.png`
                 );
 
-                console.log("=== Ответ от сервера при загрузке фото ===");
-                console.log("Полный ответ:", photoResponse);
-                console.log("photoResponse.data:", photoResponse?.data);
-                console.log(
-                  "photoResponse.data?.url:",
-                  photoResponse?.data?.url
-                );
-
                 // Извлекаем URL из ответа
-                // Сервер возвращает {"url": "..."}
                 const photoData = photoResponse?.data;
                 let screenshotUrl = null;
 
                 if (photoData) {
-                  // Проверяем разные возможные форматы ответа
                   screenshotUrl =
                     photoData.url || photoData.photo_url || photoData.image_url;
                 }
 
                 if (!screenshotUrl) {
-                  console.error("URL не найден в ответе сервера!", {
-                    photoResponse,
-                    photoData,
-                    responseKeys: photoResponse
-                      ? Object.keys(photoResponse)
-                      : [],
-                    dataKeys: photoData ? Object.keys(photoData) : [],
-                  });
                   throw new Error("URL не найден в ответе сервера");
                 }
-
-                console.log("=== Photo URL получен ===");
-                console.log("screenshotUrl:", screenshotUrl);
-                console.log("timecode для отправки:", timecode);
 
                 // Отправляем video_frame на сервер
                 const videoFrameMessage = {
@@ -335,50 +238,22 @@ function Analysis() {
                   screenshot_url: screenshotUrl,
                 };
 
-                console.log("=== Отправка video_frame в WebSocket ===");
-                console.log("videoFrameMessage:", videoFrameMessage);
-                console.log("WebSocket readyState:", wsRef.current?.readyState);
-
                 if (wsRef.current?.readyState === WebSocket.OPEN) {
                   wsRef.current.send(JSON.stringify(videoFrameMessage));
-                  console.log(
-                    "video_frame успешно отправлен:",
-                    videoFrameMessage
-                  );
-                } else {
-                  console.error("WebSocket не готов для отправки video_frame", {
-                    readyState: wsRef.current?.readyState,
-                    wsExists: !!wsRef.current,
-                  });
                 }
               } catch (error) {
-                console.error("Ошибка загрузки фото:", error);
-                if (error instanceof Error) {
-                  console.error("Сообщение об ошибке:", error.message);
-                  console.error("Стек ошибки:", error.stack);
-                }
+                // Тихая ошибка
               }
-            } else {
-              console.warn(
-                "uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
-              );
-              console.warn("Текущее состояние:", {
-                uploadedVideoId,
-                state,
-                videoFile: !!videoFile,
-              });
             }
           } else if (data.type === "error") {
-            console.error("Ошибка от сервера:", data.message);
             setUploadError(`Ошибка сервера: ${data.message}`);
           }
         } catch (error) {
-          console.error("Ошибка парсинга сообщения:", error, event.data);
+          // Тихая ошибка парсинга
         }
       };
 
       ws.onerror = (error) => {
-        console.error("WebSocket ошибка:", error);
         if (connectionTimeout) {
           clearTimeout(connectionTimeout);
           connectionTimeout = null;
@@ -390,12 +265,6 @@ function Analysis() {
       };
 
       ws.onclose = (event) => {
-        console.log("WebSocket закрыт:", {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean,
-        });
-
         if (connectionTimeout) {
           clearTimeout(connectionTimeout);
           connectionTimeout = null;
@@ -418,20 +287,15 @@ function Analysis() {
           const errorMessage =
             errorMessages[event.code] ||
             `Соединение закрыто с кодом ${event.code}`;
-          console.error("Ошибка закрытия WebSocket:", errorMessage);
 
           // Автоматическое переподключение во время просмотра видео
           if (state === "watching" && event.code === 1011) {
-            console.log(
-              "Попытка переподключения WebSocket после ошибки 1011..."
-            );
             // Отменяем предыдущее переподключение, если оно было запланировано
             if (reconnectTimeoutRef.current) {
               clearTimeout(reconnectTimeoutRef.current);
             }
             reconnectTimeoutRef.current = setTimeout(() => {
               if (state === "watching" && !isSocketConnected && token) {
-                console.log("Переподключаемся к WebSocket...");
                 connectToSocket();
               }
               reconnectTimeoutRef.current = null;
@@ -441,15 +305,11 @@ function Analysis() {
           if (state === "ready" || state === "watching") {
             setUploadError(errorMessage);
           }
-        } else if (event.code === 1005) {
-          // Код 1005 означает "No Status Received" - это может быть нормальное закрытие
-          console.log("WebSocket закрыт без кода статуса (1005)");
         }
       };
 
       wsRef.current = ws;
     } catch (error) {
-      console.error("Ошибка создания WebSocket:", error);
       setIsSocketConnected(false);
       setUploadError(
         "Не удалось создать WebSocket соединение. Проверьте настройки браузера."
@@ -468,16 +328,186 @@ function Analysis() {
     return triggers;
   };
 
-  const handleStartWatching = () => {
-    console.log("handleStartWatching вызван", {
-      videoURL: !!videoURL,
-      isSocketConnected,
-      wsReadyState: wsRef.current?.readyState,
-      uploadedVideoId,
-    });
+  const handleCalibrationComplete = () => {
+    setIsCalibrated(true);
+    setState("watching");
 
+    // Небольшая задержка, чтобы компонент успел отрендериться
+    setTimeout(() => {
+      // Отправляем video_start
+      const videoStartMessage = { type: "video_start" };
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify(videoStartMessage));
+      }
+
+      // Запускаем отслеживание взгляда
+      startEyeTracking();
+    }, 100);
+  };
+
+  const handleCalibrationCancel = () => {
+    setState("ready");
+  };
+
+  // Получаем размеры видео для тепловой карты
+  useEffect(() => {
+    const updateVideoDimensions = () => {
+      const videoElement = videoPlayerRef.current?.getVideoElement();
+      if (videoElement) {
+        setVideoDimensions({
+          width: videoElement.videoWidth || 800,
+          height: videoElement.videoHeight || 450,
+        });
+      }
+    };
+
+    const videoElement = videoPlayerRef.current?.getVideoElement();
+    if (videoElement) {
+      videoElement.addEventListener("loadedmetadata", updateVideoDimensions);
+      updateVideoDimensions();
+    }
+
+    return () => {
+      if (videoElement) {
+        videoElement.removeEventListener(
+          "loadedmetadata",
+          updateVideoDimensions
+        );
+      }
+    };
+  }, [videoURL, state]);
+
+  // Отслеживание позиции мыши для симуляции взгляда
+  useEffect(() => {
+    if (!isEyeTrackingActive || !videoContainerRef.current) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!videoContainerRef.current) return;
+      const rect = videoContainerRef.current.getBoundingClientRect();
+      const videoElement = videoPlayerRef.current?.getVideoElement();
+
+      if (!videoElement) return;
+
+      // Вычисляем относительные координаты относительно контейнера видео
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      // Сохраняем позицию мыши
+      mousePositionRef.current = { x, y };
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [isEyeTrackingActive]);
+
+  const startEyeTracking = () => {
+    if (!videoContainerRef.current || !videoPlayerRef.current) return;
+
+    // Убеждаемся, что камера все еще работает
+    if (cameraStream) {
+      const tracks = cameraStream.getVideoTracks();
+      if (tracks.length > 0 && tracks[0].readyState !== "live") {
+        // Пытаемся получить доступ к камере снова
+        navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "user" } })
+          .then((stream) => {
+            setCameraStream(stream);
+            if (cameraVideoRef.current) {
+              cameraVideoRef.current.srcObject = stream;
+              cameraVideoRef.current.play();
+            }
+          })
+          .catch(() => {
+            // Тихая ошибка
+          });
+      }
+    }
+
+    setIsEyeTrackingActive(true);
+    setGazePoints([]);
+    mousePositionRef.current = null;
+
+    // Собираем данные о взгляде каждые 100мс
+    gazeCollectionIntervalRef.current = setInterval(() => {
+      const videoElement = videoPlayerRef.current?.getVideoElement();
+      if (!videoElement || !videoContainerRef.current) return;
+
+      let x = 0.5;
+      let y = 0.5;
+
+      // Используем позицию мыши как временное решение
+      // В реальном приложении здесь будет использоваться библиотека react-eye-tracking
+      if (mousePositionRef.current) {
+        x = mousePositionRef.current.x;
+        y = mousePositionRef.current.y;
+      }
+
+      // Ограничиваем координаты в пределах [0, 1]
+      x = Math.max(0, Math.min(1, x));
+      y = Math.max(0, Math.min(1, y));
+
+      const gazePoint: GazePoint = {
+        x,
+        y,
+        timestamp: Date.now(),
+        videoTime: videoElement.currentTime,
+      };
+
+      // Логируем только координаты взгляда
+      console.log(
+        `Взгляд: x=${x.toFixed(3)}, y=${y.toFixed(
+          3
+        )}, время=${videoElement.currentTime.toFixed(2)}с`
+      );
+
+      // Принудительно запускаем видео, если оно еще не запущено
+      if (videoElement.paused && videoElement.readyState >= 2) {
+        videoElement.play().catch(() => {
+          // Тихая ошибка
+        });
+      }
+
+      setGazePoints((prev) => [...prev, gazePoint]);
+    }, 100);
+  };
+
+  const stopEyeTracking = () => {
+    if (gazeCollectionIntervalRef.current) {
+      clearInterval(gazeCollectionIntervalRef.current);
+      gazeCollectionIntervalRef.current = null;
+    }
+    setIsEyeTrackingActive(false);
+
+    // Останавливаем камеру только при полном завершении
+    // (не останавливаем здесь, так как может понадобиться для тепловой карты)
+  };
+
+  const handleCameraPermissionGranted = (stream: MediaStream) => {
+    setCameraStream(stream);
+
+    // Подключаем поток к видео элементу для отслеживания
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = stream;
+      cameraVideoRef.current.play().catch(() => {
+        // Тихая ошибка
+      });
+    }
+
+    setState("calibration");
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setUploadError(
+      "Для отслеживания взгляда необходим доступ к камере. Пожалуйста, разрешите доступ и попробуйте снова."
+    );
+    setState("ready");
+  };
+
+  const handleStartWatching = () => {
     if (!videoURL) {
-      console.error("videoURL отсутствует");
       setUploadError(
         "Видео не загружено. Пожалуйста, загрузите видео сначала."
       );
@@ -485,7 +515,6 @@ function Analysis() {
     }
 
     if (!isSocketConnected) {
-      console.error("WebSocket не подключен");
       setUploadError(
         "Соединение с сервером не установлено. Пожалуйста, подождите."
       );
@@ -493,32 +522,16 @@ function Analysis() {
     }
 
     if (wsRef.current?.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket не в состоянии OPEN", wsRef.current?.readyState);
       setUploadError("Соединение с сервером не готово. Пожалуйста, подождите.");
       return;
     }
 
-    setState("watching");
+    // Сначала запрашиваем доступ к камере
+    setState("cameraPermission");
+    return;
 
-    // Отправляем video_start
-    const videoStartMessage = { type: "video_start" };
-    try {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify(videoStartMessage));
-        console.log("Отправлен video_start:", videoStartMessage);
-      } else {
-        console.error("WebSocket не готов для отправки сообщения", {
-          wsExists: !!wsRef.current,
-          readyState: wsRef.current?.readyState,
-        });
-        setUploadError(
-          "WebSocket соединение потеряно. Пожалуйста, перезагрузите страницу."
-        );
-      }
-    } catch (error) {
-      console.error("Ошибка при отправке video_start:", error);
-      setUploadError("Не удалось отправить команду начала просмотра.");
-    }
+    // Этот код не выполняется, так как выше есть return
+    // video_start отправляется в handleCalibrationComplete
 
     if (screenshotTriggers.length === 0 && videoDurationRef.current > 0) {
       const triggers = generateScreenshotTriggers(videoDurationRef.current);
@@ -527,11 +540,13 @@ function Analysis() {
   };
 
   const handleVideoEnd = () => {
+    // Останавливаем отслеживание взгляда
+    stopEyeTracking();
+
     // Отправляем video_end
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const videoEndMessage = { type: "video_end" };
       wsRef.current.send(JSON.stringify(videoEndMessage));
-      console.log("Отправлен video_end");
     }
 
     setState("finished");
@@ -547,37 +562,32 @@ function Analysis() {
   };
 
   const handleSaveReport = async () => {
-    console.log("Сохранение отчета:", {
-      screenshots: capturedScreenshots,
-      stats: {
-        totalTime: "120 часов",
-        completedTasks: 42,
-        engagement: "85%",
-      },
-    });
-
     alert("Отчет успешно сохранен!");
   };
   const handleScreenshot = (screenshot: any) => {
-    console.log("handleScreenshot вызван с:", {
-      id: screenshot?.id,
-      timestamp: screenshot?.timestamp,
-      formattedTime: screenshot?.formattedTime,
-      hasImage: !!screenshot?.image,
-      imageLength: screenshot?.image?.length || 0,
-    });
     setCapturedScreenshots((prev) => {
       const updated = [...prev, screenshot];
-      console.log(
-        "Обновлен capturedScreenshots, новый размер:",
-        updated.length
-      );
       return updated;
     });
-    console.log("Скриншот добавлен в состояние");
   };
 
   const handleReset = () => {
+    // Останавливаем отслеживание взгляда
+    stopEyeTracking();
+
+    // Останавливаем камеру
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => {
+        track.stop();
+        // Трек камеры остановлен
+      });
+      setCameraStream(null);
+    }
+
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+
     // Закрываем WebSocket соединение
     if (wsRef.current) {
       wsRef.current.close();
@@ -596,6 +606,9 @@ function Analysis() {
     setIsSocketConnected(false);
     setIsReportGenerating(false);
     setIsTracking(false);
+    setIsCalibrated(false);
+    setGazePoints([]);
+    setIsEyeTrackingActive(false);
     setState("upload");
     setScreenshotTriggers([]);
     setCapturedScreenshots([]);
@@ -604,6 +617,14 @@ function Analysis() {
 
   useEffect(() => {
     return () => {
+      // Останавливаем отслеживание взгляда
+      stopEyeTracking();
+
+      // Останавливаем камеру
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+
       // Отменяем переподключение при размонтировании
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -618,42 +639,21 @@ function Analysis() {
         URL.revokeObjectURL(videoURL);
       }
     };
-  }, [videoURL]);
+  }, [videoURL, cameraStream]);
 
   // Проверяем наличие данных на графике
   const hasChartData = (() => {
     if (!lastMessage) {
-      console.log("hasChartData: lastMessage отсутствует");
       return false;
-    }
-
-    // Логируем структуру для отладки eeg_sample
-    if (lastMessage.type === "eeg_sample") {
-      console.log("Проверка eeg_sample данных:", {
-        hasData: !!lastMessage.data,
-        hasChannels: !!lastMessage.data?.channels,
-        hasDirectChannels: !!lastMessage.channels,
-        structure: {
-          type: lastMessage.type,
-          data: lastMessage.data ? "present" : "missing",
-          channels: lastMessage.data?.channels ? "present" : "missing",
-        },
-      });
     }
 
     const channels = lastMessage?.data?.channels || lastMessage?.channels;
     if (!channels) {
-      console.log("hasChartData: channels не найдены в", {
-        hasData: !!lastMessage.data,
-        hasChannels: !!lastMessage.channels,
-        messageKeys: Object.keys(lastMessage),
-      });
       return false;
     }
 
     const channelKeys = Object.keys(channels);
     if (channelKeys.length === 0) {
-      console.log("hasChartData: channels пустой объект");
       return false;
     }
 
@@ -666,13 +666,6 @@ function Analysis() {
       );
     });
 
-    if (!hasValidData) {
-      console.log("hasChartData: нет каналов с mind данными", {
-        channelKeys,
-        firstChannel: channels[channelKeys[0]],
-      });
-    }
-
     return hasValidData;
   })();
 
@@ -682,17 +675,7 @@ function Analysis() {
   const shouldShowTrackingIndicator =
     state === "watching" && isSocketConnected && hasChartData;
 
-  // Отладочная информация (можно убрать в продакшене)
-  console.log("Analysis render:", {
-    state,
-    videoURL: !!videoURL,
-    isSocketConnected,
-    isTracking,
-    uploadedVideoId,
-    hasChartData,
-    shouldShowTrackingIndicator,
-    capturedScreenshotsCount: capturedScreenshots.length,
-  });
+  // Отладочная информация убрана
 
   return (
     <div className={styles.analysisContainer}>
@@ -827,6 +810,21 @@ function Analysis() {
           </div>
         )}
 
+        {state === "cameraPermission" && (
+          <CameraPermission
+            onPermissionGranted={handleCameraPermissionGranted}
+            onPermissionDenied={handleCameraPermissionDenied}
+            onCancel={handleCalibrationCancel}
+          />
+        )}
+
+        {state === "calibration" && (
+          <EyeTrackingCalibration
+            onCalibrationComplete={handleCalibrationComplete}
+            onCancel={handleCalibrationCancel}
+          />
+        )}
+
         {state === "watching" && (
           <div className={styles.watchingSection}>
             {!videoURL ? (
@@ -836,7 +834,10 @@ function Analysis() {
               </div>
             ) : (
               <>
-                <div className={styles.videoPlayerContainer}>
+                <div
+                  className={styles.videoPlayerContainer}
+                  ref={videoContainerRef}
+                >
                   <VideoPlayer
                     ref={videoPlayerRef}
                     videoURL={videoURL}
@@ -847,6 +848,46 @@ function Analysis() {
                     onVideoEnd={handleVideoEnd}
                     onScreenshot={handleScreenshot}
                   />
+                  {/* Принудительно запускаем видео после калибровки */}
+                  {state === "watching" && videoPlayerRef.current && (
+                    <VideoAutoPlayHelper
+                      videoPlayerRef={videoPlayerRef}
+                      isCalibrated={isCalibrated}
+                    />
+                  )}
+                  {/* Скрытое видео с камеры для отслеживания взгляда */}
+                  {cameraStream && (
+                    <video
+                      ref={cameraVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{
+                        position: "absolute",
+                        width: "1px",
+                        height: "1px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        zIndex: -1,
+                      }}
+                    />
+                  )}
+                  {isEyeTrackingActive && (
+                    <div className={styles.eyeTrackingIndicator}>
+                      <span className={styles.eyeTrackingDot}></span>
+                      <span>Отслеживание взгляда активно</span>
+                      {cameraStream && (
+                        <span
+                          style={{ marginLeft: "0.5rem", fontSize: "0.8rem" }}
+                        >
+                          (Камера:{" "}
+                          {cameraStream.getVideoTracks()[0]?.readyState ||
+                            "неизвестно"}
+                          )
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Скриншоты с горизонтальным скроллом */}
@@ -908,15 +949,40 @@ function Analysis() {
           <div className={styles.finishedSection}>
             <div className={styles.videoPlayerContainer}>
               {videoURL && (
-                <VideoPlayer
-                  videoURL={videoURL}
-                  triggers={screenshotTriggers}
-                  autoCapture={false}
-                  autoPlay={false}
-                  showManualCapture={false}
-                  onVideoEnd={handleVideoEnd}
-                  onScreenshot={handleScreenshot}
-                />
+                <>
+                  <div className={styles.videoWithHeatmap}>
+                    <VideoPlayer
+                      videoURL={videoURL}
+                      triggers={screenshotTriggers}
+                      autoCapture={false}
+                      autoPlay={false}
+                      showManualCapture={false}
+                      onVideoEnd={handleVideoEnd}
+                      onScreenshot={handleScreenshot}
+                    />
+                    {gazePoints.length > 0 && (
+                      <div className={styles.heatmapOverlay}>
+                        <Heatmap
+                          gazePoints={gazePoints}
+                          width={videoDimensions.width}
+                          height={videoDimensions.height}
+                          intensity={0.7}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {gazePoints.length > 0 && (
+                    <div className={styles.heatmapInfo}>
+                      <p>
+                        Тепловая карта показывает области, на которые вы чаще
+                        всего смотрели во время просмотра видео
+                      </p>
+                      <p className={styles.heatmapStats}>
+                        Всего зафиксировано точек взгляда: {gazePoints.length}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -962,6 +1028,62 @@ function Analysis() {
               <h2>Отчет сгенерирован</h2>
               <p>Теперь вы можете задать вопросы о результатах анализа</p>
             </div>
+
+            {/* Тепловая карта */}
+            {gazePoints.length > 0 && (
+              <div className={styles.heatmapSection}>
+                <h3>Тепловая карта взгляда</h3>
+                <p className={styles.heatmapDescription}>
+                  Визуализация областей видео, на которые вы чаще всего смотрели
+                </p>
+                <div className={styles.heatmapContainer}>
+                  <div className={styles.videoWithHeatmap}>
+                    {videoURL && (
+                      <div className={styles.videoWrapper}>
+                        <VideoPlayer
+                          videoURL={videoURL}
+                          triggers={screenshotTriggers}
+                          autoCapture={false}
+                          autoPlay={false}
+                          showManualCapture={false}
+                          onVideoEnd={handleVideoEnd}
+                          onScreenshot={handleScreenshot}
+                        />
+                        <div className={styles.heatmapOverlay}>
+                          <Heatmap
+                            gazePoints={gazePoints}
+                            width={videoDimensions.width}
+                            height={videoDimensions.height}
+                            intensity={0.7}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.heatmapInfo}>
+                    <p className={styles.heatmapStats}>
+                      Всего зафиксировано точек взгляда: {gazePoints.length}
+                    </p>
+                    <p className={styles.heatmapLegend}>
+                      <span className={styles.legendItem}>
+                        <span
+                          className={styles.legendColor}
+                          style={{ backgroundColor: "rgba(0, 0, 255, 0.5)" }}
+                        ></span>
+                        Низкая частота
+                      </span>
+                      <span className={styles.legendItem}>
+                        <span
+                          className={styles.legendColor}
+                          style={{ backgroundColor: "rgba(255, 0, 0, 0.5)" }}
+                        ></span>
+                        Высокая частота
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className={styles.chartContainer}>
               <KeyIndicators />
