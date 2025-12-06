@@ -1,0 +1,548 @@
+.audioAnalysisContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: calc(100vw - 300px);
+  box-sizing: border-box;
+
+  .audioAnalysis {
+    background-color: var(--profile-bg);
+    padding: 2rem;
+    border-radius: 0.75rem;
+
+    h1 {
+      color: var(--profile-text);
+      margin-bottom: 2rem;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    .headerWithIndicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+
+      h1 {
+        margin-bottom: 0;
+        flex: 1;
+      }
+
+      .trackingIndicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--green-500);
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        background-color: var(--green-100);
+        border-radius: 0.5rem;
+        border: 1px solid var(--green-300);
+
+        .trackingDot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background-color: var(--green-500);
+          animation: pulse 1s infinite;
+        }
+      }
+
+      .trackingWarning {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #f59e0b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        background-color: rgba(245, 158, 11, 0.15);
+        border-radius: 0.5rem;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+
+        .warningIcon {
+          font-size: 1rem;
+        }
+      }
+
+      .stopButton {
+        padding: 0.5rem 1.5rem;
+        background-color: var(--red-500);
+        color: var(--white-500);
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: var(--red-400);
+          transform: translateY(-2px);
+        }
+      }
+    }
+
+    // Секция загрузки
+    .uploadSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem 0;
+
+      .uploadPrompt {
+        color: var(--profile-text);
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+
+      .uploadWrapper {
+        display: flex;
+        justify-content: center;
+      }
+
+      .uploadStatus {
+        color: var(--profile-text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .uploadError {
+        color: var(--red-500);
+        font-size: 0.95rem;
+      }
+    }
+
+    // Секция готовности
+    .readySection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .connectionStatus {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        color: var(--profile-text);
+        font-size: 0.9rem;
+
+        .statusDot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: 8px;
+        }
+
+        .statusConnected {
+          .statusDot {
+            background-color: var(--green-500);
+            animation: pulse 2s infinite;
+          }
+        }
+
+        .statusConnecting {
+          .statusDot {
+            background-color: var(--tifany-500);
+            animation: pulse 1s infinite;
+          }
+        }
+      }
+
+      .audioInfo {
+        color: var(--profile-text);
+        font-size: 0.9rem;
+        opacity: 0.8;
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+
+        p {
+          margin: 0.25rem 0;
+        }
+      }
+    }
+
+    // Секция прослушивания
+    .listeningSection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+
+      .audioPlayerContainer {
+        width: 100%;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        border: 1px solid var(--profile-border);
+
+        .audioPlayer {
+          width: 100%;
+          outline: none;
+        }
+
+        .audioProgress {
+          display: flex;
+          justify-content: space-between;
+          color: var(--profile-text-secondary);
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+      }
+
+      .eventsContainer {
+        margin-top: 1rem;
+        width: 100%;
+
+        .eventsTitle {
+          color: var(--profile-text);
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+
+        .eventsScroll {
+          display: flex;
+          gap: 1rem;
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 0.5rem 0;
+          scroll-behavior: smooth;
+          width: 100%;
+          -webkit-overflow-scrolling: touch;
+
+          &::-webkit-scrollbar {
+            height: 8px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background: rgba(182, 109, 219, 0.1);
+            border-radius: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background: var(--purple-300);
+            border-radius: 4px;
+
+            &:hover {
+              background: var(--purple-400);
+            }
+          }
+
+          .eventItem {
+            flex-shrink: 0;
+            min-width: 200px;
+            width: 250px;
+            max-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            background-color: var(--profile-card-bg);
+            border: 1px solid var(--purple-200);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+
+            &:hover {
+              border-color: var(--purple-300);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(182, 109, 219, 0.2);
+            }
+
+            .eventType {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              font-weight: 600;
+              font-size: 0.9rem;
+
+              &.eventIncrease {
+                color: var(--green-500);
+              }
+
+              &.eventDecrease {
+                color: var(--red-500);
+              }
+            }
+
+            .eventTime {
+              color: var(--profile-text-secondary);
+              font-size: 0.85rem;
+              font-weight: 500;
+            }
+
+            .eventConcentration {
+              color: var(--profile-text);
+              font-size: 0.85rem;
+            }
+          }
+        }
+      }
+
+      .eventsEmpty {
+        padding: 2rem;
+        text-align: center;
+        color: var(--profile-text-secondary);
+        font-size: 0.9rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        border: 1px dashed var(--profile-border);
+      }
+
+      .chartContainerSmall {
+        margin-top: 1rem;
+        width: 100%;
+        overflow: visible;
+
+        :global {
+          .chartContainer {
+            width: 100%;
+            height: 300px;
+            min-height: 300px;
+
+            > div {
+              width: 100% !important;
+              height: 300px !important;
+              min-height: 300px !important;
+            }
+          }
+        }
+      }
+    }
+
+    // Секция после прослушивания
+    .finishedSection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .audioPlayerContainer {
+        width: 100%;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        border: 1px solid var(--profile-border);
+
+        .audioPlayer {
+          width: 100%;
+          outline: none;
+        }
+      }
+
+      .eventsSection {
+        margin-top: 1rem;
+
+        h3 {
+          color: var(--profile-text);
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+
+        .eventsGrid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 1rem;
+          max-height: 500px;
+          overflow-y: auto;
+          padding-right: 0.5rem;
+
+          &::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background: rgba(182, 109, 219, 0.1);
+            border-radius: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background: var(--purple-300);
+            border-radius: 4px;
+
+            &:hover {
+              background: var(--purple-400);
+            }
+          }
+        }
+
+        .eventCard {
+          background-color: var(--profile-card-bg);
+          border: 1px solid var(--purple-200);
+          border-radius: 0.75rem;
+          padding: 1rem;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: var(--profile-hover-bg);
+            border-color: var(--purple-300);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px var(--purple-200);
+          }
+
+          .eventCardHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+
+            .eventType {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              font-weight: 600;
+              font-size: 0.9rem;
+
+              &.eventIncrease {
+                color: var(--green-500);
+              }
+
+              &.eventDecrease {
+                color: var(--red-500);
+              }
+            }
+
+            .eventTime {
+              color: var(--profile-text-secondary);
+              font-size: 0.85rem;
+              font-weight: 500;
+              padding: 0.25rem 0.5rem;
+              background-color: var(--purple-100);
+              border-radius: 0.25rem;
+              border: 1px solid var(--purple-200);
+            }
+          }
+
+          .eventConcentration {
+            color: var(--profile-text);
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            background-color: var(--profile-input-bg);
+            border-radius: 0.25rem;
+          }
+        }
+      }
+    }
+
+    .chartContainer {
+      margin-bottom: 2rem;
+
+      .chartPlaceholder {
+        height: 400px;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        p {
+          color: var(--profile-text);
+          font-size: 1.2rem;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+
+      .statItem {
+        background-color: var(--profile-card-bg);
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        border: 1px solid var(--profile-border);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 16px rgba(182, 109, 219, 0.2);
+          border-color: var(--purple-300);
+        }
+
+        h3 {
+          color: var(--profile-text);
+          margin-bottom: 1rem;
+          font-size: 1.1rem;
+          font-weight: 500;
+          opacity: 0.8;
+        }
+
+        p {
+          color: var(--profile-text);
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+      }
+    }
+
+    // Кнопки действий
+    .actionButtons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+
+      button {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .startButton {
+        background-color: var(--green-500);
+        color: var(--black-500);
+
+        &:hover:not(:disabled) {
+          background-color: var(--green-400);
+          transform: translateY(-2px);
+        }
+      }
+
+      .resetButton {
+        background-color: var(--profile-card-bg);
+        color: var(--profile-text);
+        border: 1px solid var(--profile-border);
+
+        &:hover {
+          background-color: var(--profile-hover-bg);
+          transform: translateY(-2px);
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
