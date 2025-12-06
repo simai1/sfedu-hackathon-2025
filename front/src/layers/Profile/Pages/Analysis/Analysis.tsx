@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { EyeTracking } from "react-eye-tracking/dist/index.js";
+import "react-eye-tracking/dist/index.css";
 import ChatMessagerComponent from "../../../../core/components/ChatMessagerComponent/ChatMessagerComponent";
 import KeyIndicators from "../../modules/graphics/KeyIndicators/KeyIndicators";
 import ConcentrationEngagementChart from "../../modules/graphics/KeyIndicators/components/ConcentrationEngagementChart/ConcentrationEngagementChart";
@@ -19,6 +21,23 @@ type AnalysisState =
   | "finished"
   | "reportGenerated";
 
+type CameraPermissionStatus = "unknown" | "pending" | "granted" | "denied";
+
+type GazePoint = {
+  viewportX: number;
+  viewportY: number;
+  relativeX: number;
+  relativeY: number;
+  timestamp: number;
+  videoTime: number;
+};
+
+declare global {
+  interface Window {
+    webgazer?: any;
+  }
+}
+
 function Analysis() {
   const { token } = useUserStore();
   const { lastMessage } = useWebSocketStore();
@@ -36,11 +55,183 @@ function Analysis() {
   >([]);
   const [capturedScreenshots, setCapturedScreenshots] = useState<any[]>([]);
   const [isTracking, setIsTracking] = useState(false);
+  const [cameraPermission, setCameraPermission] =
+    useState<CameraPermissionStatus>("unknown");
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [calibrationCompleted, setCalibrationCompleted] = useState(false);
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [gazeIndicator, setGazeIndicator] = useState<GazePoint | null>(null);
   const videoDurationRef = useRef<number>(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  const videoOverlayRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const uploadedVideoIdRef = useRef<string | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const latestGazeRef = useRef<GazePoint | null>(null);
+  const gazeHistoryRef = useRef<GazePoint[]>([]);
+  const gazeAnimationFrameRef = useRef<number | null>(null);
+
+  const getHasCalibrationData = useCallback(() => {
+    const points = window.webgazer?.getStoredPoints?.();
+    if (!points) return false;
+    if (Array.isArray(points)) {
+      return points.length > 0;
+    }
+    if (typeof points === "object") {
+      return Object.keys(points).length > 0;
+    }
+    return false;
+  }, []);
+
+  const requestCameraAccess = useCallback(async (): Promise<CameraPermissionStatus> => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setUploadError("Браузер не поддерживает доступ к камере.");
+      setCameraPermission("denied");
+      return "denied";
+    }
+
+    try {
+      setCameraPermission("pending");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach((track) => track.stop());
+      setCameraPermission("granted");
+      setUploadError(null);
+      return "granted";
+    } catch (error) {
+      console.error("Не удалось получить доступ к камере", error);
+      setCameraPermission("denied");
+      setUploadError(
+        "Доступ к камере не разрешен — тепловая карта и отслеживание взгляда не будут работать."
+      );
+      return "denied";
+    }
+  }, []);
+
+  const startCalibration = useCallback(async () => {
+    const permission =
+      cameraPermission === "granted"
+        ? "granted"
+        : await requestCameraAccess();
+
+    if (permission !== "granted") {
+      setUploadError(
+        "Без доступа к камере калибровка невозможна. Разрешите камеру или продолжите без тепловой карты."
+      );
+      return;
+    }
+
+    setCalibrationCompleted(false);
+    setShowCalibration(true);
+    setIsCalibrating(true);
+    setUploadError(null);
+  }, [cameraPermission, requestCameraAccess]);
+
+  const handleGazeData = useCallback(
+    (data: any) => {
+      if (!data || typeof data.x !== "number" || typeof data.y !== "number") {
+        return;
+      }
+
+      const viewportX = data.x;
+      const viewportY = data.y;
+      const rect = videoOverlayRef.current?.getBoundingClientRect();
+
+      let relativeX = -1;
+      let relativeY = -1;
+
+      if (rect) {
+        relativeX = (viewportX - rect.left) / rect.width;
+        relativeY = (viewportY - rect.top) / rect.height;
+      }
+
+      const sample: GazePoint = {
+        viewportX,
+        viewportY,
+        relativeX,
+        relativeY,
+        timestamp: Date.now(),
+        videoTime: videoPlayerRef.current?.getCurrentTime() || 0,
+      };
+
+      latestGazeRef.current = sample;
+
+      if (state === "watching") {
+        gazeHistoryRef.current.push(sample);
+        if (gazeHistoryRef.current.length > 5000) {
+          gazeHistoryRef.current.shift();
+        }
+      }
+
+      if (gazeAnimationFrameRef.current) return;
+
+      gazeAnimationFrameRef.current = requestAnimationFrame(() => {
+        gazeAnimationFrameRef.current = null;
+
+        const isInsideFrame =
+          rect &&
+          relativeX >= 0 &&
+          relativeX <= 1 &&
+          relativeY >= 0 &&
+          relativeY <= 1;
+
+        if (state === "watching" && isInsideFrame) {
+          setGazeIndicator(sample);
+        } else {
+          setGazeIndicator(null);
+        }
+      });
+    },
+    [state]
+  );
+
+  useEffect(() => {
+    if (!("permissions" in navigator)) return;
+
+    const permissionApi = (navigator as any).permissions;
+    if (!permissionApi?.query) return;
+
+    permissionApi
+      .query({ name: "camera" as PermissionName })
+      .then((status: PermissionStatus) => {
+        if (status.state === "granted") {
+          setCameraPermission("granted");
+        } else if (status.state === "denied") {
+          setCameraPermission("denied");
+        }
+        status.onchange = () => {
+          if (status.state === "granted") {
+            setCameraPermission("granted");
+          } else if (status.state === "denied") {
+            setCameraPermission("denied");
+          } else {
+            setCameraPermission("unknown");
+          }
+        };
+      })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    if (!showCalibration) {
+      setIsCalibrating(false);
+      const hasData = getHasCalibrationData();
+      setCalibrationCompleted(hasData);
+    }
+  }, [showCalibration, getHasCalibrationData]);
+
+  useEffect(() => {
+    return () => {
+      if (gazeAnimationFrameRef.current) {
+        cancelAnimationFrame(gazeAnimationFrameRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (state !== "watching") {
+      setGazeIndicator(null);
+    }
+  }, [state]);
 
   const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
@@ -321,6 +512,17 @@ function Analysis() {
                   timeCode,
                 });
 
+                const gazePositionPayload = latestGazeRef.current
+                  ? {
+                      viewport_x: latestGazeRef.current.viewportX,
+                      viewport_y: latestGazeRef.current.viewportY,
+                      relative_x: latestGazeRef.current.relativeX,
+                      relative_y: latestGazeRef.current.relativeY,
+                      video_time: latestGazeRef.current.videoTime,
+                      captured_at: latestGazeRef.current.timestamp,
+                    }
+                  : undefined;
+
                 // Отправляем video_frame на сервер
                 const videoFrameMessage = {
                   type: "video_frame",
@@ -328,6 +530,7 @@ function Analysis() {
                   video_id: currentVideoId,
                   screenshot_url: screenshotUrl,
                   time_code: timeCode,
+                  gaze_position: gazePositionPayload,
                 };
 
                 console.log("=== Отправка video_frame в WebSocket ===");
@@ -493,6 +696,25 @@ function Analysis() {
       return;
     }
 
+    if (cameraPermission !== "granted") {
+      setUploadError(
+        "Доступ к камере не разрешен — тепловая карта и красный индикатор взгляда не будут построены."
+      );
+    }
+
+    if (cameraPermission === "granted" && !calibrationCompleted) {
+      setUploadError(
+        "Пройдите калибровку: нажмите «Начать калибровку» и кликните по всем точкам 5 раз."
+      );
+      return;
+    }
+
+    if (isCalibrating) {
+      setUploadError("Дождитесь завершения калибровки перед началом просмотра.");
+      return;
+    }
+
+    setShowCalibration(false);
     setState("watching");
 
     // Отправляем video_start
@@ -561,8 +783,14 @@ function Analysis() {
       hasImage: !!screenshot?.image,
       imageLength: screenshot?.image?.length || 0,
     });
+
+    const screenshotWithGaze = {
+      ...screenshot,
+      gaze: latestGazeRef.current,
+    };
+
     setCapturedScreenshots((prev) => {
-      const updated = [...prev, screenshot];
+      const updated = [...prev, screenshotWithGaze];
       console.log(
         "Обновлен capturedScreenshots, новый размер:",
         updated.length
@@ -595,6 +823,12 @@ function Analysis() {
     setScreenshotTriggers([]);
     setCapturedScreenshots([]);
     videoDurationRef.current = 0;
+    setShowCalibration(false);
+    setIsCalibrating(false);
+    setCalibrationCompleted(false);
+    setGazeIndicator(null);
+    latestGazeRef.current = null;
+    gazeHistoryRef.current = [];
   };
 
   useEffect(() => {
@@ -677,6 +911,12 @@ function Analysis() {
   const shouldShowTrackingIndicator =
     state === "watching" && isSocketConnected && hasChartData;
 
+  const shouldShowGazeIndicator =
+    state === "watching" &&
+    cameraPermission === "granted" &&
+    calibrationCompleted &&
+    !!gazeIndicator;
+
   // Отладочная информация (можно убрать в продакшене)
   console.log("Analysis render:", {
     state,
@@ -690,7 +930,15 @@ function Analysis() {
   });
 
   return (
-    <div className={styles.analysisContainer}>
+    <>
+      <EyeTracking
+        show={showCalibration}
+        setShow={setShowCalibration}
+        showCamera={true}
+        showPoint={true}
+        listener={handleGazeData}
+      />
+      <div className={styles.analysisContainer}>
       <div className={styles.analysis}>
         <div className={styles.headerWithIndicator}>
           <h1>Анализ активности</h1>
@@ -733,6 +981,19 @@ function Analysis() {
             >
               Остановить
             </button>
+          )}
+          {state === "watching" && (
+            <div
+              className={
+                shouldShowGazeIndicator
+                  ? styles.gazeStatusOk
+                  : styles.gazeStatusWarn
+              }
+            >
+              {shouldShowGazeIndicator
+                ? "Отслеживание взгляда активно"
+                : "Нет данных взгляда — проверьте камеру и калибровку"}
+            </div>
           )}
         </div>
 
@@ -789,6 +1050,74 @@ function Analysis() {
               )}
             </div>
 
+            <div className={styles.eyeTrackingSetup}>
+              <div className={styles.eyeTrackingHeader}>
+                <h3>Отслеживание взгляда</h3>
+                <div className={styles.calibrationBadges}>
+                  <span
+                    className={
+                      cameraPermission === "granted"
+                        ? styles.badgeSuccess
+                        : styles.badgeWarning
+                    }
+                  >
+                    {cameraPermission === "granted"
+                      ? "Камера: доступ разрешен"
+                      : cameraPermission === "pending"
+                      ? "Камера: запрос..."
+                      : "Камера: доступ не разрешен"}
+                  </span>
+                  <span
+                    className={
+                      calibrationCompleted
+                        ? styles.badgeSuccess
+                        : styles.badgeWarning
+                    }
+                  >
+                    {calibrationCompleted
+                      ? "Калибровка завершена"
+                      : isCalibrating
+                      ? "Калибровка выполняется"
+                      : "Нужно пройти калибровку"}
+                  </span>
+                </div>
+              </div>
+              <p className={styles.eyeTrackingNote}>
+                Разрешите доступ к камере и нажмите «Начать калибровку». На белом
+                экране кликните по каждой точке 5 раз (как в примере WebGazer), иначе
+                тепловая карта и красный индикатор взгляда не появятся.
+              </p>
+              <div className={styles.eyeTrackingActions}>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={requestCameraAccess}
+                  disabled={cameraPermission === "pending"}
+                >
+                  Разрешить доступ к камере
+                </button>
+                <button
+                  className={styles.startButton}
+                  onClick={startCalibration}
+                  disabled={
+                    cameraPermission === "pending" ||
+                    cameraPermission === "denied" ||
+                    isCalibrating
+                  }
+                >
+                  {isCalibrating ? "Калибровка..." : "Начать калибровку"}
+                </button>
+              </div>
+              <p className={styles.calibrationHint}>
+                После окончания калибровки закройте окно «Close & load saved model», затем
+                нажмите «Начать просмотр».
+              </p>
+              {cameraPermission !== "granted" && (
+                <p className={styles.calibrationWarning}>
+                  Без доступа к камере тепловая карта и отметки взгляда не будут построены.
+                </p>
+              )}
+            </div>
+
             {videoFile && (
               <div className={styles.videoInfo}>
                 <p>Файл: {videoFile.name}</p>
@@ -832,16 +1161,30 @@ function Analysis() {
             ) : (
               <>
                 <div className={styles.videoPlayerContainer}>
-                  <VideoPlayer
-                    ref={videoPlayerRef}
-                    videoURL={videoURL}
-                    triggers={screenshotTriggers}
-                    autoCapture={false}
-                    autoPlay={true}
-                    showManualCapture={false}
-                    onVideoEnd={handleVideoEnd}
-                    onScreenshot={handleScreenshot}
-                  />
+                  <div
+                    className={styles.videoWrapper}
+                    ref={videoOverlayRef}
+                  >
+                    <VideoPlayer
+                      ref={videoPlayerRef}
+                      videoURL={videoURL}
+                      triggers={screenshotTriggers}
+                      autoCapture={false}
+                      autoPlay={true}
+                      showManualCapture={false}
+                      onVideoEnd={handleVideoEnd}
+                      onScreenshot={handleScreenshot}
+                    />
+                    {shouldShowGazeIndicator && gazeIndicator && (
+                      <div
+                        className={styles.gazeDot}
+                        style={{
+                          left: `${gazeIndicator.relativeX * 100}%`,
+                          top: `${gazeIndicator.relativeY * 100}%`,
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* Скриншоты с горизонтальным скроллом */}
@@ -1033,6 +1376,7 @@ function Analysis() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

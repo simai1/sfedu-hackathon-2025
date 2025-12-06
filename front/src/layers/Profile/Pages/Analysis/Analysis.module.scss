@@ -81,6 +81,27 @@
           transform: translateY(-2px);
         }
       }
+
+      .gazeStatusOk,
+      .gazeStatusWarn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+      }
+
+      .gazeStatusOk {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--green-500);
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+
+      .gazeStatusWarn {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.3);
+      }
     }
 
     // Секция загрузки
@@ -164,6 +185,124 @@
           margin: 0.25rem 0;
         }
       }
+
+      .eyeTrackingSetup {
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        border: 1px solid rgba(182, 109, 219, 0.25);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        .eyeTrackingHeader {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+
+          h3 {
+            margin: 0;
+            color: var(--profile-text);
+            font-size: 1.05rem;
+          }
+
+          .calibrationBadges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+
+          .badgeSuccess,
+          .badgeWarning {
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            white-space: nowrap;
+          }
+
+          .badgeSuccess {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--green-500);
+            border-color: rgba(16, 185, 129, 0.3);
+          }
+
+          .badgeWarning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.3);
+          }
+        }
+
+        .eyeTrackingNote {
+          color: var(--profile-text-secondary);
+          font-size: 0.95rem;
+          margin: 0;
+        }
+
+        .eyeTrackingActions {
+          display: flex;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+
+          button {
+            height: 38px;
+          }
+
+          .startButton {
+            padding: 0.5rem 1.25rem;
+            background: var(--green-500);
+            color: var(--black-500);
+            border: 1px solid var(--green-400);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover:not(:disabled) {
+              background: var(--green-400);
+              transform: translateY(-1px);
+            }
+
+            &:disabled {
+              opacity: 0.6;
+              cursor: not-allowed;
+            }
+          }
+        }
+
+        .secondaryButton {
+          padding: 0.5rem 1rem;
+          background: var(--profile-card-bg);
+          border: 1px solid var(--purple-300);
+          border-radius: 0.5rem;
+          color: var(--profile-text);
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba(182, 109, 219, 0.1);
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+
+        .calibrationHint {
+          margin: 0;
+          color: var(--profile-text-secondary);
+          font-size: 0.85rem;
+        }
+
+        .calibrationWarning {
+          margin: 0;
+          color: var(--red-500);
+          font-size: 0.9rem;
+        }
+      }
     }
 
     // Секция просмотра
@@ -199,6 +338,24 @@
         max-height: 500px;
         border-radius: 0.5rem;
         background-color: var(--black-500);
+      }
+
+      .videoWrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .gazeDot {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.85);
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.45);
+        transition: top 60ms linear, left 60ms linear;
       }
 
       .screenshotsScrollContainer {
