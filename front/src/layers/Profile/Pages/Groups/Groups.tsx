@@ -1,15 +1,25 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Plus, Users } from "lucide-react"
 import { useUserStore, Role } from "../../../../store/userStore"
 import styles from "./Groups.module.scss"
 import CreateGroupModal from "./components/CreateGroupModal/CreateGroupModal"
 import GroupCard from "./components/GroupCard/GroupCard"
+import {
+  apiCreateGroup,
+  apiListGroups,
+  apiAddGroupMember,
+  apiAddGroupSession,
+  apiDeleteGroupSessions,
+} from "../../../../api/groups"
+import { getOrganizationMembers } from "../../../../api/organization"
+import { toast } from "react-toastify"
 
 export interface GroupMember {
   id: string
   email: string
   name?: string
-  watched: boolean
+  joined_at?: string
+  watched?: boolean
   watchedAt?: string
 }
 
@@ -36,93 +46,111 @@ export interface Group {
 function Groups() {
   const { user } = useUserStore()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: "1",
-      name: "Группа тестирования",
-      description: "Тестовая группа для проверки функционала",
-      createdAt: "2024-12-01T10:00:00",
-      ownerId: user?.id || "1",
-      members: [
-        { id: "1", email: "user1@example.com", name: "Иван Иванов", watched: true, watchedAt: "2024-12-05T14:30:00" },
-        { id: "2", email: "user2@example.com", name: "Мария Петрова", watched: true, watchedAt: "2024-12-05T15:00:00" },
-        { id: "3", email: "user3@example.com", name: "Петр Сидоров", watched: false },
-      ],
-      sessions: [
-        {
-          id: "1",
-          videoUrl: "https://example.com/video.mp4",
-          videoName: "Презентация проекта",
-          createdAt: "2024-12-05T10:00:00",
-          watchedCount: 2,
-          totalMembers: 3,
-          canAnalyze: false,
-        },
-      ],
-    },
-  ])
+  const [groups, setGroups] = useState<Group[]>([])
+  const [orgMembers, setOrgMembers] = useState<GroupMember[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
   const isOrganization = user?.role === Role.ORGANIZATION
 
-  const handleCreateGroup = (groupData: { name: string; description: string }) => {
-    const newGroup: Group = {
-      id: Date.now().toString(),
-      name: groupData.name,
-      description: groupData.description,
-      createdAt: new Date().toISOString(),
-      ownerId: user?.id || "1",
-      members: [],
-      sessions: [],
+  const loadData = async () => {
+    if (!isOrganization) return
+    try {
+      setIsLoading(true)
+      const [membersResp, groupsResp] = await Promise.all([getOrganizationMembers(), apiListGroups()])
+      const mappedGroups: Group[] = (groupsResp || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        description: g.description || "",
+        createdAt: g.created_at || g.createdAt,
+        ownerId: user?.id || "",
+        members: (g.members || []).map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          joined_at: m.joined_at,
+          watched: false,
+        })),
+        sessions: (g.sessions ?? []).map((s: any) => ({
+          id: s.id,
+          videoUrl: s.video_url || s.videoUrl,
+          videoName: s.video_name || s.videoName || "Видео",
+          createdAt: s.created_at || s.createdAt,
+          watchedCount: 0,
+          totalMembers: (g.members?.length || 0),
+          canAnalyze: false,
+        })),
+      }))
+      setGroups(mappedGroups)
+      setOrgMembers(membersResp || [])
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось загрузить группы")
+    } finally {
+      setIsLoading(false)
     }
-    setGroups([...groups, newGroup])
+  }
+
+  useEffect(() => {
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOrganization])
+
+  const handleCreateGroup = async (groupData: { name: string; description: string }) => {
+    try {
+      await apiCreateGroup({ name: groupData.name, description: groupData.description })
+      toast.success("Группа создана")
     setIsCreateModalOpen(false)
-  }
-
-  const handleAddMember = (groupId: string, email: string) => {
-    setGroups(
-      groups.map((group) => {
-        if (group.id === groupId) {
-          const newMember: GroupMember = {
-            id: Date.now().toString(),
-            email,
-            watched: false,
-          }
-          return {
-            ...group,
-            members: [...group.members, newMember],
-          }
-        }
-        return group
-      })
-    )
-  }
-
-  const handleAddSession = (groupId: string, videoFile: File) => {
-    const group = groups.find((g) => g.id === groupId)
-    if (!group) return
-
-    const videoUrl = URL.createObjectURL(videoFile)
-    const totalMembers = group.members.length
-    const newSession: GroupSession = {
-      id: Date.now().toString(),
-      videoUrl,
-      videoName: videoFile.name,
-      createdAt: new Date().toISOString(),
-      watchedCount: 0,
-      totalMembers,
-      canAnalyze: false,
+      await loadData()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось создать группу")
     }
-    setGroups(
-      groups.map((g) => {
-        if (g.id === groupId) {
-          return {
-            ...g,
-            sessions: [...g.sessions, newSession],
-          }
-        }
-        return g
-      })
-    )
+  }
+
+  const handleAddMember = async (groupId: string, memberId: string) => {
+    try {
+      const added = await apiAddGroupMember(groupId, memberId)
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                members: [
+                  ...g.members,
+                  {
+                    id: added.id,
+                    name: added.name,
+                    email: added.email,
+                    joined_at: added.joined_at,
+            watched: false,
+                  },
+                ],
+              }
+            : g
+        )
+      )
+      toast.success("Сотрудник добавлен в группу")
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось добавить сотрудника")
+    }
+  }
+
+  const handleAddSession = async (groupId: string, file: File) => {
+    try {
+      await apiAddGroupSession(groupId, file)
+      await loadData() // подтянуть свежие сессии с бэка
+      toast.success("Видео добавлено в группу")
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось добавить видео")
+    }
+  }
+
+  const handleDeleteSessions = async (groupId: string) => {
+    try {
+      await apiDeleteGroupSessions(groupId)
+      await loadData()
+      toast.success("Видео удалено")
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось удалить видео")
+    }
   }
 
   const handleAnalyze = (groupId: string, sessionId: string) => {
@@ -154,15 +182,16 @@ function Groups() {
         </button>
       </div>
 
-      {groups.length === 0 ? (
+      {isLoading ? (
+        <div className={styles.emptyState}>
+          <Users size={64} />
+          <h2>Загрузка...</h2>
+        </div>
+      ) : groups.length === 0 ? (
         <div className={styles.emptyState}>
           <Users size={64} />
           <h2>Нет групп</h2>
           <p>Создайте первую группу для начала работы</p>
-          <button className={styles.createButton} onClick={() => setIsCreateModalOpen(true)}>
-            <Plus size={20} />
-            Создать группу
-          </button>
         </div>
       ) : (
         <div className={styles.groupsGrid}>
@@ -170,8 +199,10 @@ function Groups() {
             <GroupCard
               key={group.id}
               group={group}
+              orgMembers={orgMembers}
               onAddMember={handleAddMember}
               onAddSession={handleAddSession}
+              onDeleteSessions={handleDeleteSessions}
               onAnalyze={handleAnalyze}
             />
           ))}

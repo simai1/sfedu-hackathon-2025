@@ -1,0 +1,86 @@
+.container {
+  background-color: var(--profile-bg);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  h1 {
+    color: var(--profile-text);
+    margin: 0;
+  }
+
+  .subtitle {
+    color: var(--profile-text-secondary);
+    margin: 0.25rem 0 0 0;
+  }
+
+  .refreshButton {
+    background-color: var(--purple-400);
+    color: var(--profile-text);
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--purple-300);
+    }
+  }
+}
+
+.error {
+  color: var(--red-500);
+}
+
+.loading,
+.empty {
+  color: var(--profile-text-secondary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--profile-border);
+
+  th,
+  td {
+    padding: 0.75rem;
+    border: 1px solid var(--profile-border);
+    text-align: left;
+    color: var(--profile-text);
+  }
+
+  th {
+    background-color: var(--profile-bg);
+    color: var(--profile-text-secondary);
+  }
+}
+
+.restricted {
+  background-color: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  color: var(--profile-text);
+
+  h2 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  p {
+    margin: 0;
+    color: var(--profile-text-secondary);
+  }
+}
+

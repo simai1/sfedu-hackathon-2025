@@ -1,0 +1,89 @@
+.container {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+h1 {
+  color: var(--profile-text);
+  margin: 0;
+}
+
+.status {
+  color: var(--profile-text-secondary);
+}
+
+.groupsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.groupCard {
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background-color: var(--profile-card-bg);
+}
+
+.header {
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0 0 0.25rem 0;
+    color: var(--profile-text);
+  }
+
+  .desc {
+    margin: 0;
+    color: var(--profile-text-secondary);
+  }
+}
+
+.sessions {
+  margin-top: 0.5rem;
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--profile-text);
+  }
+}
+
+.sessionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--profile-border);
+  border-radius: 0.5rem;
+  background-color: var(--profile-input-bg);
+}
+
+.sessionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sessionName {
+  color: var(--profile-text);
+  font-weight: 600;
+}
+
+.sessionDate {
+  color: var(--profile-text-secondary);
+  font-size: 0.85rem;
+}
+
+.watchButton {
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, var(--purple-500), var(--purple-400));
+  color: white;
+  border: none;
+  border-radius: 0.4rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+

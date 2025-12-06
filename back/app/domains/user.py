@@ -10,6 +10,7 @@ class User(BaseModel):
     email: str
     role: str
     password_hash: str
+    organization_id: uuid.UUID | None = None
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
@@ -21,6 +22,7 @@ class User(BaseModel):
             email=data["email"],
             role=data["role"],
             password_hash=data["password_hash"],
+            organization_id=data.get("organization_id"),
             created_at=data["created_at"],
             updated_at=data["updated_at"],
         )
@@ -31,6 +33,20 @@ class CreateUser(BaseModel):
     email: str
     password: str
     role: str
+
+
+class UpdateUser(BaseModel):
+    name: str | None = None
+    email: str | None = None
+
+
+class UserProfile(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    role: str
+    organization_code: str | None = None
+    organization_name: str | None = None
 
 
 class ValidateUser(BaseModel):

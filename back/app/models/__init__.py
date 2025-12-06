@@ -6,6 +6,8 @@ from app.models.user import UserModel
 from app.models.pair_token import PairTokenModel
 from app.models.video import VideoModel
 from app.models.engagement import EngagementModel
+from app.models.organization import OrganizationModel
+from app.models.group import GroupModel, GroupMemberModel, GroupSessionModel
 
 __all__ = [
     "Base",
@@ -13,4 +15,8 @@ __all__ = [
     "PairTokenModel",
     "VideoModel",
     "EngagementModel",
+    "OrganizationModel",
+    "GroupModel",
+    "GroupMemberModel",
+    "GroupSessionModel",
 ]

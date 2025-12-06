@@ -82,6 +82,12 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
           name: response.name,
           email: response.email,
           role: normalizeRole(response.role),
+          organizationCode:
+            response.organization_code ||
+            response.organizationCode ||
+            response.code ||
+            null,
+          organizationName: response.organization_name || response.organizationName || null,
         })
 
         // Clear form and errors

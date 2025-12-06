@@ -52,7 +52,7 @@ function MainPage() {
 
   const handleStartClick = () => {
     if (token) {
-      navigate("/profile")
+      navigate("/profile/analysis")
     } else {
       navigate("/authorization")
     }

@@ -3,10 +3,13 @@ import { Edit, Save, X, Copy, RefreshCw, Eye, EyeOff } from "lucide-react"
 import styles from "./ProfileMain.module.scss"
 import { Role, useUserStore } from "../../../../store/userStore"
 import { usePairToken, useGeneratePairToken } from "../../../../hooks/usePairToken"
+import { joinOrganization } from "../../../../api/organization"
+import { apiUpdateUser } from "../../../../api/users"
 import SubscriptionPlans from "../../components/SubscriptionPlans/SubscriptionPlans"
+import { toast } from "react-toastify"
 
 function ProfileMain() {
-  const { user, setUser, linkToOrganization } = useUserStore()
+  const { user, setUser } = useUserStore()
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
@@ -33,6 +36,7 @@ function ProfileMain() {
     type: null,
     message: "",
   })
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
 
   const {
     data: apiToken = "",
@@ -50,16 +54,33 @@ function ProfileMain() {
     setIsEditing(false)
   }
 
-  const handleSave = () => {
-    console.log("Saving profile data:", profileData)
-    if (user) {
-      setUser({
-        ...user,
+  const handleSave = async () => {
+    if (!user) return
+    setIsSavingProfile(true)
+    try {
+      const updated = await apiUpdateUser({
         name: profileData.name,
         email: profileData.email,
       })
+      setUser({
+        ...user,
+        name: updated.name,
+        email: updated.email,
+        role: updated.role ? (updated.role.toUpperCase() as Role) : user.role,
+        organizationCode:
+          updated.organization_code ||
+          updated.organizationCode ||
+          user.organizationCode ||
+          null,
+        organizationName: updated.organization_name || updated.organizationName || user.organizationName || null,
+      })
+      toast.success("Профиль обновлен")
+      setIsEditing(false)
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Не удалось сохранить профиль")
+    } finally {
+      setIsSavingProfile(false)
     }
-    setIsEditing(false)
   }
 
   const handleChange = (field: keyof typeof profileData, value: string) => {
@@ -85,17 +106,7 @@ function ProfileMain() {
   }
 
   const isOrganization = user?.role === Role.ORGANIZATION
-  const organizationCode = (() => {
-    if (user?.organizationCode) return user.organizationCode
-    if (isOrganization && user?.id) return `ORG-${user.id.slice(0, 6).toUpperCase()}`
-    return ""
-  })()
-
-  useEffect(() => {
-    if (isOrganization && user && organizationCode && !user.organizationCode) {
-      setUser({ ...user, organizationCode })
-    }
-  }, [isOrganization, organizationCode, setUser, user])
+  const organizationCode = user?.organizationCode || ""
 
   const handleCopyOrganizationCode = () => {
     if (!organizationCode) return
@@ -112,12 +123,19 @@ function ProfileMain() {
 
     try {
       setIsLinking(true)
-      const result = await linkToOrganization(orgCodeInput.trim())
+      const result = await joinOrganization(orgCodeInput.trim())
       setOrgStatus({
         type: "success",
-        message: `Успешно привязаны к ${result.organizationName}`,
+        message: `Успешно привязаны к ${result.organization_name || result.organizationName}`,
       })
       setOrgCodeInput("")
+      if (user) {
+        setUser({
+          ...user,
+          organizationCode: result.code,
+          organizationName: result.organization_name || result.organizationName,
+        })
+      }
     } catch (error) {
       setOrgStatus({
         type: "error",
@@ -131,7 +149,13 @@ function ProfileMain() {
   return (
     <div className={styles.profileMain}>
       <div className={styles.header}>
-        <h1>Профиль пользователя</h1>
+        {
+          user?.role === Role.ORGANIZATION ? (
+            <h1>Профиль организации</h1>
+          ) : (
+            <h1>Профиль пользователя</h1>
+          )
+        }
         {!isEditing ? (
           <button className={styles.editButton} onClick={handleEdit}>
             <Edit size={18} />
@@ -141,7 +165,7 @@ function ProfileMain() {
           <div className={styles.actionButtons}>
             <button className={styles.saveButton} onClick={handleSave}>
               <Save size={18} />
-              Сохранить
+              {isSavingProfile ? "Сохранение..." : "Сохранить"}
             </button>
             <button className={styles.cancelButton} onClick={handleCancel}>
               <X size={18} />

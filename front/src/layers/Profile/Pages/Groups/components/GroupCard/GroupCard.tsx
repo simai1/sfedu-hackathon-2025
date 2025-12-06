@@ -1,28 +1,29 @@
 import { useState } from "react"
 import { Users, Video, Plus, BarChart3, X, CheckCircle, Clock } from "lucide-react"
-import { type Group, type GroupMember, type GroupSession } from "./../../Groups"
+import { type Group } from "./../../Groups"
 import styles from "./GroupCard.module.scss"
 
 interface GroupCardProps {
   group: Group
-  onAddMember: (groupId: string, email: string) => void
+  orgMembers: { id: string; name?: string; email: string }[]
+  onAddMember: (groupId: string, memberId: string) => void
   onAddSession: (groupId: string, videoFile: File) => void
+  onDeleteSessions: (groupId: string) => void
   onAnalyze: (groupId: string, sessionId: string) => void
 }
 
-function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardProps) {
+function GroupCard({ group, orgMembers, onAddMember, onAddSession, onDeleteSessions, onAnalyze }: GroupCardProps) {
   const [isAddingMember, setIsAddingMember] = useState(false)
-  const [memberEmail, setMemberEmail] = useState("")
+  const [selectedMember, setSelectedMember] = useState<string>("")
   const [isAddingSession, setIsAddingSession] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault()
-    if (memberEmail.trim()) {
-      onAddMember(group.id, memberEmail.trim())
-      setMemberEmail("")
-      setIsAddingMember(false)
-    }
+    if (!selectedMember) return
+    onAddMember(group.id, selectedMember)
+    setSelectedMember("")
+    setIsAddingMember(false)
   }
 
   const handleAddSession = (e: React.FormEvent) => {
@@ -41,10 +42,9 @@ function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardPro
     }
   }
 
-  const watchedCount = group.members.filter((m) => m.watched).length
   const totalMembers = group.members.length
 
-  // Обновляем canAnalyze для сессий
+  // Обновляем canAnalyze для сессий (пока watchedCount заглушка)
   const updatedSessions = group.sessions.map((session) => ({
     ...session,
     canAnalyze: session.watchedCount === totalMembers && totalMembers > 0,
@@ -75,14 +75,20 @@ function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardPro
 
           {isAddingMember ? (
             <form onSubmit={handleAddMember} className={styles.addForm}>
-              <input
-                type="email"
-                value={memberEmail}
-                onChange={(e) => setMemberEmail(e.target.value)}
-                placeholder="Email участника"
+              <select
+                value={selectedMember}
+                onChange={(e) => setSelectedMember(e.target.value)}
                 className={styles.emailInput}
+                required
                 autoFocus
-              />
+              >
+                <option value="">Выберите сотрудника</option>
+                {orgMembers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name || m.email}
+                  </option>
+                ))}
+              </select>
               <div className={styles.formActions}>
                 <button type="submit" className={styles.submitSmallButton}>
                   Добавить
@@ -92,7 +98,7 @@ function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardPro
                   className={styles.cancelSmallButton}
                   onClick={() => {
                     setIsAddingMember(false)
-                    setMemberEmail("")
+                    setSelectedMember("")
                   }}
                 >
                   <X size={16} />
@@ -179,6 +185,7 @@ function GroupCard({ group, onAddMember, onAddSession, onAnalyze }: GroupCardPro
                   <div key={session.id} className={styles.sessionItem}>
                     <div className={styles.sessionInfo}>
                       <span className={styles.sessionName}>{session.videoName}</span>
+                     
                       <span className={styles.sessionStats}>
                         Просмотрели: {session.watchedCount} / {session.totalMembers}
                       </span>

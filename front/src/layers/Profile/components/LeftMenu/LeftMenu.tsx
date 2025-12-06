@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users, MessageCircle } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users, MessageCircle, Play } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
 import { Role, useUserStore } from "../../../../store/userStore"
 
@@ -33,6 +33,18 @@ function LeftMenu() {
       onlyForOrganization: true,
     },
     {
+      label: "Мои группы",
+      path: "/profile/my-groups",
+      icon: <Play size={20} />,
+      onlyForOrganization: false,
+    },
+    {
+      label: "Сотрудники",
+      path: "/profile/employees",
+      icon: <User size={20} />,
+      onlyForOrganization: true,
+    },
+    {
       label: "Анализ",
       path: "/profile/analysis",
       icon: <BarChart3 size={20} />,
@@ -60,7 +72,9 @@ function LeftMenu() {
 
   ]
 
-  const filteredItems = menuItems.filter((item) => (item.onlyForOrganization ? isOrganization : true))
+  const filteredItems = menuItems.filter((item) =>
+    item.onlyForOrganization ? isOrganization : true
+  )
 
   return (
     <div className={styles.leftMenu}>

@@ -17,3 +17,7 @@ export const WEBSOCKET_BASE_URL = getWebSocketUrl()
 export const WEBSOCKET_CLIENT_ENDPOINT = "/ws/client"
 export const NEURO_ASSISTANT_CHAT =
   import.meta.env.VITE_NEURO_ASSISTANT_URL || "http://localhost:8090/chat"
+
+export const ORG_CREATE_ENDPOINT = "/v1/organization/"
+export const ORG_JOIN_ENDPOINT = "/v1/organization/join"
+export const ORG_MEMBERS_ENDPOINT = "/v1/organization/members"

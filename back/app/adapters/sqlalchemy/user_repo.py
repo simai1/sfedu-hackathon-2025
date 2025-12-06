@@ -42,3 +42,32 @@ class UserRepo():
             return User(**user_model.as_dict())
         else:
             return None
+
+    async def set_organization(self, user_id: uuid.UUID, organization_id: uuid.UUID) -> User | None:
+        user_model = await self.session.get(UserModel, user_id)
+        if not user_model:
+            return None
+        user_model.organization_id = organization_id
+        await self.session.commit()
+        await self.session.refresh(user_model)
+        return User(**user_model.as_dict())
+
+    async def list_by_organization(self, organization_id: uuid.UUID, *, include_owner: bool = False) -> list[User]:
+        stmt = select(UserModel).where(UserModel.organization_id == organization_id)
+        if not include_owner:
+            stmt = stmt.where(UserModel.role != "organization")
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+        return [User(**m.as_dict()) for m in models]
+
+    async def update_fields(self, user_id: uuid.UUID, *, name: str | None = None, email: str | None = None) -> User | None:
+        user_model = await self.session.get(UserModel, user_id)
+        if not user_model:
+            return None
+        if name is not None:
+            user_model.name = name
+        if email is not None:
+            user_model.email = email
+        await self.session.commit()
+        await self.session.refresh(user_model)
+        return User(**user_model.as_dict())
