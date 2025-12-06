@@ -8,13 +8,17 @@ interface MenuItem {
   path: string
   icon: React.ReactNode
   onlyForOrganization?: boolean
+  onlyIfLinkedToOrg?: boolean
+  onlyForUser?: boolean
 }
 
 function LeftMenu() {
   const location = useLocation()
   const { user } = useUserStore()
   const isOrganization = user?.role === Role.ORGANIZATION
-
+  const isLinkedToOrg = Boolean(user?.organizationCode)
+  const isUserRole = user?.role === Role.USER
+  
   const menuItems: MenuItem[] = [
     {
       label: "Профиль",
@@ -37,6 +41,8 @@ function LeftMenu() {
       path: "/profile/my-groups",
       icon: <Play size={20} />,
       onlyForOrganization: false,
+      onlyIfLinkedToOrg: true,
+      onlyForUser: true,
     },
     {
       label: "Сотрудники",
@@ -72,9 +78,12 @@ function LeftMenu() {
 
   ]
 
-  const filteredItems = menuItems.filter((item) =>
-    item.onlyForOrganization ? isOrganization : true
-  )
+  const filteredItems = menuItems.filter((item) => {
+    if (item.onlyForOrganization && !isOrganization) return false
+    if (item.onlyForUser && !isUserRole) return false
+    if ((item as any).onlyIfLinkedToOrg && !isLinkedToOrg) return false
+    return true
+  })
 
   return (
     <div className={styles.leftMenu}>
