@@ -26,6 +26,13 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
   const [isLoading, setIsLoading] = useState(false)
   const { setToken, setUser } = useUserStore()
 
+  const normalizeRole = (role?: string) => {
+    if (!role) return Role.USER
+    const normalized = role.toLowerCase()
+    if (normalized === "organization") return Role.ORGANIZATION
+    return Role.USER
+  }
+
   // Функции для сброса ошибок при вводе
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
@@ -120,8 +127,13 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
           id: response.id,
           name: response.name,
           email: response.email,
-          role:
-            response.role || (isOrganization ? Role.ORGANIZATION : Role.USER), // Добавляем роль в пользовательские данные
+          role: normalizeRole(response.role),
+          organizationCode:
+            response.organization_code ||
+            response.organizationCode ||
+            response.code ||
+            null,
+          organizationName: response.organization_name || response.organizationName || null,
         })
 
         // Clear form and errors

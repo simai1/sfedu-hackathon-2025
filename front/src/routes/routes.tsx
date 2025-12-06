@@ -13,6 +13,7 @@ import Settings from "../layers/Profile/Pages/Settings/Settings"
 import Graphics from "../layers/Profile/Pages/Graphics/Graphics"
 import Groups from "../layers/Profile/Pages/Groups/Groups"
 import Assistant from "../layers/Profile/Pages/Assistant/Assistant"
+import Employees from "../layers/Profile/Pages/Employees/Employees"
 
 export const routes = [
   { path: "/", element: <MainPage /> },
@@ -34,6 +35,7 @@ export const routes = [
       { path: "report/:id", element: <ReportDetailed /> },
       { path: "groups", element: <Groups /> },
       { path: "assistant", element: <Assistant /> },
+      { path: "employees", element: <Employees /> },
     ],
   },
 ]

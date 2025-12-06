@@ -35,6 +35,20 @@ class CreateUser(BaseModel):
     role: str
 
 
+class UpdateUser(BaseModel):
+    name: str | None = None
+    email: str | None = None
+
+
+class UserProfile(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    role: str
+    organization_code: str | None = None
+    organization_name: str | None = None
+
+
 class ValidateUser(BaseModel):
     email: str
     password: str

@@ -33,6 +33,12 @@ function LeftMenu() {
       onlyForOrganization: true,
     },
     {
+      label: "Сотрудники",
+      path: "/profile/employees",
+      icon: <User size={20} />,
+      onlyForOrganization: true,
+    },
+    {
       label: "Анализ",
       path: "/profile/analysis",
       icon: <BarChart3 size={20} />,
