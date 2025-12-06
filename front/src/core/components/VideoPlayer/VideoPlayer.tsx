@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react"
+import React, { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react"
 import { Camera, X, Download, TrendingUp, Brain, Heart, AlertCircle } from "lucide-react"
 import styles from "./VideoPlayer.module.scss"
 
@@ -17,6 +17,12 @@ interface Screenshot {
   formattedTime: string
 }
 
+export interface VideoPlayerRef {
+  captureScreenshot: () => string | null // Возвращает base64 изображение или null
+  getCurrentTime: () => number
+  getVideoElement: () => HTMLVideoElement | null
+}
+
 interface VideoPlayerProps {
   videoURL?: string | null
   onVideoLoad?: (file: File) => void
@@ -28,7 +34,7 @@ interface VideoPlayerProps {
   showManualCapture?: boolean // Показывать кнопку ручного скриншота
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({
+const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   videoURL: externalVideoURL,
   onVideoLoad,
   triggers = [],
@@ -37,7 +43,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   autoCapture = true,
   autoPlay = false,
   showManualCapture = false,
-}) => {
+}, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [internalVideoURL, setInternalVideoURL] = useState<string | null>(null)
   const [screenshots, setScreenshots] = useState<Screenshot[]>([])
@@ -104,33 +110,48 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }
 
-  // Создание скриншота
-  const captureScreenshot = useCallback(
-    (trigger?: ScreenshotTrigger) => {
-      if (!videoRef.current) return
+  // Создание скриншота (внутренняя функция)
+  const captureScreenshotInternal = useCallback(
+    (trigger?: ScreenshotTrigger): string | null => {
+      console.log("captureScreenshotInternal вызван", {
+        hasVideoRef: !!videoRef.current,
+        hasOnScreenshot: !!onScreenshot,
+        trigger,
+      });
 
-      const video = videoRef.current
+      if (!videoRef.current) {
+        console.error("videoRef.current отсутствует в captureScreenshotInternal");
+        return null;
+      }
+
+      const video = videoRef.current;
 
       if (!video.videoWidth || !video.videoHeight) {
-        setError("Видео не готово для создания скриншота")
-        return
+        console.error("Видео не готово для создания скриншота", {
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          readyState: video.readyState,
+        });
+        setError("Видео не готово для создания скриншота");
+        return null;
       }
 
       try {
-        const canvas = document.createElement("canvas")
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        const ctx = canvas.getContext("2d")
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
-          setError("Не удалось получить контекст canvas")
-          return
+          console.error("Не удалось получить контекст canvas");
+          setError("Не удалось получить контекст canvas");
+          return null;
         }
 
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-        const imageData = canvas.toDataURL("image/png")
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/png");
 
-        const timestamp = video.currentTime
+        const timestamp = video.currentTime;
         const screenshot: Screenshot = {
           id: Date.now().toString(),
           image: imageData,
@@ -138,22 +159,43 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           trigger: trigger || {
             type: "custom",
             timestamp,
-            message: "Ручной скриншот",
+            message: "Скриншот по запросу сервера",
           },
           formattedTime: formatTime(timestamp),
+        };
+
+        console.log("Скриншот создан в VideoPlayer:", {
+          id: screenshot.id,
+          timestamp: screenshot.timestamp,
+          formattedTime: screenshot.formattedTime,
+          imageLength: screenshot.image.length,
+        });
+
+        setScreenshots((prev) => [...prev, screenshot]);
+        
+        if (onScreenshot) {
+          console.log("Вызываем onScreenshot callback с:", screenshot);
+          onScreenshot(screenshot);
+        } else {
+          console.warn("onScreenshot callback не передан в VideoPlayer!");
         }
 
-        setScreenshots((prev) => [...prev, screenshot])
-        if (onScreenshot) {
-          onScreenshot(screenshot)
-        }
+        return imageData;
       } catch (err) {
-        console.error("Ошибка при создании скриншота:", err)
-        setError("Не удалось создать скриншот")
+        console.error("Ошибка при создании скриншота:", err);
+        setError("Не удалось создать скриншот");
+        return null;
       }
     },
     [onScreenshot]
-  )
+  );
+
+  // Экспорт методов через ref
+  useImperativeHandle(ref, () => ({
+    captureScreenshot: () => captureScreenshotInternal(),
+    getCurrentTime: () => videoRef.current?.currentTime || 0,
+    getVideoElement: () => videoRef.current,
+  }), [captureScreenshotInternal])
 
   // Обработка триггеров
   useEffect(() => {
@@ -172,7 +214,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         // Проверяем, достигли ли мы времени триггера (с небольшой погрешностью)
         if (Math.abs(currentTime - trigger.timestamp) < 0.5) {
           processedTriggersRef.current.add(triggerKey)
-          captureScreenshot(trigger)
+          captureScreenshotInternal(trigger)
         }
       })
     }
@@ -180,7 +222,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const interval = setInterval(checkTriggers, 100) // Проверяем каждые 100мс
 
     return () => clearInterval(interval)
-  }, [triggers, autoCapture, captureScreenshot])
+  }, [triggers, autoCapture, captureScreenshotInternal])
 
   // Загрузка видео
   const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -322,7 +364,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   </div>
                   {showManualCapture && (
                     <button
-                      onClick={() => captureScreenshot()}
+                      onClick={() => captureScreenshotInternal()}
                       className={styles.captureButton}
                       title="Сделать скриншот"
                     >
@@ -336,52 +378,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           )}
         </div>
 
-        {/* Боковая панель со скриншотами */}
-        {screenshots.length > 0 && (
-          <div className={styles.screenshotsPanel}>
-            <div className={styles.screenshotsHeader}>
-              <h3>Скриншоты ({screenshots.length})</h3>
-              <button
-                onClick={() => setScreenshots([])}
-                className={styles.clearButton}
-                title="Очистить все"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className={styles.screenshotsList}>
-              {screenshots.map((screenshot) => (
-                <div key={screenshot.id} className={styles.screenshotItem}>
-                  <div className={styles.screenshotImage}>
-                    <img src={screenshot.image} alt={`Screenshot at ${screenshot.formattedTime}`} />
-                    <div className={styles.screenshotOverlay}>
-                      <button
-                        onClick={() => downloadScreenshot(screenshot)}
-                        className={styles.downloadButton}
-                        title="Скачать"
-                      >
-                        <Download size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className={styles.screenshotInfo}>
-                    <div className={styles.screenshotTime}>{screenshot.formattedTime}</div>
-                    <div
-                      className={styles.screenshotTrigger}
-                      style={{ color: getTriggerColor(screenshot.trigger.type) }}
-                    >
-                      {getTriggerIcon(screenshot.trigger.type)}
-                      <span>{getTriggerLabel(screenshot.trigger)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
-}
+})
+
+VideoPlayer.displayName = "VideoPlayer"
 
 export default VideoPlayer

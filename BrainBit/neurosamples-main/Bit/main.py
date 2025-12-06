@@ -28,20 +28,22 @@ qInstallMessageHandler(suppress_qt_warnings)
 logging.getLogger('PyQt6').setLevel(logging.ERROR)
 
 # Подавляем вывод исключений из ctypes callback
-_original_stderr_write = sys.stderr.write
+# Проверяем, что sys.stderr не None (может быть None в скомпилированном exe)
+if sys.stderr is not None:
+    _original_stderr_write = sys.stderr.write
 
-def filtered_stderr_write(text):
-    """Фильтрует сообщения об исключениях из ctypes callback"""
-    text_str = str(text)
-    # Игнорируем исключения из ctypes callback
-    if "Exception ignored on calling ctypes callback function" in text_str:
-        return len(text_str)
-    if "AttributeError" in text_str and "ctypes callback" in text_str:
-        return len(text_str)
-    return _original_stderr_write(text)
+    def filtered_stderr_write(text):
+        """Фильтрует сообщения об исключениях из ctypes callback"""
+        text_str = str(text)
+        # Игнорируем исключения из ctypes callback
+        if "Exception ignored on calling ctypes callback function" in text_str:
+            return len(text_str)
+        if "AttributeError" in text_str and "ctypes callback" in text_str:
+            return len(text_str)
+        return _original_stderr_write(text)
 
-# Применяем фильтр
-sys.stderr.write = filtered_stderr_write
+    # Применяем фильтр
+    sys.stderr.write = filtered_stderr_write
 
 # Определяем базовый путь для ресурсов (работает и в exe, и в обычном режиме)
 def resource_path(relative_path):
