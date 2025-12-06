@@ -12,6 +12,7 @@ from app.composites.engagement_composite import (
     get_service as get_engagement_service,
     get_tracker as get_engagement_tracker,
 )
+from fastapi.encoders import jsonable_encoder
 from app.service.engagement_service import EngagementService
 from app.service.engagement_tracker import EngagementTracker
 from app.core.logger import logger
@@ -84,14 +85,8 @@ async def device_ws(
 
                 frame = engagement_tracker.handle_sample(user_id, eeg_data)
                 if frame:
-                    logger.debug(
-                        "Device WS: engagement frame detected user_id=%s timecode=%s",
-                        user_id, frame.timecode
-                    )
-                    await manager.send_to_clients(user_id, {
-                        "type": "request_screenshot",
-                        "timecode": frame.timecode,
-                    })
+                    logger.debug("Device WS: engagement spike detected user_id=%s", user_id)
+                    await manager.send_to_clients(user_id, {"type": "request_screenshot"})
 
     except WebSocketDisconnect:
         logger.debug("Device WS: disconnect for user_id=%s", locals().get("user_id"))
@@ -155,12 +150,9 @@ async def client_ws(
 
                 timecode = str(timecode_raw)
                 video_id = uuid.UUID(video_id_raw)
-                stored = engagement_tracker.attach_video_frame(
-                    user_id, timecode, video_id, screenshot_url
-                )
+                stored = engagement_tracker.attach_video_frame(user_id, timecode, video_id, screenshot_url)
                 if stored:
-                    logger.debug(f"!!! stored: {stored}")
-                    relaxation, concentration, timecode, video_id, screenshot_url = stored
+                    relaxation, concentration = stored
                     engagement = await engagement_service.create(
                         video_id=video_id,
                         relaxation=relaxation,
@@ -174,7 +166,7 @@ async def client_ws(
                     )
                     await websocket.send_json({
                         "type": "engagement_saved",
-                        "engagement": engagement.model_dump(),
+                        "engagement": jsonable_encoder(engagement),
                     })
                 else:
                     logger.debug(

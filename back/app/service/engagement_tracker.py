@@ -1,11 +1,10 @@
-import time
-import uuid
+from collections import deque
 from dataclasses import dataclass, field
+from typing import Deque
 
 
 @dataclass
 class PendingFrame:
-    timecode: str
     relaxation: float
     concentration: float
 
@@ -14,7 +13,7 @@ class PendingFrame:
 class EngagementState:
     active: bool = False
     last_concentration: float | None = None
-    pending_frames: dict[str, PendingFrame] = field(default_factory=dict)
+    pending_frames: Deque[PendingFrame] = field(default_factory=deque)
 
 
 class EngagementTracker:
@@ -33,46 +32,51 @@ class EngagementTracker:
     def end_video(self, user_id: str):
         self.user_states.pop(user_id, None)
 
-    def handle_sample(self, user_id: str, sample: dict) -> PendingFrame | None:
+    def handle_sample(self, user_id: str, sample: dict) -> bool:
+        """
+        Process EEG sample. On spike, enqueue a pending frame (no timecode yet).
+        Returns True when spike detected.
+        """
         state = self.user_states.get(user_id)
         if not state or not state.active:
-            return None
+            return False
 
         aggregate = self._aggregate(sample)
         if aggregate is None:
-            return None
+            return False
         relaxation, concentration = aggregate
 
         last = state.last_concentration
         state.last_concentration = concentration
 
         if last is None:
-            return None
+            return False
 
         if concentration >= last * (1 + self.spike_threshold):
-            tc = str(int(time.time() * 1000))
-            frame = PendingFrame(timecode=tc, relaxation=relaxation, concentration=concentration)
-            state.pending_frames[tc] = frame
-            return frame
+            state.pending_frames.append(PendingFrame(relaxation=relaxation, concentration=concentration))
+            return True
 
-        return None
+        return False
 
     def attach_video_frame(
         self,
         user_id: str,
         timecode: str,
-        video_id: uuid.UUID,
+        video_id,
         screenshot_url: str,
-    ) -> tuple[float, float, str, uuid.UUID, str] | None:
+    ):
+        """
+        Match the oldest pending frame to the provided timecode from client.
+        """
         state = self.user_states.get(user_id)
         if not state:
             return None
 
-        frame = state.pending_frames.pop(timecode, None)
-        if not frame:
+        if not state.pending_frames:
             return None
 
-        return frame.relaxation, frame.concentration, frame.timecode, video_id, screenshot_url
+        frame = state.pending_frames.popleft()
+        return frame.relaxation, frame.concentration
 
     def _aggregate(self, sample: dict) -> tuple[float, float] | None:
         channels = sample.get("channels") or {}
