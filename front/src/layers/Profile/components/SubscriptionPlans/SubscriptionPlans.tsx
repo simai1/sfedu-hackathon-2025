@@ -1,8 +1,16 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
+import { Role, useUserStore } from "../../../../store/userStore"
 import styles from "./SubscriptionPlans.module.scss"
 
-type PlanType = "free" | "standard" | "pro" | "ultimate"
+type PlanType =
+  | "free"
+  | "standard"
+  | "pro"
+  | "ultimate"
+  | "org_starter"
+  | "org_growth"
+  | "org_enterprise"
 
 interface Plan {
   id: PlanType
@@ -22,7 +30,7 @@ interface Plan {
   popular?: boolean
 }
 
-const plans: Plan[] = [
+const individualPlans: Plan[] = [
   {
     id: "standard",
     name: "Стандарт",
@@ -92,12 +100,83 @@ const plans: Plan[] = [
   },
 ]
 
+const organizationPlans: Plan[] = [
+  {
+    id: "org_starter",
+    name: "Орг. Старт",
+    price: "4 900 ₽/мес",
+    description: "Для небольших команд и пилотов",
+    features: {
+      included: [
+        "Группы и приглашения участников",
+        "До 5 сессий в месяц",
+        "Статистика просмотров",
+        "Базовые отчеты по группам",
+        "Поддержка по email",
+      ],
+    },
+    limits: {
+      reports: "Базовые групповые",
+      requests: "До 5 сессий/мес",
+      analysis: "Стандартная",
+      storage: "10 GB",
+    },
+  },
+  {
+    id: "org_growth",
+    name: "Орг. Рост",
+    price: "9 900 ₽/мес",
+    description: "Для растущих организаций",
+    features: {
+      included: [
+        "Неограниченные группы",
+        "До 20 сессий в месяц",
+        "Подробная статистика и отчеты",
+        "Экспорт данных и API доступ",
+        "Приоритетная поддержка",
+      ],
+    },
+    limits: {
+      reports: "Расширенные групповые",
+      requests: "До 20 сессий/мес",
+      analysis: "Углубленная",
+      storage: "100 GB",
+    },
+    popular: true,
+  },
+  {
+    id: "org_enterprise",
+    name: "Орг. Enterprise",
+    price: "По запросу",
+    description: "Для крупных компаний и сетей",
+    features: {
+      included: [
+        "SLA и выделенный менеджер",
+        "Безлимитные сессии и группы",
+        "Продвинутая аналитика по организациям",
+        "Интеграции (SSO, аудит логов)",
+        "Гибкие лимиты хранения",
+      ],
+    },
+    limits: {
+      reports: "Полные корпоративные",
+      requests: "Безлимит",
+      analysis: "Максимальная + кастом",
+      storage: "По договоренности",
+    },
+  },
+]
+
 interface SubscriptionPlansProps {
   currentPlan?: PlanType
 }
 
 function SubscriptionPlans({ currentPlan = "free" }: SubscriptionPlansProps) {
+  const { user } = useUserStore()
+  const isOrganization = user?.role === Role.ORGANIZATION
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null)
+
+  const plans = isOrganization ? organizationPlans : individualPlans
 
   const getCurrentPlanName = () => {
     if (currentPlan === "free") return "Бесплатная пробная mvp подписка"

@@ -3,6 +3,7 @@ import ChatMessagerComponent from "../../../../core/components/ChatMessagerCompo
 import KeyIndicators from "../../modules/graphics/KeyIndicators/KeyIndicators"
 import UploadFile from "../../../../core/components/UploadFile/UploadFile"
 import VideoPlayer, { type ScreenshotTrigger } from "../../../../core/components/VideoPlayer/VideoPlayer"
+import { uploadVideo } from "../../../../api/files"
 import styles from "./Analysis.module.scss"
 
 type AnalysisState = "upload" | "ready" | "watching" | "finished" | "reportGenerated"
@@ -11,6 +12,10 @@ function Analysis() {
   const [state, setState] = useState<AnalysisState>("upload")
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoURL, setVideoURL] = useState<string | null>(null)
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null)
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [isSocketConnected, setIsSocketConnected] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isReportGenerating, setIsReportGenerating] = useState(false)
@@ -18,33 +23,52 @@ function Analysis() {
   const [capturedScreenshots, setCapturedScreenshots] = useState<any[]>([])
   const videoDurationRef = useRef<number>(0)
 
-  const handleFileSelect = (file: File | null) => {
+  const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
+      setUploadError(null)
+      setIsUploading(true)
       setVideoFile(file)
-      const url = URL.createObjectURL(file)
-      setVideoURL(url)
-      setState("ready")
-      
+
+      // Локальный URL используем для предпросмотра и вычисления триггеров
+      const localUrl = URL.createObjectURL(file)
+      setVideoURL(localUrl)
+
       const video = document.createElement("video")
       video.preload = "metadata"
-      video.src = url
+      video.src = localUrl
       video.onloadedmetadata = () => {
         videoDurationRef.current = video.duration
         const triggers = generateScreenshotTriggers(video.duration)
         setScreenshotTriggers(triggers)
         video.remove()
       }
-      
-      connectToSocket()
+
+      try {
+        const response = await uploadVideo(file)
+        const data = response?.data
+        if (data?.id) setUploadedVideoId(data.id)
+        if (data?.url || data?.video_url) setUploadedVideoUrl(data.url || data.video_url)
+        setState("ready")
+        connectToSocket()
+      } catch (error) {
+        console.error("Ошибка загрузки видео", error)
+        setUploadError("Не удалось загрузить видео. Попробуйте еще раз.")
+        setState("upload")
+        setVideoFile(null)
+        setVideoURL(null)
+        setScreenshotTriggers([])
+      } finally {
+        setIsUploading(false)
+      }
     }
   }
 
   const connectToSocket = () => {
     setTimeout(() => {
       setIsSocketConnected(true)
-      console.log("Соединение с сервером установлено")
     }, 1000)
   }
+
   const generateScreenshotTriggers = (duration: number) => {
     const triggers: ScreenshotTrigger[] = []
     for (let time = 0; time < duration; time += 2) {
@@ -106,6 +130,9 @@ function Analysis() {
     }
     setVideoFile(null)
     setVideoURL(null)
+    setUploadedVideoId(null)
+    setUploadedVideoUrl(null)
+    setUploadError(null)
     setIsSocketConnected(false)
     setIsAnalyzing(false)
     setIsReportGenerating(false)
@@ -135,6 +162,8 @@ function Analysis() {
             <div className={styles.uploadWrapper}>
               <UploadFile onFileSelect={handleFileSelect} />
             </div>
+            {isUploading && <p className={styles.uploadStatus}>Загружаем видео на сервер...</p>}
+            {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
           </div>
         )}
 
@@ -161,15 +190,18 @@ function Analysis() {
               </div>
             )}
 
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
+            {uploadedVideoId && (
+              <div className={styles.videoInfo}>
+                <p>ID видео: {uploadedVideoId}</p>
+                {uploadedVideoUrl && <p>Ссылка: {uploadedVideoUrl}</p>}
+              </div>
+            )}
 
-            <div className={styles.actionButtons}>
+<div className={styles.actionButtons}>
               <button
                 className={styles.startButton}
                 onClick={handleStartWatching}
-                disabled={!isSocketConnected}
+                disabled={!isSocketConnected || isUploading}
               >
                 Начать просмотр
               </button>
@@ -177,6 +209,12 @@ function Analysis() {
                 Загрузить другое видео
               </button>
             </div>
+            
+            <div className={styles.chartContainer}>
+              <KeyIndicators />
+            </div>
+
+           
           </div>
         )}
 
