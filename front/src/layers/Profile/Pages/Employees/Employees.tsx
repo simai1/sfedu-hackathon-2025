@@ -7,6 +7,7 @@ interface Member {
   id: string
   name: string
   email: string
+  joined_at?: string
 }
 
 function Employees() {
@@ -81,6 +82,7 @@ function Employees() {
             <tr>
               <th>Имя</th>
               <th>Email</th>
+              <th>Дата привязки</th>
             </tr>
           </thead>
           <tbody>
@@ -88,6 +90,7 @@ function Employees() {
               <tr key={m.id}>
                 <td>{m.name}</td>
                 <td>{m.email}</td>
+                <td>{m.joined_at ? new Date(m.joined_at).toLocaleString() : "—"}</td>
               </tr>
             ))}
           </tbody>
