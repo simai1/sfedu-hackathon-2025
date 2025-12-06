@@ -1,6 +1,6 @@
 .leftMenu {
   width: 250px;
-  background-color: var(--blue-500);
+  background-color: var(--profile-bg);
   padding: 1.5rem;
   border-radius: 0.75rem;
   height: fit-content;
@@ -21,7 +21,7 @@
           align-items: center;
           gap: 0.75rem;
           padding: 0.75rem 1rem;
-          color: #d1d5db;
+          color: var(--profile-text-muted);
           text-decoration: none;
           border-radius: 0.5rem;
           transition: all 0.2s ease;
@@ -37,13 +37,13 @@
           }
 
           &:hover {
-            background-color: #374151;
-            color: #f3f4f6;
+            background-color: var(--profile-hover-bg);
+            color: var(--profile-text);
           }
 
           &.active {
-            background-color: #a78bfa;
-            color: #111827;
+            background-color: var(--profile-active-bg);
+            color: var(--profile-active-text);
             font-weight: 600;
           }
         }

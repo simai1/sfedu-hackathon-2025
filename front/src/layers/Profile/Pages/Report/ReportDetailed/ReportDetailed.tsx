@@ -2,7 +2,6 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import styles from "./ReportDetailed.module.scss"
 
-// Моковые данные для детальной страницы отчета
 const mockDetailedReports: Record<string, any> = {
   "1": {
     id: "1",

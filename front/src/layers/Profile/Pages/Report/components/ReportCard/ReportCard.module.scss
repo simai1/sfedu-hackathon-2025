@@ -1,16 +1,16 @@
 .reportCard {
   display: flex;
   gap: 1.25rem;
-  background-color: var(--blue-500);
+  background-color: var(--profile-bg);
   border-radius: 0.75rem;
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--profile-border);
   align-items: flex-start;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--profile-hover-bg);
     border-color: var(--purple-500);
     transform: translateY(-2px);
   }
@@ -22,7 +22,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--profile-card-bg);
     border-radius: 0.5rem;
     color: var(--purple-500);
   }
@@ -41,7 +41,7 @@
       flex-wrap: wrap;
 
       .title {
-        color: var(--white-500);
+        color: var(--profile-text);
         font-size: 1.125rem;
         font-weight: 600;
         margin: 0;
@@ -66,13 +66,13 @@
     }
 
     .date {
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--profile-text-secondary);
       font-size: 0.875rem;
       margin: 0;
     }
 
     .preview {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--profile-text);
       font-size: 0.9375rem;
       margin: 0.5rem 0 0 0;
       line-height: 1.5;
@@ -99,8 +99,8 @@
       }
 
       &.draft {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: var(--white-500);
+        background-color: var(--profile-hover-bg);
+        color: var(--profile-text);
       }
     }
   }
@@ -110,7 +110,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--profile-text-muted);
     transition: all 0.2s ease;
   }
 

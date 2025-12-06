@@ -48,11 +48,9 @@ export const useUserStore = create<UserStore>()(
         }
       },
       login: async (credentials) => {
-        // Simulate API call
         console.log("Logging in with:", credentials);
-        // In a real app, you would make an API call here
+        // TODO: заменить на реальный API вызов
         // const response = await api.login(credentials);
-        // set({ token: response.token, user: response.user });
         set({ 
           token: "fake-jwt-token", 
           user: { 
@@ -64,11 +62,9 @@ export const useUserStore = create<UserStore>()(
         });
       },
       register: async (userData) => {
-        // Simulate API call
         console.log("Registering with:", userData);
-        // In a real app, you would make an API call here
+        // TODO: заменить на реальный API вызов
         // const response = await api.register(userData);
-        // set({ token: response.token, user: response.user });
         set({ 
           token: "fake-jwt-token", 
           user: { 
