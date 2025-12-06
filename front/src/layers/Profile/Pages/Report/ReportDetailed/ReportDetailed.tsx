@@ -1,7 +1,7 @@
-import React from "react"
+import React, { useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import styles from "./ReportDetailed.module.scss"
-
+import { FileUp } from "lucide-react"
 const mockDetailedReports: Record<string, any> = {
   "1": {
     id: "1",
@@ -128,6 +128,7 @@ const mockDetailedReports: Record<string, any> = {
 function ReportDetailed() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const report = id ? mockDetailedReports[id] : null
 
@@ -167,6 +168,33 @@ function ReportDetailed() {
         return "Отчет"
     }
   }
+
+  const handleExportPdf = () => {
+    if (!contentRef.current) return
+    const printWindow = window.open("", "PRINT", "width=900,height=1200")
+    if (!printWindow) return
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${report.title}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; padding: 24px; color: #111827; }
+            h1, h2 { margin: 12px 0; }
+            p { line-height: 1.6; margin: 8px 0; }
+            ul { margin: 8px 0 8px 20px; }
+          </style>
+        </head>
+        <body>
+          ${contentRef.current.innerHTML}
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+    printWindow.close()
+  }
+
 
   // Простой парсер Markdown для отображения контента
   const renderContent = (content: string) => {
@@ -315,16 +343,24 @@ function ReportDetailed() {
           <p className={styles.date}>{formatDate(report.date)}</p>
         </div>
         <div className={styles.meta}>
-          {report.type && <span className={styles.type}>{getTypeLabel()}</span>}
-          {report.status && (
-            <span className={`${styles.status} ${styles[report.status]}`}>
-              {report.status === "completed" ? "Завершен" : "Черновик"}
-            </span>
-          )}
+          <div className={styles.badges}>
+            {report.type && <span className={styles.type}>{getTypeLabel()}</span>}
+            {report.status && (
+              <span className={`${styles.status} ${styles[report.status]}`}>
+                {report.status === "completed" ? "Завершен" : "Черновик"}
+              </span>
+            )}
+          </div>
+          <div className={styles.actions}>
+            <button className={styles.exportButton} onClick={handleExportPdf}>
+              <FileUp size={20} />
+              Экспорт в PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className={styles.content}>
+      <div className={styles.content} ref={contentRef}>
         <div className={styles.reportContent}>{renderContent(report.content)}</div>
       </div>
     </div>
