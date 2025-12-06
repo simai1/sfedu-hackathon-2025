@@ -11,7 +11,7 @@ class EngagementService:
     async def create(
         self,
         video_id: uuid.UUID,
-        relaxation: float | None,
+        relaxation: float,
         concentration: float,
         screenshot_url: str,
         timecode: str | None = None,

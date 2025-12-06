@@ -4,6 +4,12 @@ import websockets
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, QTimer
 from typing import Optional, Dict, Any
 import threading
+import sys
+import os
+
+# Добавляем путь к корневой директории для импорта config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config
 
 
 class WebSocketClient(QObject):
@@ -13,9 +19,9 @@ class WebSocketClient(QObject):
     error = pyqtSignal(str)
     message_received = pyqtSignal(dict)
     
-    def __init__(self, url: str = "ws://5.129.252.186:3000/ws/device"):
+    def __init__(self, url: str = None):
         super().__init__()
-        self.url = url
+        self.url = url if url is not None else config.WEBSOCKET_SERVER_URL
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
         self.connected_status = False
         self.loop: Optional[asyncio.AbstractEventLoop] = None

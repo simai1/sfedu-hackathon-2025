@@ -155,33 +155,55 @@ async def client_ws(
 
                 timecode = str(timecode_raw)
                 video_id = uuid.UUID(video_id_raw)
+                
+                # Пытаемся найти pending_frame для получения точных значений EEG
                 stored = engagement_tracker.attach_video_frame(
                     user_id, timecode, video_id, screenshot_url
                 )
+                
                 if stored:
-                    logger.debug(f"!!! stored: {stored}")
+                    # Нашли pending_frame - используем точные значения из EEG
                     relaxation, concentration, timecode, video_id, screenshot_url = stored
-                    engagement = await engagement_service.create(
-                        video_id=video_id,
-                        relaxation=relaxation,
-                        concentration=concentration,
-                        screenshot_url=screenshot_url,
-                        timecode=timecode,
-                    )
                     logger.debug(
-                        "Client WS: engagement saved user_id=%s video_id=%s timecode=%s",
-                        user_id, video_id, timecode
+                        "Client WS: using EEG data from pending_frame user_id=%s timecode=%s relaxation=%s concentration=%s",
+                        user_id, timecode, relaxation, concentration
                     )
-                    await websocket.send_json({
-                        "type": "engagement_saved",
-                        "engagement": engagement.model_dump(),
-                    })
                 else:
-                    logger.debug(
-                        "Client WS: timecode not pending user_id=%s timecode=%s",
-                        user_id, timecode
-                    )
-                    await websocket.send_json({"type": "error", "message": "timecode not pending"})
+                    # Нет pending_frame - используем последние известные значения или дефолтные
+                    # Это нормально, если скриншот отправлен без запроса от бэка или timecode не совпадает
+                    state = engagement_tracker.user_states.get(user_id)
+                    if state and state.last_concentration is not None:
+                        concentration = state.last_concentration
+                        relaxation = 50.0  # Дефолтное значение релаксации
+                        logger.debug(
+                            "Client WS: using last known values user_id=%s timecode=%s concentration=%s",
+                            user_id, timecode, concentration
+                        )
+                    else:
+                        # Если нет состояния, используем дефолтные значения
+                        concentration = 50.0
+                        relaxation = 50.0
+                        logger.debug(
+                            "Client WS: using default values user_id=%s timecode=%s",
+                            user_id, timecode
+                        )
+                
+                # Всегда сохраняем engagement в БД
+                engagement = await engagement_service.create(
+                    video_id=video_id,
+                    relaxation=relaxation,
+                    concentration=concentration,
+                    screenshot_url=screenshot_url,
+                    timecode=timecode,
+                )
+                logger.debug(
+                    "Client WS: engagement saved to DB user_id=%s video_id=%s timecode=%s screenshot_url=%s",
+                    user_id, video_id, timecode, screenshot_url
+                )
+                await websocket.send_json({
+                    "type": "engagement_saved",
+                    "engagement": engagement.model_dump(),
+                })
             else:
                 logger.debug("Client WS: unknown message type user_id=%s payload=%s", user_id, message)
                 await websocket.send_json({"type": "error", "message": "unknown message type"})

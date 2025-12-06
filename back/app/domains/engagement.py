@@ -14,7 +14,7 @@ class Engagement(BaseModel):
 
 class CreateEngagement(BaseModel):
     video_id: uuid.UUID
-    relaxation: float | None
+    relaxation: float
     concentration: float
     screenshot_url: str
     timecode: str | None = None

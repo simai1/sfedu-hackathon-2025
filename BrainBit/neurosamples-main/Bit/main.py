@@ -64,6 +64,7 @@ from neuro_impl.websocket_client import WebSocketClient
 from PyQt6.QtWidgets import QPushButton
 from ui.plots import SpectrumPlot, SignalPlot
 import json
+import config
 
 
 class MenuScreen(QMainWindow):
@@ -789,7 +790,7 @@ class TokenScreen(QMainWindow):
         self.connectButton.setEnabled(False)
         
         # Создаем WebSocket клиент
-        self.ws_client = WebSocketClient("ws://5.129.252.186:3000/ws/device")
+        self.ws_client = WebSocketClient(config.WEBSOCKET_SERVER_URL)
         self.ws_client.connected.connect(self.__on_websocket_connected)
         self.ws_client.disconnected.connect(self.__on_websocket_disconnected)
         self.ws_client.error.connect(self.__on_websocket_error)
