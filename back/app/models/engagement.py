@@ -1,0 +1,37 @@
+import uuid
+
+from sqlalchemy import Float, ForeignKey, String, text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from . import Base
+
+
+class EngagementModel(Base):
+    __tablename__ = "engagements"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        nullable=False,
+    )
+
+    video_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False
+    )
+
+    relaxation: Mapped[float] = mapped_column(Float, nullable=False)
+
+    concentration: Mapped[float] = mapped_column(Float, nullable=False)
+
+    screenshot_url: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    def as_dict(self):
+        return {
+            "id": str(self.id),
+            "video_id": str(self.video_id),
+            "relaxation": self.relaxation,
+            "concentration": self.concentration,
+            "screenshot_url": self.screenshot_url,
+        }

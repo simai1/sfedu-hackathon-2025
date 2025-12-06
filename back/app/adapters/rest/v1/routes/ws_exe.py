@@ -1,3 +1,6 @@
+import uuid
+import json
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.composites.pair_token_composite import get_controller as get_token_controller
 from app.adapters.rest.v1.controllers.pair_token import PairTokenController
@@ -5,6 +8,12 @@ from app.composites.connection_manager_composite import get_service as get_cm_se
 from app.service.connection_manager import ConnectionManager
 from app.composites.token_composite import get_service as get_token_service
 from app.service.token_service import TokenService
+from app.composites.engagement_composite import (
+    get_service as get_engagement_service,
+    get_tracker as get_engagement_tracker,
+)
+from app.service.engagement_service import EngagementService
+from app.service.engagement_tracker import EngagementTracker
 
 router = APIRouter()
 
@@ -12,7 +21,8 @@ router = APIRouter()
 async def device_ws(
     websocket: WebSocket,
     controller: PairTokenController = Depends(get_token_controller),
-    manager: ConnectionManager = Depends(get_cm_service)
+    manager: ConnectionManager = Depends(get_cm_service),
+    engagement_tracker: EngagementTracker = Depends(get_engagement_tracker),
 ):
     await websocket.accept()
 
@@ -38,12 +48,36 @@ async def device_ws(
 
         while True:
             data = await websocket.receive_json()
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except json.JSONDecodeError:
+                    await websocket.send_json({"type": "error", "message": "invalid json payload"})
+                    continue
+            if not isinstance(data, dict):
+                await websocket.send_json({"type": "error", "message": "invalid payload"})
+                continue
 
-            if data.get("type") == "eeg_sample":
+            msg_type = data.get("type")
+            print(msg_type)
+
+            if msg_type == "eeg_sample":
+                eeg_data = data.get("data")
+                if not isinstance(eeg_data, dict):
+                    await websocket.send_json({"type": "error", "message": "missing eeg data"})
+                    continue
+
                 await manager.send_to_clients(user_id, {
-                    "data": data.get("data")
+                    "type": "eeg_sample",
+                    "data": eeg_data
                 })
-                print(data.get("data"))
+
+                frame = engagement_tracker.handle_sample(user_id, eeg_data)
+                if frame:
+                    await manager.send_to_clients(user_id, {
+                        "type": "request_screenshot",
+                        "timestamp": frame.timestamp,
+                    })
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
@@ -57,6 +91,8 @@ async def client_ws(
     websocket: WebSocket,
     token_service: TokenService = Depends(get_token_service),
     manager: ConnectionManager = Depends(get_cm_service),
+    engagement_tracker: EngagementTracker = Depends(get_engagement_tracker),
+    engagement_service: EngagementService = Depends(get_engagement_service),
 ):
     await websocket.accept()
 
@@ -73,7 +109,45 @@ async def client_ws(
         await websocket.send_json({"type": "connected", "user_id": user_id})
 
         while True:
-            await websocket.receive_text()
+            message = await websocket.receive_json()
+            msg_type = message.get("type")
+
+            if msg_type == "video_start":
+                engagement_tracker.start_video(user_id)
+                await websocket.send_json({"type": "video_tracking_started"})
+            elif msg_type == "video_end":
+                engagement_tracker.end_video(user_id)
+                await websocket.send_json({"type": "video_tracking_ended"})
+            elif msg_type == "video_frame":
+                timestamp_raw = message.get("timestamp")
+                video_id_raw = message.get("video_id")
+                screenshot_url = message.get("screenshot_url")
+
+                if timestamp_raw is None or not video_id_raw or not screenshot_url:
+                    await websocket.send_json({"type": "error", "message": "video_frame missing fields"})
+                    continue
+
+                timestamp = str(timestamp_raw)
+                video_id = uuid.UUID(video_id_raw)
+                stored = engagement_tracker.attach_video_frame(
+                    user_id, timestamp, video_id, screenshot_url
+                )
+                if stored:
+                    relaxation, concentration, video_id, screenshot_url = stored
+                    engagement = await engagement_service.create(
+                        video_id=video_id,
+                        relaxation=relaxation,
+                        concentration=concentration,
+                        screenshot_url=screenshot_url,
+                    )
+                    await websocket.send_json({
+                        "type": "engagement_saved",
+                        "engagement": engagement.model_dump(),
+                    })
+                else:
+                    await websocket.send_json({"type": "error", "message": "timestamp not pending"})
+            else:
+                await websocket.send_json({"type": "error", "message": "unknown message type"})
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)

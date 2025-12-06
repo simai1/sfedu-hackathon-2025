@@ -6,7 +6,7 @@ from app.adapters.sqlalchemy.user_repo import UserRepo
 from app.service.token_service import TokenService
 from app.core.errors import NotFoundError
 from app.domains.auth import AuthUser
-from app.core.errors import InvalidDataError
+from app.core.errors import InvalidDataError, AlreadyUserError
 
 class UserService():
     def __init__(self, repo: UserRepo, token_service: TokenService):
@@ -14,6 +14,10 @@ class UserService():
         self.token_service = token_service
 
     async def register(self, create_user: CreateUser) -> AuthUser:
+        existing_user = await self.repo.get_one_by_email(create_user.email)
+        if existing_user:
+            raise AlreadyUserError("email")
+
         user = await self.repo.create(create_user)
         token = self.token_service.generate_access_token(user)
         return AuthUser(
