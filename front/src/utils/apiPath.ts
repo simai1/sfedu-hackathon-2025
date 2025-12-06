@@ -15,3 +15,5 @@ const getWebSocketUrl = () => {
 
 export const WEBSOCKET_BASE_URL = getWebSocketUrl()
 export const WEBSOCKET_CLIENT_ENDPOINT = "/ws/client"
+export const NEURO_ASSISTANT_CHAT =
+  import.meta.env.VITE_NEURO_ASSISTANT_URL || "http://localhost:8090/chat"

@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  neuro-assistant:
+    build: .
+    container_name: neuro-assistant
+    env_file:
+      - .env
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+

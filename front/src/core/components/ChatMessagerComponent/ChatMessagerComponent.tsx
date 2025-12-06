@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import styles from "./ChatMessagerComponent.module.scss"
+import { NEURO_ASSISTANT_CHAT } from "../../../utils/apiPath"
 
 interface Message {
   id: string
@@ -12,13 +13,14 @@ function ChatMessagerComponent() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Привет! Я ваш виртуальный помощник. Задайте мне любой вопрос.",
+      text: "Привет! Я нейро-помощник по вопросам обработки видео. Спроси меня, например: «Как осветлить тени в видео?»",
       sender: "bot",
       timestamp: new Date(),
     },
   ])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Функция для прокрутки к последнему сообщению
@@ -36,22 +38,29 @@ function ChatMessagerComponent() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  const generateBotResponse = (userMessage: string): string => {
-    const responses = [
-      "Понимаю ваш запрос. Это интересный вопрос!",
-      "Спасибо за ваше сообщение. Я изучаю его содержание.",
-      "Отличный вопрос! Дайте подумать...",
-      "Я получил ваше сообщение и обрабатываю информацию.",
-      "Интересная точка зрения. Что еще вы хотели бы узнать?",
-      "Спасибо за обращение. Я постараюсь помочь вам с этим.",
-    ]
-
-    return responses[Math.floor(Math.random() * responses.length)]
+  const buildPayload = (history: Message[], userText: string) => {
+    const mapped = history.map((m) => ({
+      role: m.sender === "user" ? "user" : "assistant",
+      content: m.text,
+    }))
+    return {
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful assistant for video editing tips and BrainBit users. Answer concisely.",
+        },
+        ...mapped,
+        { role: "user", content: userText },
+      ],
+      stream: false,
+      temperature: 0.7,
+    }
   }
+
   const handleSendMessage = async () => {
     if (inputValue.trim() === "" || isLoading) return
 
-    // Добавляем сообщение пользователя
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
@@ -62,18 +71,37 @@ function ChatMessagerComponent() {
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsLoading(true)
+    setError(null)
 
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      const payload = buildPayload(messages, userMessage.text)
+      const res = await fetch(NEURO_ASSISTANT_CHAT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        throw new Error(`Ошибка ответа: ${res.status}`)
+      }
+      const data = await res.json()
+      const botText =
+        data?.choices?.[0]?.message?.content ||
+        data?.message ||
+        "Извините, не удалось получить ответ."
+
+      const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateBotResponse(inputValue),
+        text: botText,
         sender: "bot",
         timestamp: new Date(),
       }
 
-      setMessages((prev) => [...prev, botResponse])
+      setMessages((prev) => [...prev, botMessage])
+    } catch (err: any) {
+      setError(err?.message || "Не удалось получить ответ")
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,6 +129,8 @@ function ChatMessagerComponent() {
             </div>
           </div>
         ))}
+
+        {error && <div className={styles.error}>{error}</div>}
 
         {isLoading && (
           <div className={styles.loadingContainer}>
