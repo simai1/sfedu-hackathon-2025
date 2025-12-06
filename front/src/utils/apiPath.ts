@@ -3,6 +3,7 @@ export const LOGIN_ENDPOINT = "/v1/auth/login"
 export const PAIR_TOKEN_ENDPOINT = "/v1/pair-token/"
 export const VIDEO_UPLOAD_ENDPOINT = "/v1/videos"
 export const VIDEO_BY_ID_ENDPOINT = "/v1/videos/{id}"
+export const PHOTO_UPLOAD_ENDPOINT = "/v1/photos"
 // WebSocket endpoint
 const getWebSocketUrl = () => {
   if (import.meta.env.DEV) {
