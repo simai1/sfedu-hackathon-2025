@@ -29,7 +29,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    // Axios автоматически установит Content-Type: application/json для обычных объектов
+    // Axios автоматически установит Content-Type для FormData (multipart/form-data)
+    // Не устанавливаем Content-Type вручную для FormData, чтобы браузер мог установить boundary
+    if (config.data instanceof FormData) {
+      // Удаляем Content-Type, чтобы браузер установил его автоматически с boundary
+      delete config.headers["Content-Type"]
+    }
     return config
   },
   (error) => Promise.reject(error)

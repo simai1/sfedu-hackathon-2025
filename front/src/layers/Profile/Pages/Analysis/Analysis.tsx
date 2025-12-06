@@ -39,6 +39,8 @@ function Analysis() {
   const videoDurationRef = useRef<number>(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const uploadedVideoIdRef = useRef<string | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
@@ -69,6 +71,7 @@ function Analysis() {
         if (data?.id) {
           console.log("Устанавливаем uploadedVideoId:", data.id);
           setUploadedVideoId(data.id);
+          uploadedVideoIdRef.current = data.id; // Обновляем ref
         } else {
           console.error("ID видео не найден в ответе сервера:", data);
         }
@@ -243,53 +246,108 @@ function Analysis() {
               imageData.length
             );
 
+            // Используем ref для получения актуального значения uploadedVideoId
+            // (чтобы избежать проблемы с замыканием в обработчике WebSocket)
+            const currentVideoId =
+              uploadedVideoIdRef.current || uploadedVideoId;
+
+            console.log("Проверка uploadedVideoId:", {
+              fromRef: uploadedVideoIdRef.current,
+              fromState: uploadedVideoId,
+              currentVideoId,
+            });
+
             // Отправляем на сервер только если есть uploadedVideoId
-            if (uploadedVideoId) {
+            if (currentVideoId) {
               try {
                 console.log(
-                  "Начинаем загрузку фото на сервер через /v1/photos..."
+                  "=== Начинаем загрузку фото на сервер через /v1/photos ==="
                 );
+                console.log("imageData длина:", imageData.length);
+                console.log(
+                  "uploadedVideoId (из ref):",
+                  uploadedVideoIdRef.current
+                );
+                console.log("uploadedVideoId (из state):", uploadedVideoId);
+                console.log("currentVideoId:", currentVideoId);
+
                 // Загружаем фото на сервер через /v1/photos
                 const photoResponse = await uploadPhoto(
                   imageData,
                   `screenshot-${Date.now()}.png`
                 );
+
+                console.log("=== Ответ от сервера при загрузке фото ===");
+                console.log("Полный ответ:", photoResponse);
+                console.log("photoResponse.data:", photoResponse?.data);
                 console.log(
-                  "Ответ от сервера при загрузке фото:",
-                  photoResponse
+                  "photoResponse.data?.url:",
+                  photoResponse?.data?.url
                 );
 
+                // Извлекаем URL из ответа
+                // Сервер возвращает {"url": "..."}
                 const photoData = photoResponse?.data;
-                const screenshotUrl =
-                  photoData?.url ||
-                  photoData?.photo_url ||
-                  photoData?.image_url ||
-                  "random/url";
+                let screenshotUrl = null;
 
-                console.log("Photo URL:", screenshotUrl);
+                if (photoData) {
+                  // Проверяем разные возможные форматы ответа
+                  screenshotUrl =
+                    photoData.url || photoData.photo_url || photoData.image_url;
+                }
+
+                if (!screenshotUrl) {
+                  console.error("❌ URL не найден в ответе сервера!", {
+                    photoResponse,
+                    photoData,
+                    responseKeys: photoResponse
+                      ? Object.keys(photoResponse)
+                      : [],
+                    dataKeys: photoData ? Object.keys(photoData) : [],
+                  });
+                  throw new Error("URL не найден в ответе сервера");
+                }
+
+                console.log("=== Photo URL получен ===");
+                console.log("screenshotUrl:", screenshotUrl);
 
                 // Отправляем video_frame на сервер
                 const videoFrameMessage = {
                   type: "video_frame",
                   timestamp: timestamp.toString(),
-                  video_id: uploadedVideoId,
+                  video_id: currentVideoId,
                   screenshot_url: screenshotUrl,
                 };
 
+                console.log("=== Отправка video_frame в WebSocket ===");
+                console.log("videoFrameMessage:", videoFrameMessage);
+                console.log("WebSocket readyState:", wsRef.current?.readyState);
+
                 if (wsRef.current?.readyState === WebSocket.OPEN) {
                   wsRef.current.send(JSON.stringify(videoFrameMessage));
-                  console.log("Отправлен video_frame:", videoFrameMessage);
+                  console.log(
+                    "✅ video_frame успешно отправлен:",
+                    videoFrameMessage
+                  );
                 } else {
-                  console.error("WebSocket не готов для отправки video_frame", {
-                    readyState: wsRef.current?.readyState,
-                  });
+                  console.error(
+                    "❌ WebSocket не готов для отправки video_frame",
+                    {
+                      readyState: wsRef.current?.readyState,
+                      wsExists: !!wsRef.current,
+                    }
+                  );
                 }
               } catch (error) {
-                console.error("Ошибка загрузки фото:", error);
+                console.error("❌ Ошибка загрузки фото:", error);
+                if (error instanceof Error) {
+                  console.error("Сообщение об ошибке:", error.message);
+                  console.error("Стек ошибки:", error.stack);
+                }
               }
             } else {
               console.warn(
-                "uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
+                "⚠️ uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
               );
               console.warn("Текущее состояние:", {
                 uploadedVideoId,
@@ -348,6 +406,24 @@ function Analysis() {
             errorMessages[event.code] ||
             `Соединение закрыто с кодом ${event.code}`;
           console.error("Ошибка закрытия WebSocket:", errorMessage);
+
+          // Автоматическое переподключение во время просмотра видео
+          if (state === "watching" && event.code === 1011) {
+            console.log(
+              "Попытка переподключения WebSocket после ошибки 1011..."
+            );
+            // Отменяем предыдущее переподключение, если оно было запланировано
+            if (reconnectTimeoutRef.current) {
+              clearTimeout(reconnectTimeoutRef.current);
+            }
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (state === "watching" && !isSocketConnected && token) {
+                console.log("Переподключаемся к WebSocket...");
+                connectToSocket();
+              }
+              reconnectTimeoutRef.current = null;
+            }, 2000); // Переподключение через 2 секунды
+          }
 
           if (state === "ready" || state === "watching") {
             setUploadError(errorMessage);
@@ -501,6 +577,7 @@ function Analysis() {
     setVideoFile(null);
     setVideoURL(null);
     setUploadedVideoId(null);
+    uploadedVideoIdRef.current = null;
     setUploadedVideoUrl(null);
     setUploadError(null);
     setIsSocketConnected(false);
@@ -514,6 +591,11 @@ function Analysis() {
 
   useEffect(() => {
     return () => {
+      // Отменяем переподключение при размонтировании
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       // Закрываем WebSocket при размонтировании
       if (wsRef.current) {
         wsRef.current.close();
