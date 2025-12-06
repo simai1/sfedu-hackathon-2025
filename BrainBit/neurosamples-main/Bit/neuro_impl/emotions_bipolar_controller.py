@@ -2,8 +2,6 @@ from em_st_artifacts.emotional_math import EmotionalMath
 from em_st_artifacts.utils.lib_settings import MathLibSetting, ArtifactDetectSetting, \
     MentalAndSpectralSetting
 from em_st_artifacts.utils.support_classes import RawChannels
-import time
-import random
 
 
 class EmotionBipolar:
@@ -33,12 +31,10 @@ class EmotionBipolar:
         self.__math.set_calibration_length(self.calibration_length)
         self.__math.set_mental_estimation_mode(False)
         self.__math.set_skip_wins_after_artifact(nwins_skip_after_artifact)
-        self.__math.set_zero_spect_waves(True, 0, 1, 1, 1, 0)
+        self.__math.set_zero_spect_waves(True, 1, 1, 1, 1, 1)
         self.__math.set_spect_normalization_by_bands_width(True)
 
         self.__is_calibrated = False
-        self.__force_calibration = False  # Флаг для принудительной калибровки
-        self.__calibration_start_time = None  # Время начала калибровки
         self.__is_running = False  # Флаг для отслеживания состояния работы
         self.isArtifactedSequenceCallback = None
         self.isBothSidesArtifactedCallback = None
@@ -110,53 +106,31 @@ class EmotionBipolar:
 
     def start_calibration(self):
         self.__math.start_calibration()
-        # Сбрасываем флаг принудительной калибровки
-        self.__force_calibration = False
-        self.__calibration_start_time = time.time()
         self.__is_running = True
         
     def stop_calibration(self):
         """Остановка калибровки"""
         self.__is_running = False
         self.__is_calibrated = False
-        self.__calibration_start_time = None
         
     def __process_calibration(self):
-        if not self.__is_running or self.__calibration_start_time is None:
+        if not self.__is_running:
             return
         
         # Проверяем, завершена ли калибровка по данным библиотеки
         self.__is_calibrated = self.__math.calibration_finished()
         
         # Получаем прогресс из библиотеки
-        library_progress = self.__math.get_calibration_percents()
+        progress = self.__math.get_calibration_percents()
         
-        # Вычисляем прогресс на основе времени (10 секунд калибровки)
-        elapsed_time = time.time() - self.__calibration_start_time
-        time_based_progress = min(100, int((elapsed_time / self.calibration_length) * 100))
-        
-        # Используем максимум из прогресса библиотеки и времени
-        # Это гарантирует, что калибровка не завершится раньше времени
-        progress = max(library_progress, time_based_progress)
-        
+        # Отображаем прогресс калибровки
         if self.progressCalibrationCallback:
             self.progressCalibrationCallback(progress)
         
-        # Проверяем завершение калибровки
-        # Калибровка завершена, если библиотека говорит, что она завершена,
-        # И прошло достаточно времени (10 секунд)
-        if self.__is_calibrated and elapsed_time >= self.calibration_length:
-            # Калибровка завершена естественным образом
+        # Если калибровка завершена библиотекой, устанавливаем прогресс в 100%
+        if self.__is_calibrated:
             if self.progressCalibrationCallback:
                 self.progressCalibrationCallback(100)
-        elif elapsed_time >= self.calibration_length:
-            # Принудительно завершаем калибровку после 10 секунд
-            self.__is_calibrated = True
-            self.__force_calibration = True
-            if self.progressCalibrationCallback:
-                self.progressCalibrationCallback(100)
-            # Вызываем обработчики после завершения калибровки
-            self.__resolve_mind_data()
 
     def process_data(self, brain_bit_data: []):
         # Проверяем, запущена ли калибровка
@@ -193,7 +167,8 @@ class EmotionBipolar:
             self.isBothSidesArtifactedCallback(is_both_side_artifacted)
 
     def __resolve_spectral_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
         spectral_values = self.__math.read_spectral_data_percents_arr()
         if len(spectral_values) > 0:
@@ -202,32 +177,20 @@ class EmotionBipolar:
                 self.lastSpectralDataCallback(spectral_val)
                 
     def __resolve_raw_spectral_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
         raw_spectral_values = self.__math.read_raw_spectral_vals()
         if self.rawSpectralDataCallback:
             self.rawSpectralDataCallback(raw_spectral_values)
             
     def __resolve_mind_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
+        
         mental_values = self.__math.read_mental_data_arr()
         if len(mental_values) > 0:
             mind_data = mental_values[-1]
             if self.lastMindDataCallback:
                 self.lastMindDataCallback(mind_data)
-        else:
-            # Если данных нет, создаем mock данные для демонстрации
-            class MockMindData:
-                def __init__(self, attention, relaxation):
-                    self.rel_attention = attention
-                    self.rel_relaxation = relaxation
-                    self.inst_attention = attention
-                    self.inst_relaxation = relaxation
-            
-            # Генерируем mock данные (используем время для генерации)
-            attention = 50 + random.randint(-10, 10)
-            relaxation = 50 + random.randint(-10, 10)
-            mock_data = MockMindData(attention, relaxation)
-            if self.lastMindDataCallback:
-                self.lastMindDataCallback(mock_data)
