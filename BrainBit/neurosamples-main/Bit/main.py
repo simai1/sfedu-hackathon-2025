@@ -865,6 +865,12 @@ class TokenScreen(QMainWindow):
             # Переходим на экран статусов
             stackNavigation.setCurrentWidget(statusScreen)
             statusScreen.update_statuses(device_connected=True, calibrated=True, backend_connected=True)
+            # Обновляем статус сокетов
+            if hasattr(tokenScreen, 'ws_client') and tokenScreen.ws_client:
+                tokenScreen.ws_client.connected.connect(statusScreen.__on_websocket_connected)
+                tokenScreen.ws_client.disconnected.connect(statusScreen.__on_websocket_disconnected)
+                tokenScreen.ws_client.error.connect(statusScreen.__on_websocket_error)
+                statusScreen.update_backend_status(tokenScreen.ws_client.is_connected())
             
     def __setup_realtime_data_sending(self):
         """Настройка отправки данных в реальном времени"""
@@ -1014,7 +1020,10 @@ class StatusScreen(QMainWindow):
         super().__init__(*args, **kwargs)
         loadUi(resource_path("ui/StatusScreenRuUI.ui"), self)
         self.backButton.clicked.connect(self.__close_screen)
-        self.disconnectButton.clicked.connect(self.__disconnect_device)
+        self.menuButton.clicked.connect(self.__go_to_menu)
+        self.switchDeviceButton.clicked.connect(self.__switch_device)
+        self.recalibrateButton.clicked.connect(self.__recalibrate)
+        self.chooseCalibrationButton.clicked.connect(self.__choose_calibration)
         self.device_connected = False
         self.calibrated = False
         self.backend_connected = False
@@ -1024,6 +1033,53 @@ class StatusScreen(QMainWindow):
         self.deviceStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('device')
         self.calibrationStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('calibration')
         self.backendStatusItem.mousePressEvent = lambda e: self.__on_status_clicked('backend')
+        
+        # Подключаемся к сигналам WebSocket для обновления статуса
+        if hasattr(tokenScreen, 'ws_client') and tokenScreen.ws_client:
+            tokenScreen.ws_client.connected.connect(self.__on_websocket_connected)
+            tokenScreen.ws_client.disconnected.connect(self.__on_websocket_disconnected)
+            tokenScreen.ws_client.error.connect(self.__on_websocket_error)
+    
+    def __go_to_menu(self):
+        """Переход в главное меню"""
+        stackNavigation.setCurrentWidget(menuScreen)
+    
+    def __switch_device(self):
+        """Переключение устройства"""
+        brain_bit_controller.disconnect_sensor()
+        if hasattr(tokenScreen, 'ws_client') and tokenScreen.ws_client:
+            tokenScreen.ws_client.stop()
+        stackNavigation.setCurrentWidget(searchScreen)
+        searchScreen.__refresh_search()
+    
+    def __recalibrate(self):
+        """Повторная калибровка"""
+        # Определяем, какой тип калибровки был использован
+        if hasattr(emotionBipolarScreen, 'is_started') and emotionBipolarScreen.is_started:
+            stackNavigation.setCurrentWidget(emotionBipolarScreen)
+            emotionBipolarScreen.__refresh_calibration()
+        elif hasattr(emotionMonopolarScreen, 'is_started') and emotionMonopolarScreen.is_started:
+            stackNavigation.setCurrentWidget(emotionMonopolarScreen)
+            emotionMonopolarScreen.__refresh_calibration()
+        else:
+            # Если не определено, переходим на выбор калибровки
+            stackNavigation.setCurrentWidget(calibrationChoiceScreen)
+    
+    def __choose_calibration(self):
+        """Выбор типа калибровки"""
+        stackNavigation.setCurrentWidget(calibrationChoiceScreen)
+    
+    def __on_websocket_connected(self):
+        """Обработчик подключения WebSocket"""
+        self.update_backend_status(True)
+    
+    def __on_websocket_disconnected(self):
+        """Обработчик отключения WebSocket"""
+        self.update_backend_status(False)
+    
+    def __on_websocket_error(self, error_msg: str):
+        """Обработчик ошибки WebSocket"""
+        self.update_backend_status(False)
 
     def __on_status_clicked(self, status_type):
         """Обработка клика на статус"""
@@ -1060,35 +1116,41 @@ class StatusScreen(QMainWindow):
         """Обновление статусов на экране"""
         self.device_connected = device_connected
         self.calibrated = calibrated
-        self.backend_connected = backend_connected
-        
-        # Обновляем отображение статусов устройства
-        self.deviceStatusValue.setText("Да" if device_connected else "Нет")
-        status_style = "true" if device_connected else "false"
+        self.update_backend_status(backend_connected)
+        self.update_device_status(device_connected)
+        self.update_calibration_status(calibrated)
+    
+    def update_device_status(self, connected):
+        """Обновление статуса устройства"""
+        self.device_connected = connected
+        self.deviceStatusValue.setText("Да" if connected else "Нет")
+        status_style = "true" if connected else "false"
         self.deviceStatusValue.setProperty("statusValue", status_style)
-        self.deviceStatusIcon.setText("✓" if device_connected else "✗")
+        self.deviceStatusIcon.setText("✓" if connected else "✗")
         self.deviceStatusIcon.setProperty("statusIcon", status_style)
         self.deviceStatusValue.setStyleSheet(f"""
             QLabel {{
                 font-size: 16px;
                 font-weight: 600;
-                color: {'#4DA1FF' if device_connected else '#999999'};
+                color: {'#4DA1FF' if connected else '#999999'};
                 margin: 0;
                 padding: 6px 12px;
-                background: {'rgba(77, 161, 255, 0.1)' if device_connected else 'rgba(153, 153, 153, 0.1)'};
-                border: 1px solid {'rgba(77, 161, 255, 0.2)' if device_connected else 'rgba(153, 153, 153, 0.2)'};
+                background: {'rgba(77, 161, 255, 0.1)' if connected else 'rgba(153, 153, 153, 0.1)'};
+                border: 1px solid {'rgba(77, 161, 255, 0.2)' if connected else 'rgba(153, 153, 153, 0.2)'};
                 border-radius: 6px;
             }}
         """)
         self.deviceStatusIcon.setStyleSheet(f"""
             QLabel {{
                 font-size: 20px;
-                color: {'#4DA1FF' if device_connected else '#999999'};
+                color: {'#4DA1FF' if connected else '#999999'};
                 font-weight: bold;
             }}
         """)
-        
-        # Обновляем отображение статусов калибровки
+    
+    def update_calibration_status(self, calibrated):
+        """Обновление статуса калибровки"""
+        self.calibrated = calibrated
         self.calibrationStatusValue.setText("Да" if calibrated else "Нет")
         status_style = "true" if calibrated else "false"
         self.calibrationStatusValue.setProperty("statusValue", status_style)
@@ -1113,32 +1175,102 @@ class StatusScreen(QMainWindow):
                 font-weight: bold;
             }}
         """)
+    
+    def update_backend_status(self, connected):
+        """Обновление статуса подключения к сокетам"""
+        self.backend_connected = connected
+        # Проверяем реальный статус WebSocket
+        if hasattr(tokenScreen, 'ws_client') and tokenScreen.ws_client:
+            actual_status = tokenScreen.ws_client.is_connected()
+            if actual_status != connected:
+                connected = actual_status
         
-        # Обновляем отображение статусов бэка
-        self.backendStatusValue.setText("Да" if backend_connected else "Нет")
-        status_style = "true" if backend_connected else "false"
+        # Определяем статус подключения
+        if hasattr(tokenScreen, 'ws_client') and tokenScreen.ws_client:
+            # Проверяем, есть ли активное подключение
+            if tokenScreen.ws_client.connected_status:
+                status_text = "Да"
+                status_style = "true"
+                icon_text = "✓"
+                icon_style = "true"
+            else:
+                status_text = "Подключение..."
+                status_style = "connecting"
+                icon_text = "⟳"
+                icon_style = "connecting"
+        else:
+            status_text = "Нет"
+            status_style = "false"
+            icon_text = "✗"
+            icon_style = "false"
+        
+        self.backendStatusValue.setText(status_text)
         self.backendStatusValue.setProperty("statusValue", status_style)
-        self.backendStatusIcon.setText("✓" if backend_connected else "✗")
-        self.backendStatusIcon.setProperty("statusIcon", status_style)
-        self.backendStatusValue.setStyleSheet(f"""
-            QLabel {{
-                font-size: 16px;
-                font-weight: 600;
-                color: {'#4DA1FF' if backend_connected else '#999999'};
-                margin: 0;
-                padding: 6px 12px;
-                background: {'rgba(77, 161, 255, 0.1)' if backend_connected else 'rgba(153, 153, 153, 0.1)'};
-                border: 1px solid {'rgba(77, 161, 255, 0.2)' if backend_connected else 'rgba(153, 153, 153, 0.2)'};
-                border-radius: 6px;
-            }}
-        """)
-        self.backendStatusIcon.setStyleSheet(f"""
-            QLabel {{
-                font-size: 20px;
-                color: {'#4DA1FF' if backend_connected else '#999999'};
-                font-weight: bold;
-            }}
-        """)
+        self.backendStatusIcon.setText(icon_text)
+        self.backendStatusIcon.setProperty("statusIcon", icon_style)
+        
+        # Применяем стили
+        if status_style == "connecting":
+            self.backendStatusValue.setStyleSheet("""
+                QLabel {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #F59E0B;
+                    margin: 0;
+                    padding: 6px 12px;
+                    background: rgba(245, 158, 11, 0.1);
+                    border: 1px solid rgba(245, 158, 11, 0.2);
+                    border-radius: 6px;
+                }
+            """)
+            self.backendStatusIcon.setStyleSheet("""
+                QLabel {
+                    font-size: 20px;
+                    color: #F59E0B;
+                    font-weight: bold;
+                }
+            """)
+        elif status_style == "true":
+            self.backendStatusValue.setStyleSheet("""
+                QLabel {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #4DA1FF;
+                    margin: 0;
+                    padding: 6px 12px;
+                    background: rgba(77, 161, 255, 0.1);
+                    border: 1px solid rgba(77, 161, 255, 0.2);
+                    border-radius: 6px;
+                }
+            """)
+            self.backendStatusIcon.setStyleSheet("""
+                QLabel {
+                    font-size: 20px;
+                    color: #4DA1FF;
+                    font-weight: bold;
+                }
+            """)
+        else:
+            self.backendStatusValue.setStyleSheet("""
+                QLabel {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #999999;
+                    margin: 0;
+                    padding: 6px 12px;
+                    background: rgba(153, 153, 153, 0.1);
+                    border: 1px solid rgba(153, 153, 153, 0.2);
+                    border-radius: 6px;
+                }
+            """)
+            self.backendStatusIcon.setStyleSheet("""
+                QLabel {
+                    font-size: 20px;
+                    color: #999999;
+                    font-weight: bold;
+                }
+            """)
+        
 
     def __close_screen(self):
         # Возвращаемся на предыдущий экран, если он был сохранен, иначе на токен

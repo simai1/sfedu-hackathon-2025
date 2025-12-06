@@ -13,6 +13,55 @@
   <property name="windowTitle">
    <string>Выбор калибровки</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background: #0A0E1A;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #E0E0E0;
+}
+
+QPushButton {
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
+	font-weight: 500;
+	height: 48px;
+	padding: 0 24px;
+	border-radius: 8px;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	box-shadow: 0 4px 12px rgba(77, 161, 255, 0.3);
+	transform: translateY(-2px);
+}
+
+QPushButton:pressed {
+	background: rgba(77, 161, 255, 0.15);
+	transform: translateY(0px);
+	box-shadow: 0 2px 6px rgba(77, 161, 255, 0.2);
+}
+
+QPushButton:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+/* Header */
+QLabel#titleLabel {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0 8px 0;
+	text-align: center;
+	color: #4DA1FF;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="leftMargin">
@@ -59,13 +108,11 @@
     </item>
     <item>
      <widget class="QPushButton" name="bipolarButton">
-      <property name="styleSheet">
-       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white; padding: 15px;</string>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>48</height>
+       </size>
       </property>
       <property name="text">
        <string>Биполярная калибровка</string>
@@ -96,13 +143,11 @@
     </item>
     <item>
      <widget class="QPushButton" name="monopolarButton">
-      <property name="styleSheet">
-       <string notr="true">background-color: black; border: 2px solid #B66DDB; color: white; padding: 15px;</string>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>48</height>
+       </size>
       </property>
       <property name="text">
        <string>Монополярная калибровка</string>
@@ -133,11 +178,8 @@
     </item>
     <item>
      <widget class="QPushButton" name="backButton">
-      <property name="styleSheet">
-       <string notr="true">background-color: #333333; border: 2px solid #666666; color: white;</string>
-      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>← Назад</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>

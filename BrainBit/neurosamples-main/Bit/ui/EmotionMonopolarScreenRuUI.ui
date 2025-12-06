@@ -32,20 +32,25 @@ QPushButton {
 	height: 40px;
 	padding: 0 20px;
 	border-radius: 8px;
+	transition: all 0.3s ease;
 }
 
 QPushButton:hover {
-	background: rgba(77, 161, 255, 0.2);
-	border: 1px solid rgba(77, 161, 255, 0.5);
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	box-shadow: 0 4px 12px rgba(77, 161, 255, 0.3);
+	transform: translateY(-2px);
 }
 
 QPushButton:pressed {
 	background: rgba(77, 161, 255, 0.15);
-	transform: scale(0.98);
+	transform: translateY(0px);
+	box-shadow: 0 2px 6px rgba(77, 161, 255, 0.2);
 }
 
 QPushButton:disabled {
 	opacity: 0.4;
+	cursor: not-allowed;
 }
 
 /* Header */

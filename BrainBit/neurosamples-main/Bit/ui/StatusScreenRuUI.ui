@@ -32,20 +32,25 @@ QPushButton {
 	height: 40px;
 	padding: 0 20px;
 	border-radius: 8px;
+	transition: all 0.3s ease;
 }
 
 QPushButton:hover {
-	background: rgba(77, 161, 255, 0.2);
-	border: 1px solid rgba(77, 161, 255, 0.5);
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	box-shadow: 0 4px 12px rgba(77, 161, 255, 0.3);
+	transform: translateY(-2px);
 }
 
 QPushButton:pressed {
 	background: rgba(77, 161, 255, 0.15);
-	transform: scale(0.98);
+	transform: translateY(0px);
+	box-shadow: 0 2px 6px rgba(77, 161, 255, 0.2);
 }
 
 QPushButton:disabled {
 	opacity: 0.4;
+	cursor: not-allowed;
 }
 
 /* Header */
@@ -99,6 +104,7 @@ QLabel[statusValue="true"] {
 	background: rgba(77, 161, 255, 0.1);
 	border: 1px solid rgba(77, 161, 255, 0.2);
 	border-radius: 6px;
+	animation: pulseSuccess 2s ease-in-out infinite;
 }
 
 /* Status Value - Error */
@@ -111,6 +117,19 @@ QLabel[statusValue="false"] {
 	background: rgba(153, 153, 153, 0.1);
 	border: 1px solid rgba(153, 153, 153, 0.2);
 	border-radius: 6px;
+}
+
+/* Status Value - Connecting */
+QLabel[statusValue="connecting"] {
+	font-size: 16px;
+	font-weight: 600;
+	color: #F59E0B;
+	margin: 0;
+	padding: 6px 12px;
+	background: rgba(245, 158, 11, 0.1);
+	border: 1px solid rgba(245, 158, 11, 0.2);
+	border-radius: 6px;
+	animation: pulseConnecting 1.5s ease-in-out infinite;
 }
 
 /* Status Icon Container */
@@ -137,6 +156,74 @@ QLabel[statusIcon="false"] {
 	font-size: 20px;
 	color: #999999;
 	font-weight: bold;
+}
+
+/* Status Icon - Connecting */
+QLabel[statusIcon="connecting"] {
+	font-size: 20px;
+	color: #F59E0B;
+	font-weight: bold;
+	animation: spin 1s linear infinite;
+}
+
+/* Loading Spinner */
+QProgressBar#loadingSpinner {
+	border: none;
+	background: transparent;
+	text-align: center;
+	color: #4DA1FF;
+	font-size: 14px;
+	height: 4px;
+	border-radius: 2px;
+}
+
+QProgressBar#loadingSpinner::chunk {
+	background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+		stop:0 rgba(77, 161, 255, 0.3),
+		stop:0.5 rgba(77, 161, 255, 1),
+		stop:1 rgba(77, 161, 255, 0.3));
+	border-radius: 2px;
+	animation: loadingBar 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseSuccess {
+	0%, 100% {
+		opacity: 1;
+		box-shadow: 0 0 0 0 rgba(77, 161, 255, 0.7);
+	}
+	50% {
+		opacity: 0.9;
+		box-shadow: 0 0 0 8px rgba(77, 161, 255, 0);
+	}
+}
+
+@keyframes pulseConnecting {
+	0%, 100% {
+		opacity: 1;
+		box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+	}
+	50% {
+		opacity: 0.8;
+		box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+	}
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes loadingBar {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(400%);
+	}
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -173,11 +260,24 @@ QLabel[statusIcon="false"] {
       <item>
        <widget class="QPushButton" name="backButton">
         <property name="text">
-         <string>&lt;</string>
+         <string>← Назад</string>
         </property>
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>100</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="menuButton">
+        <property name="text">
+         <string>☰ Меню</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
           <height>40</height>
          </size>
         </property>
@@ -197,9 +297,35 @@ QLabel[statusIcon="false"] {
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="disconnectButton">
+       <widget class="QPushButton" name="switchDeviceButton">
         <property name="text">
-         <string>Отключить устройство</string>
+         <string>Переключить устройство</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="recalibrateButton">
+        <property name="text">
+         <string>Заново калибровать</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>180</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="chooseCalibrationButton">
+        <property name="text">
+         <string>Выбрать калибровку</string>
         </property>
         <property name="minimumSize">
          <size>
@@ -353,7 +479,7 @@ QLabel[statusIcon="false"] {
           <item>
            <widget class="QLabel" name="backendStatusLabel" statusLabel="true">
             <property name="text">
-             <string>Подключено к бэку</string>
+             <string>Подключено к сокетам</string>
             </property>
            </widget>
           </item>
@@ -381,6 +507,22 @@ QLabel[statusIcon="false"] {
         </widget>
        </item>
       </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="loadingSpinner">
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>0</number>
+      </property>
+      <property name="textVisible">
+       <bool>false</bool>
+      </property>
+      <property name="visible">
+       <bool>false</bool>
+      </property>
      </widget>
     </item>
     <item>

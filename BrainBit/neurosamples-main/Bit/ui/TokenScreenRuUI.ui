@@ -32,20 +32,25 @@ QPushButton {
 	height: 40px;
 	padding: 0 20px;
 	border-radius: 8px;
+	transition: all 0.3s ease;
 }
 
 QPushButton:hover {
-	background: rgba(77, 161, 255, 0.2);
-	border: 1px solid rgba(77, 161, 255, 0.5);
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	box-shadow: 0 4px 12px rgba(77, 161, 255, 0.3);
+	transform: translateY(-2px);
 }
 
 QPushButton:pressed {
 	background: rgba(77, 161, 255, 0.15);
-	transform: scale(0.98);
+	transform: translateY(0px);
+	box-shadow: 0 2px 6px rgba(77, 161, 255, 0.2);
 }
 
 QPushButton:disabled {
 	opacity: 0.4;
+	cursor: not-allowed;
 }
 
 QLineEdit {
@@ -225,6 +230,23 @@ QLabel#descriptionLabel {
       </property>
       <property name="visible">
        <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QProgressBar {
+	border: none;
+	background: rgba(77, 161, 255, 0.1);
+	border-radius: 4px;
+	height: 4px;
+	text-align: center;
+}
+
+QProgressBar::chunk {
+	background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+		stop:0 rgba(77, 161, 255, 0.3),
+		stop:0.5 rgba(77, 161, 255, 1),
+		stop:1 rgba(77, 161, 255, 0.3));
+	border-radius: 4px;
+}</string>
       </property>
      </widget>
     </item>
