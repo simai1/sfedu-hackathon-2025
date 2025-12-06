@@ -159,6 +159,7 @@ async def client_ws(
                     user_id, timecode, video_id, screenshot_url
                 )
                 if stored:
+                    logger.debug(f"!!! stored: {stored}")
                     relaxation, concentration, timecode, video_id, screenshot_url = stored
                     engagement = await engagement_service.create(
                         video_id=video_id,
