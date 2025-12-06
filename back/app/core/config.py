@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     APP_URL: str
 
    
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 180
     JWT_SECRET: str = "secret"
     JWT_ALGORITHM: str = "HS256"
     

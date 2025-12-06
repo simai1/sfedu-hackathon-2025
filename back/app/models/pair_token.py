@@ -31,7 +31,7 @@ class PairTokenModel(Base):
     user: Mapped["UserModel"] = relationship(back_populates="users_pair_tokens")
 
     expires_at: Mapped[datetime.datetime] = mapped_column(
-        server_default=text("TIMEZONE('utc', now()) + INTERVAL '5 minutes'"),
+        server_default=text("TIMEZONE('utc', now()) + INTERVAL '60 minutes'"),
         nullable=False,
     )
     
