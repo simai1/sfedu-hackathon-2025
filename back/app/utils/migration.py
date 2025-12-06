@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.logger import logger
 
-alembic_cfg = Config("back/alembic.ini")
-# alembic_cfg = Config("alembic.ini")       
+# alembic_cfg = Config("back/alembic.ini")
+alembic_cfg = Config("alembic.ini")       
 script = ScriptDirectory.from_config(alembic_cfg)
 
 
