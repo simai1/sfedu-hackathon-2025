@@ -50,7 +50,7 @@ class EngagementTracker:
             return None
 
         if concentration >= last * (1 + self.spike_threshold):
-            ts = str(time.time())
+            ts = str(int(time.time() * 1000))
             frame = PendingFrame(timestamp=ts, relaxation=relaxation, concentration=concentration)
             state.pending_frames[ts] = frame
             return frame
