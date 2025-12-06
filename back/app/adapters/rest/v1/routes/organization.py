@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.adapters.rest.v1.controllers.organization import OrganizationController
 from app.composites.organization_composite import get_controller
-from app.domains.organization import Organization, JoinOrganizationResponse
+from app.domains.organization import Organization, JoinOrganizationResponse, OrganizationMember
 from app.domains.user import User
 
 router = APIRouter()
@@ -30,7 +30,7 @@ async def join_organization(
     return await controller.join(access_token=token, code=code)
 
 
-@router.get("/members", response_model=list[User])
+@router.get("/members", response_model=list[OrganizationMember])
 async def list_members(
     token: str = Depends(oauth2_scheme),
     controller: OrganizationController = Depends(get_controller),

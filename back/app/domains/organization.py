@@ -20,3 +20,10 @@ class JoinOrganizationResponse(BaseModel):
     organization_name: str
     code: str
 
+
+class OrganizationMember(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    joined_at: datetime.datetime
+

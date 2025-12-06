@@ -52,8 +52,10 @@ class UserRepo():
         await self.session.refresh(user_model)
         return User(**user_model.as_dict())
 
-    async def list_by_organization(self, organization_id: uuid.UUID) -> list[User]:
+    async def list_by_organization(self, organization_id: uuid.UUID, *, include_owner: bool = False) -> list[User]:
         stmt = select(UserModel).where(UserModel.organization_id == organization_id)
+        if not include_owner:
+            stmt = stmt.where(UserModel.role != "organization")
         result = await self.session.execute(stmt)
         models = result.scalars().all()
         return [User(**m.as_dict()) for m in models]

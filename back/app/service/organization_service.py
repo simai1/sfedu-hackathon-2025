@@ -3,7 +3,7 @@ import secrets
 
 from app.adapters.sqlalchemy.organization_repo import OrganizationRepo
 from app.adapters.sqlalchemy.user_repo import UserRepo
-from app.domains.organization import Organization, CreateOrganization, JoinOrganizationResponse
+from app.domains.organization import Organization, CreateOrganization, JoinOrganizationResponse, OrganizationMember
 from app.domains.user import User
 from app.service.token_service import TokenService
 
@@ -40,12 +40,22 @@ class OrganizationService:
             code=organization.code,
         )
 
-    async def list_members(self, access_token: str) -> list[User]:
+    async def list_members(self, access_token: str) -> list[OrganizationMember]:
         payload = self.token_service.validate_access_token(access_token)
         user = await self.user_repo.get_one_by_id(uuid.UUID(payload.sub))
         if not user:
             raise ValueError("User not found")
         if not user.organization_id:
             return []
-        return await self.user_repo.list_by_organization(user.organization_id)
+        # exclude owner (role = organization) from member list
+        members = await self.user_repo.list_by_organization(user.organization_id, include_owner=False)
+        return [
+            OrganizationMember(
+                id=m.id,
+                name=m.name,
+                email=m.email,
+                joined_at=m.updated_at,
+            )
+            for m in members
+        ]
 
