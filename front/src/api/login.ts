@@ -17,7 +17,12 @@ export const loginEndpoint = async (data: any) => {
   }
 }
 
-export const registerEndpoint = async (data: any) => {
+export const registerEndpoint = async (data: {
+  name: string
+  email: string
+  password: string
+  role: string
+}) => {
   try {
     const response = await apiRequest("post", REGISTER_ENDPOINT, data)
     return response.data

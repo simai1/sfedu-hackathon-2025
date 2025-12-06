@@ -1,31 +1,32 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 export enum Role {
   ORGANIZATION = "ORGANIZATION",
-  STUDENT = "STUDENT",
-  APPLICANT = "APPLICANT",
-  ADMIN = "ADMIN",
-  GRADUATE = "GRADUATE",
-  STAFF = "STAFF",
+  USER = "USER",
 }
 
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role?: Role;
+  id: string
+  name: string
+  email: string
+  role?: Role
 }
 
 interface UserStore {
-  token: string | null;
-  user: User | null;
-  setUser: (data: User) => void;
-  setRole: (role: Role) => void;
-  clearUser: () => void;
-  setToken: (token: string | null) => void;
-  login: (credentials: { username: string; password: string }) => Promise<void>;
-  register: (userData: { username: string; email: string; password: string }) => Promise<void>;
+  token: string | null
+  user: User | null
+  setUser: (data: User) => void
+  setRole: (role: Role) => void
+  clearUser: () => void
+  setToken: (token: string | null) => void
+  login: (credentials: { username: string; password: string }) => Promise<void>
+  register: (userData: {
+    username: string
+    email: string
+    password: string
+    role: string
+  }) => Promise<void>
 }
 
 export const useUserStore = create<UserStore>()(
@@ -36,44 +37,44 @@ export const useUserStore = create<UserStore>()(
       setUser: (data) => set({ user: data }),
       setRole: (role: Role) =>
         set((state) => {
-          if (!state.user) return state;
-          return { ...state, user: { ...state.user, role } };
+          if (!state.user) return state
+          return { ...state, user: { ...state.user, role } }
         }),
       clearUser: () => set({ user: null, token: null }),
       setToken: (token) => {
         if (token === null) {
-          set({ token: null, user: null });
+          set({ token: null, user: null })
         } else {
-          set({ token });
+          set({ token })
         }
       },
       login: async (credentials) => {
-        console.log("Logging in with:", credentials);
+        console.log("Logging in with:", credentials)
         // TODO: заменить на реальный API вызов
         // const response = await api.login(credentials);
-        set({ 
-          token: "fake-jwt-token", 
-          user: { 
-            id: "1", 
-            name: credentials.username, 
-            email: "user@example.com", 
-            role: Role.STUDENT
-          } 
-        });
+        set({
+          token: "fake-jwt-token",
+          user: {
+            id: "1",
+            name: credentials.username,
+            email: "user@example.com",
+            role: Role.USER,
+          },
+        })
       },
       register: async (userData) => {
-        console.log("Registering with:", userData);
+        console.log("Registering with:", userData)
         // TODO: заменить на реальный API вызов
         // const response = await api.register(userData);
-        set({ 
-          token: "fake-jwt-token", 
-          user: { 
-            id: "1", 
+        set({
+          token: "fake-jwt-token",
+          user: {
+            id: "1",
             name: userData.username,
-            email: userData.email, 
-            role: Role.STUDENT
-          } 
-        });
+            email: userData.email,
+            role: Role.USER,
+          },
+        })
       },
     }),
     {
@@ -84,4 +85,4 @@ export const useUserStore = create<UserStore>()(
       }),
     }
   )
-);
+)

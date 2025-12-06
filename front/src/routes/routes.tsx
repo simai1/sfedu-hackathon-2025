@@ -11,6 +11,7 @@ import ProfileMain from "../layers/Profile/Pages/ProfileMain/ProfileMain"
 import Analysis from "../layers/Profile/Pages/Analysis/Analysis"
 import Settings from "../layers/Profile/Pages/Settings/Settings"
 import Graphics from "../layers/Profile/Pages/Graphics/Graphics"
+import Groups from "../layers/Profile/Pages/Groups/Groups"
 
 export const routes = [
   { path: "/", element: <MainPage /> },
@@ -30,6 +31,7 @@ export const routes = [
       { path: "history/:id", element: <HistoryDetailed /> },
       { path: "report", element: <Report /> },
       { path: "report/:id", element: <ReportDetailed /> },
+      { path: "groups", element: <Groups /> },
     ],
   },
 ]
