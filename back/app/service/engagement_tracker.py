@@ -63,7 +63,7 @@ class EngagementTracker:
         timestamp: str,
         video_id: uuid.UUID,
         screenshot_url: str,
-    ) -> tuple[float, float, uuid.UUID, str] | None:
+    ) -> tuple[float, float, str, uuid.UUID, str] | None:
         state = self.user_states.get(user_id)
         if not state:
             return None
@@ -72,7 +72,7 @@ class EngagementTracker:
         if not frame:
             return None
 
-        return frame.relaxation, frame.concentration, video_id, screenshot_url
+        return frame.relaxation, frame.concentration, frame.timestamp, video_id, screenshot_url
 
     def _aggregate(self, sample: dict) -> tuple[float, float] | None:
         channels = sample.get("channels") or {}

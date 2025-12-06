@@ -27,6 +27,8 @@ class EngagementModel(Base):
 
     screenshot_url: Mapped[str] = mapped_column(String(255), nullable=False)
 
+    timecode: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     def as_dict(self):
         return {
             "id": str(self.id),
@@ -34,4 +36,5 @@ class EngagementModel(Base):
             "relaxation": self.relaxation,
             "concentration": self.concentration,
             "screenshot_url": self.screenshot_url,
+            "timecode": self.timecode,
         }

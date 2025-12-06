@@ -159,16 +159,17 @@ async def client_ws(
                     user_id, timestamp, video_id, screenshot_url
                 )
                 if stored:
-                    relaxation, concentration, video_id, screenshot_url = stored
+                    relaxation, concentration, timecode, video_id, screenshot_url = stored
                     engagement = await engagement_service.create(
                         video_id=video_id,
                         relaxation=relaxation,
                         concentration=concentration,
                         screenshot_url=screenshot_url,
+                        timecode=timecode,
                     )
                     logger.debug(
-                        "Client WS: engagement saved user_id=%s video_id=%s timestamp=%s",
-                        user_id, video_id, timestamp
+                        "Client WS: engagement saved user_id=%s video_id=%s timecode=%s",
+                        user_id, video_id, timecode
                     )
                     await websocket.send_json({
                         "type": "engagement_saved",

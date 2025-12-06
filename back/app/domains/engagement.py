@@ -9,6 +9,7 @@ class Engagement(BaseModel):
     relaxation: float
     concentration: float
     screenshot_url: str
+    timecode: str | None = None
 
 
 class CreateEngagement(BaseModel):
@@ -16,3 +17,4 @@ class CreateEngagement(BaseModel):
     relaxation: float | None
     concentration: float
     screenshot_url: str
+    timecode: str | None = None

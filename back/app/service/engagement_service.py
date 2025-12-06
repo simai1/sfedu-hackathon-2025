@@ -14,11 +14,13 @@ class EngagementService:
         relaxation: float | None,
         concentration: float,
         screenshot_url: str,
+        timecode: str | None = None,
     ) -> Engagement:
         create_engagement = CreateEngagement(
             video_id=video_id,
             relaxation=relaxation,
             concentration=concentration,
             screenshot_url=screenshot_url,
+            timecode=timecode,
         )
         return await self.repo.create(create_engagement)
