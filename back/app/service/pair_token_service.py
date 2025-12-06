@@ -16,8 +16,6 @@ class PairTokenService():
         return await self.repo.create(CreatePairToken(user_id=uuid.UUID(payload.sub)))
 
 
-    async def validate(self, pair_token_str: str) -> bool:
-        if await self.repo.get_one_by_id(uuid.UUID(pair_token_str)) is None:
-            return False
-        return True
+    async def validate(self, pair_token_str: str) -> PairToken | None:
+        return await self.repo.get_one_by_id(uuid.UUID(pair_token_str))
         

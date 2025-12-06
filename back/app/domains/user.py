@@ -8,6 +8,7 @@ class User(BaseModel):
     id: uuid.UUID
     name: str
     email: str
+    role: str
     password_hash: str
     created_at: datetime.datetime
     updated_at: datetime.datetime
@@ -18,6 +19,7 @@ class User(BaseModel):
             id=data["id"],
             name=data["name"],
             email=data["email"],
+            role=data["role"],
             password_hash=data["password_hash"],
             created_at=data["created_at"],
             updated_at=data["updated_at"],
@@ -28,6 +30,7 @@ class CreateUser(BaseModel):
     name: str
     email: str
     password: str
+    role: str
 
 
 class ValidateUser(BaseModel):
