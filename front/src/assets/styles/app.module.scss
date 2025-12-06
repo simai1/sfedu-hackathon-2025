@@ -1,0 +1,62 @@
+@import "./colors.scss";
+@import "./fonts.scss";
+@import "./mixins.scss";
+
+body {
+  background-color: var(--bg);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  color: var(--text);
+  font-size: torem(18px);
+  overflow-x: hidden !important;
+  font-family: "Norms", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+a,
+p {
+  margin: 0;
+  padding: 0;
+}
+
+a,
+button {
+  cursor: pointer;
+}
+
+input {
+  // Убираем желтое выделение
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 torem(1000px) var(--BodyBgColor) inset !important; // Замените 'white' на цвет фона вашего инпута
+    -webkit-text-fill-color: black; // Замените 'black' на цвет текста вашего инпута
+  }
+
+  // Убираем обводку при фокусе
+  &:focus {
+    outline: none; // Убираем стандартную обводку
+  }
+}
+
+.skeleton {
+  width: 100%;
+  background: red;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

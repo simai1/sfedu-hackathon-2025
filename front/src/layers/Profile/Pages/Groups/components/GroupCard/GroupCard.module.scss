@@ -1,0 +1,276 @@
+.groupCard {
+  background-color: var(--profile-card-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: var(--profile-hover-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.cardHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--profile-border);
+}
+
+.groupName {
+  color: var(--profile-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.groupDescription {
+  color: var(--profile-text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.membersSection,
+.sessionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--profile-text);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.addButton {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: 1px solid var(--profile-border);
+  border-radius: 0.375rem;
+  color: var(--profile-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--profile-hover-bg);
+    color: var(--profile-text);
+    border-color: var(--purple-400);
+  }
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--profile-input-bg);
+  border-radius: 0.5rem;
+  border: 1px solid var(--profile-border);
+}
+
+.emailInput {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: var(--profile-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.375rem;
+  color: var(--profile-text);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--purple-400);
+  }
+
+  &::placeholder {
+    color: var(--profile-text-secondary);
+  }
+}
+
+.fileLabel {
+  cursor: pointer;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileButton {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--profile-bg);
+  border: 1px solid var(--profile-border);
+  border-radius: 0.375rem;
+  color: var(--profile-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--profile-hover-bg);
+    border-color: var(--purple-400);
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.submitSmallButton,
+.cancelSmallButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.submitSmallButton {
+  background: linear-gradient(135deg, var(--purple-500), var(--purple-400));
+  color: white;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.cancelSmallButton {
+  background-color: transparent;
+  color: var(--profile-text-secondary);
+  border: 1px solid var(--profile-border);
+
+  &:hover {
+    background-color: var(--profile-hover-bg);
+    color: var(--profile-text);
+  }
+}
+
+.membersList,
+.sessionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.emptyText {
+  color: var(--profile-text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: var(--profile-input-bg);
+  border-radius: 0.5rem;
+  border: 1px solid var(--profile-border);
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.memberEmail {
+  color: var(--profile-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.memberName {
+  color: var(--profile-text-secondary);
+  font-size: 0.85rem;
+}
+
+.watchedIcon {
+  color: var(--green-500);
+}
+
+.notWatchedIcon {
+  color: var(--profile-text-secondary);
+}
+
+.sessionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: var(--profile-input-bg);
+  border-radius: 0.5rem;
+  border: 1px solid var(--profile-border);
+  gap: 1rem;
+}
+
+.sessionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.sessionName {
+  color: var(--profile-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sessionStats {
+  color: var(--profile-text-secondary);
+  font-size: 0.85rem;
+}
+
+.analyzeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--purple-500), var(--purple-400));
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+}
+

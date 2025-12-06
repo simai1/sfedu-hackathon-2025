@@ -1,0 +1,249 @@
+.settings {
+  background-color: var(--profile-bg);
+  padding: 2rem;
+  border-radius: 0.75rem;
+
+  h1 {
+    color: var(--profile-text);
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .settingsForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .settingItem {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--profile-border);
+
+      label {
+        color: var(--profile-text);
+        font-size: 1.1rem;
+      }
+
+      .toggle {
+        width: 60px;
+        height: 30px;
+        background-color: var(--profile-hover-bg);
+        border-radius: 15px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        .toggleSlider {
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 24px;
+          height: 24px;
+          background-color: var(--profile-text);
+          border-radius: 50%;
+          transition: transform 0.3s ease;
+        }
+
+        &.active {
+          background-color: var(--profile-active-bg);
+
+          .toggleSlider {
+            transform: translateX(30px);
+          }
+        }
+      }
+    }
+
+    .saveButton {
+      align-self: flex-start;
+      background-color: var(--profile-active-bg);
+      color: var(--profile-active-text);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-top: 1rem;
+
+      &:hover {
+        background-color: var(--purple-400);
+      }
+    }
+
+    .changePasswordButton {
+      align-self: flex-start;
+      background-color: var(--profile-active-bg);
+      color: var(--profile-active-text);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-top: 1rem;
+
+      &:hover {
+        background-color: var(--purple-400);
+      }
+    }
+
+    .passwordForm {
+      background-color: var(--profile-card-bg);
+      border: 1px solid var(--profile-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-top: 1rem;
+
+      .passwordFormHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        h2 {
+          color: var(--profile-text);
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .closeButton {
+          background: none;
+          border: none;
+          color: var(--profile-text-secondary);
+          font-size: 2rem;
+          line-height: 1;
+          cursor: pointer;
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.25rem;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: var(--profile-hover-bg);
+            color: var(--profile-text);
+          }
+        }
+      }
+
+      .formGroup {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+
+        label {
+          color: var(--profile-text);
+          font-size: 0.9375rem;
+          font-weight: 500;
+        }
+
+        input {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          border: 1px solid var(--profile-border);
+          background-color: var(--profile-input-bg);
+          color: var(--profile-text);
+          font-size: 1rem;
+          transition: border-color 0.2s ease;
+          box-sizing: border-box;
+          &:focus {
+            outline: none;
+            border-color: var(--profile-active-bg);
+            box-shadow: 0 0 0 3px var(--purple-200);
+          }
+
+          &::placeholder {
+            color: var(--profile-text-secondary);
+          }
+
+          &.inputError {
+            border-color: var(--red-500);
+            
+            &:focus {
+              box-shadow: 0 0 0 3px var(--red-200);
+            }
+          }
+        }
+
+        .errorText {
+          color: var(--red-500);
+          font-size: 0.875rem;
+          margin-top: 0.25rem;
+        }
+      }
+
+      .formActions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+
+        .cancelButton {
+          padding: 0.75rem 1.5rem;
+          background-color: var(--profile-hover-bg);
+          color: var(--profile-text);
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+
+          &:hover:not(:disabled) {
+            background-color: var(--profile-border);
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+
+        .submitButton {
+          padding: 0.75rem 1.5rem;
+          background-color: var(--purple-500);
+          color: var(--white-500);
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+
+          &:hover:not(:disabled) {
+            background-color: var(--purple-400);
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    .logoutButton {
+      align-self: flex-start;
+      background-color: var(--red-500);
+      color: var(--white-500);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-top: 1rem;
+
+      &:hover {
+        background-color: var(--red-400);
+      }
+    }
+  }
+}

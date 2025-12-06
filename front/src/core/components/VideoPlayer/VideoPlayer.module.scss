@@ -1,0 +1,352 @@
+.VideoPlayer {
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(182, 109, 219, 0.05) 0%, rgba(31, 41, 55, 0.3) 100%);
+  border-radius: 1rem;
+  border: 1px solid var(--purple-200);
+
+  .mainContent {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  .videoSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  // Область загрузки
+  .uploadArea {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    border: 2px dashed var(--purple-300);
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(182, 109, 219, 0.05) 0%, rgba(182, 109, 219, 0.02) 100%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--purple-400);
+      background: linear-gradient(135deg, rgba(182, 109, 219, 0.1) 0%, rgba(182, 109, 219, 0.05) 100%);
+    }
+  }
+
+  .fileInput {
+    display: none;
+  }
+
+  .uploadLabel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    cursor: pointer;
+    color: var(--purple-400);
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: var(--purple-500);
+      transform: scale(1.05);
+    }
+
+    span {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--white-500);
+    }
+  }
+
+  // Информация о файле
+  .fileInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: rgba(182, 109, 219, 0.1);
+    border-radius: 0.5rem;
+    border: 1px solid var(--purple-300);
+
+    span {
+      color: var(--white-500);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+
+  .resetButton {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--red-400);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: var(--red-400);
+      transform: scale(1.1);
+    }
+  }
+
+  // Контейнер видео
+  .videoContainer {
+    position: relative;
+    width: 100%;
+    background-color: var(--black-500);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--purple-200);
+  }
+
+  .video {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 600px;
+  }
+
+  .videoControls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .timeInfo {
+    color: var(--white-500);
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+  }
+
+  .captureButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--purple-500);
+    border: 1px solid var(--purple-400);
+    border-radius: 0.5rem;
+    color: var(--white-500);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: all;
+
+    &:hover {
+      background-color: var(--purple-400);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(182, 109, 219, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  // Ошибка
+  .error {
+    padding: 0.75rem 1rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--red-300);
+    border-radius: 0.5rem;
+    color: var(--red-400);
+    font-size: 0.9rem;
+  }
+
+  // Панель скриншотов
+  .screenshotsPanel {
+    width: 320px;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, rgba(182, 109, 219, 0.08) 0%, rgba(31, 41, 55, 0.4) 100%);
+    border: 1px solid var(--purple-200);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    overflow: hidden;
+  }
+
+  .screenshotsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--purple-200);
+
+    h3 {
+      color: var(--white-500);
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .clearButton {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--red-400);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: var(--red-400);
+      transform: scale(1.1);
+    }
+  }
+
+  .screenshotsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 0.5rem;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(182, 109, 219, 0.1);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--purple-300);
+      border-radius: 3px;
+
+      &:hover {
+        background: var(--purple-400);
+      }
+    }
+  }
+
+  .screenshotItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: rgba(182, 109, 219, 0.05);
+    border: 1px solid var(--purple-200);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: rgba(182, 109, 219, 0.1);
+      border-color: var(--purple-300);
+      transform: translateX(4px);
+    }
+  }
+
+  .screenshotImage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: var(--black-500);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  .screenshotOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    .screenshotImage:hover & {
+      opacity: 1;
+    }
+  }
+
+  .downloadButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--purple-500);
+    border: 1px solid var(--purple-400);
+    color: var(--white-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: var(--purple-400);
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(182, 109, 219, 0.4);
+    }
+  }
+
+  .screenshotInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .screenshotTime {
+    color: var(--white-300);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .screenshotTrigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

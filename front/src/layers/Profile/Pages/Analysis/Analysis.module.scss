@@ -1,0 +1,415 @@
+.analysisContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  .analysis {
+    background-color: var(--profile-bg);
+    padding: 2rem;
+    border-radius: 0.75rem;
+
+    h1 {
+      color: var(--profile-text);
+      margin-bottom: 2rem;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    // Секция загрузки
+    .uploadSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem 0;
+
+      .uploadPrompt {
+        color: var(--profile-text);
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+
+      .uploadWrapper {
+        display: flex;
+        justify-content: center;
+      }
+
+      .uploadStatus {
+        color: var(--profile-text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .uploadError {
+        color: var(--red-500);
+        font-size: 0.95rem;
+      }
+    }
+
+    // Секция готовности
+    .readySection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .connectionStatus {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        color: var(--profile-text);
+        font-size: 0.9rem;
+
+        .statusDot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: 8px;
+        }
+
+        .statusConnected {
+          .statusDot {
+            background-color: var(--green-500);
+            animation: pulse 2s infinite;
+          }
+        }
+
+        .statusConnecting {
+          .statusDot {
+            background-color: var(--tifany-500);
+            animation: pulse 1s infinite;
+          }
+        }
+      }
+
+      .videoInfo {
+        color: var(--profile-text);
+        font-size: 0.9rem;
+        opacity: 0.8;
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+
+        p {
+          margin: 0.25rem 0;
+        }
+      }
+    }
+
+    // Секция просмотра
+    .watchingSection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .videoPlayerContainer {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .videoPlayer {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: 500px;
+        border-radius: 0.5rem;
+        background-color: var(--black-500);
+      }
+
+      .analyzingIndicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--profile-text);
+        font-size: 0.9rem;
+        padding: 1rem;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+
+        .analyzingDot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: var(--purple-500);
+          animation: pulse 1s infinite;
+        }
+      }
+    }
+
+    // Секция после просмотра
+    .finishedSection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    // Секция отчета
+    .reportSection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .reportHeader {
+        text-align: center;
+        padding: 1.5rem;
+        background-color: var(--green-100);
+        border-radius: 0.5rem;
+        border: 1px solid var(--green-300);
+
+        h2 {
+          color: var(--profile-text);
+          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+        }
+
+        p {
+          color: var(--profile-text);
+          opacity: 0.9;
+          font-size: 1rem;
+        }
+      }
+
+      // Секция скриншотов
+      .screenshotsSection {
+        margin-top: 1rem;
+
+        h3 {
+          color: var(--profile-text);
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+
+        .screenshotsGrid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 1rem;
+          max-height: 500px;
+          overflow-y: auto;
+          padding-right: 0.5rem;
+
+          &::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background: rgba(182, 109, 219, 0.1);
+            border-radius: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background: var(--purple-300);
+            border-radius: 4px;
+
+            &:hover {
+              background: var(--purple-400);
+            }
+          }
+        }
+
+        .screenshotCard {
+          background-color: var(--profile-card-bg);
+          border: 1px solid var(--purple-200);
+          border-radius: 0.75rem;
+          overflow: hidden;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: var(--profile-hover-bg);
+            border-color: var(--purple-300);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px var(--purple-200);
+          }
+        }
+
+        .screenshotImage {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          background-color: var(--profile-input-bg);
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+
+          .screenshotTime {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            background-color: var(--profile-card-bg);
+            color: var(--profile-text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+          }
+        }
+
+        .screenshotInfo {
+          padding: 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .screenshotTrigger {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--profile-text);
+          font-size: 0.9rem;
+          font-weight: 500;
+
+          span {
+            flex: 1;
+          }
+        }
+
+        .screenshotValue {
+          color: var(--profile-text-secondary);
+          font-size: 0.85rem;
+          padding: 0.25rem 0.5rem;
+          background-color: var(--purple-100);
+          border-radius: 0.25rem;
+          border: 1px solid var(--purple-200);
+        }
+      }
+    }
+
+    .chartContainer {
+      margin-bottom: 2rem;
+
+      .chartPlaceholder {
+        height: 400px;
+        background-color: var(--profile-card-bg);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        p {
+          color: var(--profile-text);
+          font-size: 1.2rem;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+
+      .statItem {
+        background-color: var(--profile-card-bg);
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        border: 1px solid var(--profile-border);
+
+        h3 {
+          color: var(--profile-text);
+          margin-bottom: 1rem;
+          font-size: 1.1rem;
+          font-weight: 500;
+          opacity: 0.8;
+        }
+
+        p {
+          color: var(--profile-text);
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+      }
+    }
+
+    // Кнопки действий
+    .actionButtons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+
+      button {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .startButton {
+        background-color: var(--green-500);
+        color: var(--black-500);
+
+        &:hover:not(:disabled) {
+          background-color: var(--green-400);
+          transform: translateY(-2px);
+        }
+      }
+
+      .generateButton {
+        background-color: var(--purple-500);
+        color: var(--white-500);
+
+        &:hover:not(:disabled) {
+          background-color: var(--purple-400);
+          transform: translateY(-2px);
+        }
+      }
+
+      .saveButton {
+        background-color: var(--green-500);
+        color: var(--black-500);
+
+        &:hover {
+          background-color: var(--green-400);
+          transform: translateY(-2px);
+        }
+      }
+
+      .resetButton {
+        background-color: var(--profile-card-bg);
+        color: var(--profile-text);
+        border: 1px solid var(--profile-border);
+
+        &:hover {
+          background-color: var(--profile-hover-bg);
+          transform: translateY(-2px);
+        }
+      }
+    }
+  }
+
+  .chat {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,12 @@
+.Graphics {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  background-color: var(--profile-bg);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}

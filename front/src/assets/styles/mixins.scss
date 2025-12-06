@@ -1,0 +1,447 @@
+@use "sass:math";
+// :root {
+//   --base-font: clamp(14px, 1.5vw, 16px);
+// }
+
+@function torem($px, $base: 16px) {
+  @return math.div($px, $base) * 1rem;
+}
+
+//! h1 заголовок над контейнером в авторизации
+@mixin h1() {
+  font-weight: 600;
+  font-size: torem(48px);
+  margin-bottom: torem(30px);
+}
+
+//! h1 белый контейнер с закруглением
+@mixin containerWhite() {
+  width: auto;
+  height: auto;
+  background-color: var(--bg-white);
+  padding: torem(28px);
+  border-radius: torem(28px);
+  @media (max-width: 1140px) {
+    padding: torem(14px);
+  }
+}
+
+//! отцентровка элементов в блоке
+@mixin flexCenter() {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+//! название инпута
+@mixin label() {
+  font-weight: 600;
+  font-size: torem(18px);
+  box-sizing: border-box;
+}
+
+//! инпут
+@mixin input() {
+  width: 100%;
+  height: max-content;
+  font-family: NT Somic;
+  font-weight: 400;
+  font-size: torem(18px);
+  border: torem(1px) solid var(--border);
+  border-radius: torem(28px);
+  box-sizing: border-box;
+  background-color: var(--bg-white);
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    border: torem(1px) solid #555555;
+  }
+
+  &::placeholder {
+    color: var(--greenText);
+  }
+}
+
+//! инпут контейнер с названием
+@mixin inputLabelBox() {
+  height: auto;
+  label {
+    @include label();
+  }
+  .error {
+    color: var(--red) !important;
+    font-weight: 400;
+    font-size: torem(16px);
+    margin-top: torem(4px);
+  }
+  .errorLabel {
+    color: var(--red) !important;
+  }
+  .errorInput {
+    border: var(--red) solid torem(1px) !important;
+  }
+}
+
+//! hoveractive
+@mixin hoverActive() {
+  transition: all 0.2s ease-in-out;
+  &:hover {
+    filter: brightness(90%);
+  }
+  &:active {
+    filter: brightness(80%);
+  }
+}
+
+@mixin hoverActiveOrange() {
+  transition: all 0.2s linear;
+  &:hover {
+    background-color: var(--orangeMenuHover);
+  }
+  &:active {
+    background-color: var(--orangeMenuClick);
+  }
+}
+
+//! при наведении с опасити
+@mixin hoverActiveOpacity() {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.7;
+  }
+  &:active {
+    opacity: 1;
+  }
+}
+
+@mixin hoverActiveTextUnderline() {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-thickness: 7%;
+    text-decoration-skip-ink: auto;
+  }
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+//! желтая кнопка
+@mixin buttonOrange() {
+  width: 100%;
+  height: auto;
+  background-color: var(--orange);
+  color: var(--text-select);
+  border-radius: torem(30px);
+  display: flex;
+  // border: none;
+  border: torem(1px) solid var(--border-orange);
+  justify-content: center;
+  align-items: center;
+  font-family: NT Somic;
+  font-weight: 600;
+  font-size: torem(20px);
+  padding: torem(16px);
+  height: torem(55px);
+  @media (max-width: 770px) {
+    font-size: 18px;
+    height: torem(45px);
+    padding: torem(8px);
+  }
+  @include hoverActive;
+}
+
+//! кнопка без стиле
+@mixin buttonNoStyle() {
+  border: none;
+  background-color: none;
+  background: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  height: max-content;
+  padding: 0;
+  margin: 0;
+}
+
+//! серая кнопка
+@mixin buttonGray() {
+  background-color: var(--gray);
+  border-radius: torem(30px);
+  display: flex;
+  border: none;
+  justify-content: center;
+  align-items: center;
+  font-family: NT Somic;
+  font-weight: 600;
+  font-size: torem(20px);
+  padding: torem(16px);
+  height: 55px;
+  @include hoverActive;
+  @media (max-width: 770px) {
+    font-size: 18px;
+    height: torem(45px);
+    padding: torem(8px);
+  }
+}
+
+//! белая кнопка
+@mixin buttonWhite() {
+  width: 100%;
+  height: auto;
+  background-color: #ffffff;
+  border: torem(1px) solid #e4e4e4;
+  border-radius: torem(30px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: NT Somic;
+  font-weight: 600;
+  font-size: torem(20px);
+  padding: torem(16px);
+  @include hoverActive;
+  height: torem(55px);
+  @media (max-width: 580px) {
+    font-size: 18px;
+    height: torem(45px);
+    padding: torem(8px);
+  }
+  img {
+    width: torem(18px);
+    height: torem(18px);
+    margin-right: torem(10px);
+    padding: torem(8px);
+  }
+}
+
+//! белая кнопка
+@mixin buttonWhiteOrangeBorder($noHover: "false") {
+  width: 100%;
+  height: auto;
+  background-color: var(--bg-white);
+  border: torem(2px) solid var(--orange);
+  color: var(--text);
+  border-radius: torem(30px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: NT Somic;
+  font-weight: 600;
+  font-size: torem(20px);
+  padding: torem(16px);
+  height: torem(55px);
+  @media (max-width: 770px) {
+    font-size: 18px;
+    height: torem(45px);
+    padding: torem(8px);
+  }
+  @if ($noHover == "false") {
+    @include hoverActiveOrange;
+  }
+  @media (max-width: 580px) {
+    font-size: 18px;
+    height: torem(45px);
+  }
+}
+
+@mixin ButtonIconText() {
+  background-color: var(--bg-white);
+  padding: 0;
+  margin: 0;
+  @include hoverActiveOpacity();
+  border: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  img {
+    width: torem(20px);
+    height: torem(20px);
+    margin-right: torem(10px);
+    transform: translateY(2px);
+    filter: var(--img-filter);
+  }
+  span {
+    font-family: "NT Somic";
+    font-weight: 500;
+    font-size: torem(20px);
+    color: var(--orangeDoc);
+  }
+  height: torem(55px);
+  @media (max-width: 580px) {
+    font-size: 18px;
+    height: torem(45px);
+    padding: torem(8px);
+  }
+}
+
+//! или в аторизации регистрации
+@mixin or() {
+  // <div className={styles.or}>
+  //     <span>или</span>
+  // </div>
+  width: 100%;
+  height: auto;
+  margin-bottom: torem(24px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  span {
+    font-weight: 400;
+    font-size: torem(18px);
+    color: var(--greenText);
+    position: relative;
+
+    &::before {
+      content: "";
+      width: torem(52px);
+      height: torem(1px);
+      background-color: var(--greenText);
+      margin-right: torem(16px);
+      position: absolute;
+      left: calc(-100% - 8px - 33px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    &::after {
+      content: "";
+      width: torem(52px);
+      height: torem(1px);
+      background-color: var(--greenText);
+      margin-left: torem(16px);
+      position: absolute;
+      right: calc(-100% - 8px - 33px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+//! нет аккаута?
+@mixin noAccount() {
+  font-weight: 400;
+  font-size: torem(20px);
+  text-align: center;
+  a {
+    color: var(--orangeHover);
+    font-weight: 600;
+    font-size: torem(20px);
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-thickness: 0%;
+    text-decoration-skip-ink: auto;
+    @include hoverActiveOpacity;
+  }
+}
+
+@mixin orangeStatus() {
+  border: torem(1px) solid var(--orange-base);
+  color: var(--orange-base);
+  width: fit-content;
+  border-radius: torem(20px);
+  padding: torem(4px) torem(14px);
+}
+
+@mixin greenStatus() {
+  border: torem(1px) solid var(--green-light);
+  color: var(--green-light);
+  width: fit-content;
+  padding: torem(4px) torem(14px);
+  border-radius: torem(20px);
+}
+
+@mixin blueStatus() {
+  border: torem(1px) solid var(--blue-light);
+  color: var(--blue-light);
+  width: fit-content;
+  border-radius: torem(20px);
+  padding: torem(2px) torem(14px);
+}
+
+//! скролл
+@mixin ScrollBar() {
+  /* Вертикальный скролл */
+  &::-webkit-scrollbar {
+    width: torem(8px);
+    height: torem(8px);
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--scrollBar);
+    border-radius: torem(8px);
+    border: torem(2px) solid var(--scrollBar);
+    cursor: pointer;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollBar);
+    cursor: pointer;
+  }
+}
+
+@mixin noData() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 900;
+  text-align: center;
+  font-size: torem(22px);
+  color: var(--grey-A9);
+}
+
+@mixin noDataP() {
+  font-size: 900;
+  text-align: center;
+  font-size: torem(24px);
+  color: var(--grey-A9);
+}
+
+@mixin containerModalPhone() {
+  @media (max-width: 770px) {
+    min-width: calc(100vw - 32px);
+    padding: torem(20px) torem(15px);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+}
+
+@mixin HoverUnderline {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  width: max-content;
+  @include hoverActiveOpacity();
+
+  &:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: torem(1px);
+    background-color: currentColor;
+    transition: width 0.3s ease-in-out;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+
+  &:not(:hover)::after {
+    transition: width 0.3s ease-in-out;
+  }
+}

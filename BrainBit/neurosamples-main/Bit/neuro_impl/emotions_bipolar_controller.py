@@ -24,63 +24,122 @@ class EmotionBipolar:
                                     spect_art_by_totalp=True)
         mss = MentalAndSpectralSetting(n_sec_for_averaging=2,
                                        n_sec_for_instant_estimation=4)
-        calibration_length = 6
+        self.calibration_length = 10
         nwins_skip_after_artifact = 10
 
         self.__math = EmotionalMath(mls, ads, mss)
-        self.__math.set_calibration_length(calibration_length)
+        self.__math.set_calibration_length(self.calibration_length)
         self.__math.set_mental_estimation_mode(False)
         self.__math.set_skip_wins_after_artifact(nwins_skip_after_artifact)
+        # Для расчетов ментальных уровней (концентрация и расслабленность) 
+        # SDK рекомендует обнулять дельту и гамму, используя только тета, альфа и бета
+        # Параметры: (active, delta, theta, alpha, beta, gamma)
         self.__math.set_zero_spect_waves(True, 0, 1, 1, 1, 0)
         self.__math.set_spect_normalization_by_bands_width(True)
 
         self.__is_calibrated = False
-        self.__force_calibration = False  # Флаг для принудительной калибровки
-        self.__sample_count = 0
+        self.__is_running = False  # Флаг для отслеживания состояния работы
         self.isArtifactedSequenceCallback = None
         self.isBothSidesArtifactedCallback = None
         self.progressCalibrationCallback = None
         self.lastSpectralDataCallback = None
         self.rawSpectralDataCallback = None
         self.lastMindDataCallback = None
+        
+    def get_calibration_data(self) -> dict:
+        """Получение всех данных после калибровки"""
+        data = {
+            "calibration_completed": self.__is_calibrated,
+            "channels": {}
+        }
+        
+        if not self.__is_calibrated:
+            return data
+        
+        # Для биполярной калибровки у нас есть два канала: left (T3-O1) и right (T4-O2)
+        # Преобразуем их в формат каналов O1, O2, T3, T4 для совместимости
+        
+        # Спектральные данные
+        spectral_values = self.__math.read_spectral_data_percents_arr()
+        if len(spectral_values) > 0:
+            spectral = spectral_values[-1]
+            spectral_data = {
+                "delta": float(spectral.delta),
+                "theta": float(spectral.theta),
+                "alpha": float(spectral.alpha),
+                "beta": float(spectral.beta),
+                "gamma": float(spectral.gamma)
+            }
+            # Применяем к каналам, связанным с биполярными измерениями
+            # Left bipolar (T3-O1) влияет на T3 и O1
+            # Right bipolar (T4-O2) влияет на T4 и O2
+            for channel in ['O1', 'O2', 'T3', 'T4']:
+                if channel not in data["channels"]:
+                    data["channels"][channel] = {}
+                data["channels"][channel]["spectral"] = spectral_data
+        
+        # Сырые спектральные данные
+        raw_spectral = self.__math.read_raw_spectral_vals()
+        if raw_spectral:
+            raw_spectral_data = {
+                "alpha": float(raw_spectral.alpha),
+                "beta": float(raw_spectral.beta)
+            }
+            for channel in ['O1', 'O2', 'T3', 'T4']:
+                if channel not in data["channels"]:
+                    data["channels"][channel] = {}
+                data["channels"][channel]["raw_spectral"] = raw_spectral_data
+        
+        # Ментальные данные
+        mental_values = self.__math.read_mental_data_arr()
+        if len(mental_values) > 0:
+            mind = mental_values[-1]
+            mind_data = {
+                "rel_attention": float(mind.rel_attention),
+                "rel_relaxation": float(mind.rel_relaxation),
+                "inst_attention": float(mind.inst_attention),
+                "inst_relaxation": float(mind.inst_relaxation)
+            }
+            for channel in ['O1', 'O2', 'T3', 'T4']:
+                if channel not in data["channels"]:
+                    data["channels"][channel] = {}
+                data["channels"][channel]["mind"] = mind_data
+        
+        return data
 
     def start_calibration(self):
-        print("EmotionBipolar: Starting calibration")
         self.__math.start_calibration()
-        # Сбрасываем флаг принудительной калибровки
-        self.__force_calibration = False
-        self.__sample_count = 0
+        self.__is_running = True
+        
+    def stop_calibration(self):
+        """Остановка калибровки"""
+        self.__is_running = False
+        self.__is_calibrated = False
         
     def __process_calibration(self):
-        self.__sample_count += 1
+        if not self.__is_running:
+            return
         
         # Проверяем, завершена ли калибровка по данным библиотеки
         self.__is_calibrated = self.__math.calibration_finished()
         
-        # Если библиотека не продвигает калибровку, имитируем прогресс
-        if not self.__is_calibrated:
-            # Имитируем прогресс калибровки
-            progress = min(100, int((self.__sample_count / 50) * 100))
-            print(f"EmotionBipolar: Calibration progress {progress}%")
+        # Получаем прогресс из библиотеки
+        progress = self.__math.get_calibration_percents()
+        
+        # Отображаем прогресс калибровки
+        if self.progressCalibrationCallback:
+            self.progressCalibrationCallback(progress)
+        
+        # Если калибровка завершена библиотекой, устанавливаем прогресс в 100%
+        if self.__is_calibrated:
             if self.progressCalibrationCallback:
-                self.progressCalibrationCallback(progress)
-                
-            # Принудительно завершаем калибровку после 50 итераций
-            if self.__sample_count >= 50:
-                self.__is_calibrated = True
-                self.__force_calibration = True
-                print("EmotionBipolar: Calibration finished (forced)")
-                # Вызываем обработчики после завершения калибровки
-                self.__resolve_mind_data()
-        else:
-            progress = self.__math.get_calibration_percents()
-            print(f"EmotionBipolar: Calibration progress {progress}%")
-            if self.progressCalibrationCallback:
-                self.progressCalibrationCallback(progress)
-            print("EmotionBipolar: Calibration finished")
+                self.progressCalibrationCallback(100)
 
     def process_data(self, brain_bit_data: []):
-        print(f"EmotionBipolar: Processing {len(brain_bit_data)} samples")
+        # Проверяем, запущена ли калибровка
+        if not self.__is_running:
+            return
+            
         bipolar_samples = []
         for sample in brain_bit_data:
             left_bipolar = sample.T3 - sample.O1
@@ -111,44 +170,30 @@ class EmotionBipolar:
             self.isBothSidesArtifactedCallback(is_both_side_artifacted)
 
     def __resolve_spectral_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
         spectral_values = self.__math.read_spectral_data_percents_arr()
         if len(spectral_values) > 0:
             spectral_val = spectral_values[-1]
-            print(f"EmotionBipolar: Spectral data - Delta: {spectral_val.delta:.4f}, Theta: {spectral_val.theta:.4f}, Alpha: {spectral_val.alpha:.4f}, Beta: {spectral_val.beta:.4f}, Gamma: {spectral_val.gamma:.4f}")
             if self.lastSpectralDataCallback:
                 self.lastSpectralDataCallback(spectral_val)
                 
     def __resolve_raw_spectral_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
         raw_spectral_values = self.__math.read_raw_spectral_vals()
         if self.rawSpectralDataCallback:
             self.rawSpectralDataCallback(raw_spectral_values)
             
     def __resolve_mind_data(self):
-        if not self.__is_calibrated and not self.__force_calibration:
+        # Используем данные только если калибровка действительно завершена библиотекой
+        if not self.__is_calibrated:
             return
+        
         mental_values = self.__math.read_mental_data_arr()
         if len(mental_values) > 0:
             mind_data = mental_values[-1]
-            print(f"EmotionBipolar: Mind data - Attention: {mind_data.rel_attention:.2f}%, Relaxation: {mind_data.rel_relaxation:.2f}%")
             if self.lastMindDataCallback:
                 self.lastMindDataCallback(mind_data)
-        else:
-            # Если данных нет, создаем mock данные для демонстрации
-            class MockMindData:
-                def __init__(self, attention, relaxation):
-                    self.rel_attention = attention
-                    self.rel_relaxation = relaxation
-                    self.inst_attention = attention
-                    self.inst_relaxation = relaxation
-            
-            # Генерируем mock данные на основе счетчика семплов
-            attention = 50 + (self.__sample_count % 20) - 10
-            relaxation = 50 + ((self.__sample_count + 10) % 20) - 10
-            mock_data = MockMindData(attention, relaxation)
-            print(f"EmotionBipolar: Mock mind data - Attention: {mock_data.rel_attention:.2f}%, Relaxation: {mock_data.rel_relaxation:.2f}%")
-            if self.lastMindDataCallback:
-                self.lastMindDataCallback(mock_data)

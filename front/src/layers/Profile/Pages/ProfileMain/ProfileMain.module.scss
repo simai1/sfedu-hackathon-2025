@@ -1,0 +1,357 @@
+.profileMain {
+  background-color: var(--profile-bg);
+  padding: 2rem;
+  border-radius: 0.75rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      color: var(--profile-text);
+      font-size: 1.75rem;
+    }
+
+    .editButton {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--purple-400);
+      color: var(--profile-text);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: var(--purple-300);
+      }
+    }
+
+    .actionButtons {
+      display: flex;
+      gap: 0.5rem;
+
+      .saveButton,
+      .cancelButton {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .saveButton {
+        background-color: var(--green-500);
+        color: var(--black-500);
+
+        &:hover {
+          background-color: var(--green-400);
+        }
+      }
+
+      .cancelButton {
+        background-color: var(--red-500);
+        color: var(--profile-text);
+
+        &:hover {
+          background-color: var(--red-400);
+        }
+      }
+    }
+  }
+
+  .profileInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .infoItem {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        color: var(--profile-text-secondary);
+        font-weight: 600;
+      }
+
+      span {
+        color: var(--profile-text);
+        font-size: 1.1rem;
+      }
+
+      .aboutText {
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+
+      .editInput,
+      .editTextarea {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--profile-border);
+        background-color: var(--profile-input-bg);
+        color: var(--profile-text);
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--profile-active-bg);
+          box-shadow: 0 0 0 3px var(--purple-200);
+        }
+      }
+
+      .editTextarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+    }
+  }
+
+  .apiTokenContainer {
+    background-color: var(--profile-card-bg);
+    border: 1px solid var(--profile-border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+
+    h2 {
+      color: var(--profile-text);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tokenDescription {
+      color: var(--profile-text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .tokenField {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+
+      .tokenInput {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--profile-border);
+        background-color: var(--profile-bg);
+        color: var(--profile-text);
+        font-family: monospace;
+        font-size: 1rem;
+        letter-spacing: 1px;
+
+        &:focus {
+          outline: none;
+          border-color: var(--profile-active-bg);
+          box-shadow: 0 0 0 3px var(--purple-200);
+        }
+      }
+
+      .tokenActions {
+        display: flex;
+        gap: 0.5rem;
+
+        .tokenButton {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          background-color: var(--profile-bg);
+          border: 1px solid var(--profile-border);
+          border-radius: 0.5rem;
+          color: var(--profile-text);
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: var(--profile-hover-bg);
+            border-color: var(--profile-text-secondary);
+          }
+        }
+      }
+    }
+
+    .tokenButtons {
+      .refreshButton {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: var(--purple-400);
+        color: var(--profile-text);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: var(--purple-300);
+        }
+      }
+    }
+  }
+
+  .organizationContainer {
+    margin-top: 2rem;
+    background-color: var(--profile-card-bg);
+    border: 1px solid var(--profile-border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+
+    h2 {
+      color: var(--profile-text);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .sectionDescription {
+      color: var(--profile-text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .organizationCodeBlock {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .codeValue {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--profile-border);
+        background-color: var(--profile-bg);
+        color: var(--profile-text);
+        font-family: monospace;
+        font-size: 1rem;
+        letter-spacing: 1px;
+      }
+
+      .copyCodeButton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        background-color: var(--profile-bg);
+        border: 1px solid var(--profile-border);
+        border-radius: 0.5rem;
+        color: var(--profile-text);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover:enabled {
+          background-color: var(--profile-hover-bg);
+          border-color: var(--profile-text-secondary);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .linkedOrganization {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      background-color: var(--profile-bg);
+      border: 1px solid var(--profile-border);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+
+      .linkedOrgLabel {
+        color: var(--profile-text-secondary);
+        font-weight: 600;
+      }
+
+      .linkedOrgCode {
+        color: var(--profile-text);
+        font-family: monospace;
+        letter-spacing: 1px;
+      }
+
+      .linkedOrgName {
+        color: var(--profile-text-secondary);
+        font-size: 0.95rem;
+      }
+    }
+
+    .joinForm {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 0.5rem;
+
+      .joinInput {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--profile-border);
+        background-color: var(--profile-input-bg);
+        color: var(--profile-text);
+
+        &:focus {
+          outline: none;
+          border-color: var(--profile-active-bg);
+          box-shadow: 0 0 0 3px var(--purple-200);
+        }
+      }
+
+      .joinButton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background-color: var(--purple-400);
+        color: var(--profile-text);
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover:enabled {
+          background-color: var(--purple-300);
+        }
+
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .statusMessage {
+      margin-top: 0.75rem;
+      font-weight: 600;
+    }
+
+    .statusSuccess {
+      color: var(--green-500);
+    }
+
+    .statusError {
+      color: var(--red-500);
+    }
+  }
+}

@@ -1,0 +1,100 @@
+.TextSwipe {
+  border-radius: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  height: max-content;
+
+  .loader {
+    color: rgb(124, 124, 124);
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    font-size: 25px;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+    height: 30px;
+    padding: 0px 10px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  .words {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .words::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      var(--bg-color) 10%,
+      transparent 30%,
+      transparent 70%,
+      var(--bg-color) 90%
+    );
+    z-index: 20;
+  }
+
+  .word {
+    display: block;
+    height: 100%;
+    padding-left: 6px;
+    color: #956afa;
+    animation: spin_4991 8s infinite;
+  }
+
+  @keyframes spin_4991 {
+    0%,
+    18% {
+      transform: translateY(0%);
+    }
+
+    19% {
+      transform: translateY(-20%);
+    }
+
+    20%,
+    38% {
+      transform: translateY(-100%);
+    }
+
+    39% {
+      transform: translateY(-120%);
+    }
+
+    40%,
+    58% {
+      transform: translateY(-200%);
+    }
+
+    59% {
+      transform: translateY(-220%);
+    }
+
+    60%,
+    78% {
+      transform: translateY(-300%);
+    }
+
+    79% {
+      transform: translateY(-320%);
+    }
+
+    80%,
+    98% {
+      transform: translateY(-400%);
+    }
+
+    99% {
+      transform: translateY(-420%);
+    }
+
+    100% {
+      transform: translateY(-500%);
+    }
+  }
+}

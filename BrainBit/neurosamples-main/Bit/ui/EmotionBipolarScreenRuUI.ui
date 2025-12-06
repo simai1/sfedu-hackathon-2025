@@ -6,49 +6,245 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
-    <height>600</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Эмоции (биполярные)</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background: #0A0E1A;
+	font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+	color: #E0E0E0;
+}
+
+QPushButton {
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	color: #E0E0E0;
+	font-size: 14px;
+	font-weight: 500;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 8px;
+	transition: all 0.3s ease;
+}
+
+QPushButton:hover {
+	background: rgba(77, 161, 255, 0.25);
+	border: 1px solid rgba(77, 161, 255, 0.6);
+	box-shadow: 0 4px 12px rgba(77, 161, 255, 0.3);
+	transform: translateY(-2px);
+}
+
+QPushButton:pressed {
+	background: rgba(77, 161, 255, 0.15);
+	transform: translateY(0px);
+	box-shadow: 0 2px 6px rgba(77, 161, 255, 0.2);
+}
+
+QPushButton:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+/* Header */
+QLabel#headerTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin: 24px 0 8px 0;
+	text-align: center;
+	color: #4DA1FF;
+}
+
+/* Back Button */
+QPushButton#backButton {
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	border-radius: 8px;
+	font-size: 14px;
+	padding: 0 16px;
+	min-width: 60px;
+	height: 40px;
+}
+
+QPushButton#backButton:hover {
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
+}
+
+/* Start Button */
+QPushButton#startBipolarEmotionButton {
+	background: rgba(77, 161, 255, 0.1);
+	border: 1px solid rgba(77, 161, 255, 0.3);
+	border-radius: 8px;
+	font-size: 14px;
+	padding: 0 20px;
+	min-width: 120px;
+	height: 40px;
+}
+
+QPushButton#startBipolarEmotionButton:hover {
+	background: rgba(77, 161, 255, 0.2);
+	border: 1px solid rgba(77, 161, 255, 0.5);
+}
+
+/* Section Headers */
+QLabel[objectName="sectionHeader"] {
+	font-size: 13px;
+	font-weight: 500;
+	color: #999999;
+	margin: 8px 0 4px 0;
+}
+
+/* Progress Bar */
+QProgressBar#calibrationProgress {
+	border: 1px solid rgba(77, 161, 255, 0.2);
+	border-radius: 6px;
+	background: rgba(77, 161, 255, 0.05);
+	margin: 8px 24px;
+	height: 8px;
+	text-align: center;
+}
+
+QProgressBar#calibrationProgress::chunk {
+	background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #4DA1FF, stop: 1 #6BB5FF);
+	border-radius: 5px;
+}
+
+/* Status Labels */
+QLabel#artSequenceLabel, QLabel#artBothSidesLabel {
+	font-size: 12px;
+	margin: 4px 24px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	background: rgba(77, 161, 255, 0.05);
+	border: 1px solid rgba(77, 161, 255, 0.1);
+	color: #CCCCCC;
+}
+
+/* Data Grids */
+QGridLayout {
+	margin: 8px 24px;
+	spacing: 8px;
+}
+
+/* Grid Headers */
+QLabel[property*="labelType=gridHeader"] {
+	font-weight: 500;
+	font-size: 12px;
+	color: #999999;
+	text-align: center;
+}
+
+/* Value Labels */
+QLabel[property*="labelType=value"] {
+	font-weight: 600;
+	font-size: 14px;
+	color: #4DA1FF;
+	text-align: center;
+	background: rgba(77, 161, 255, 0.08);
+	border: 1px solid rgba(77, 161, 255, 0.15);
+	border-radius: 6px;
+	padding: 6px 10px;
+}
+
+/* Status Bar */
+QStatusBar {
+	background: #0A0E1A;
+	border: none;
+	border-top: 1px solid rgba(77, 161, 255, 0.15);
+}
+
+QStatusBar QLabel {
+	color: #999999;
+	font-size: 12px;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
     <property name="leftMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
-     <number>15</number>
+     <number>0</number>
     </property>
+    <item alignment="Qt::AlignTop">
+     <widget class="QLabel" name="headerTitle">
+      <property name="text">
+       <string>Анализ биполярных эмоций</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>24</number>
+      </property>
+      <property name="rightMargin">
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QPushButton" name="backButton">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="text">
-         <string>&lt;</string>
+         <string>← Назад</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="startBipolarEmotionButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Старт</string>
+         <string>Начать анализ</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="calibrationHeader">
       <property name="text">
        <string>Калибровка:</string>
+      </property>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
       </property>
      </widget>
     </item>
@@ -57,28 +253,65 @@
       <property name="value">
        <number>0</number>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>8</height>
+       </size>
+      </property>
      </widget>
     </item>
     <item>
      <widget class="QLabel" name="artSequenceLabel">
       <property name="text">
-       <string>Артефакты последовательности</string>
+       <string>Артефакты последовательности: Нет</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QLabel" name="artBothSidesLabel">
       <property name="text">
-       <string>Артефакты с обеих сторон</string>
+       <string>Артефакты с обеих сторон: Нет</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="spectralHeader">
+      <property name="text">
+       <string>Спектральные данные:</string>
+      </property>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
       </property>
      </widget>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="property" stdset="0">
+       <string>dataGrid=true</string>
+      </property>
+      <property name="horizontalSpacing">
+       <number>8</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>8</number>
+      </property>
       <item row="0" column="2">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Альфа</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
         </property>
        </widget>
       </item>
@@ -87,12 +320,24 @@
         <property name="text">
          <string>Дельта</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
+        </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Тета</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
         </property>
        </widget>
       </item>
@@ -101,12 +346,24 @@
         <property name="text">
          <string>Бета</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
+        </property>
        </widget>
       </item>
       <item row="1" column="1">
        <widget class="QLabel" name="thetaPercentLabel">
         <property name="text">
          <string>0%</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
         </property>
        </widget>
       </item>
@@ -115,12 +372,24 @@
         <property name="text">
          <string>0%</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
       <item row="0" column="4">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>Гамма</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
         </property>
        </widget>
       </item>
@@ -129,12 +398,24 @@
         <property name="text">
          <string>0%</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
        <widget class="QLabel" name="alphaRawLabel">
         <property name="text">
          <string>0.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
         </property>
        </widget>
       </item>
@@ -143,12 +424,24 @@
         <property name="text">
          <string>0%</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
       <item row="2" column="3">
        <widget class="QLabel" name="betaRawLabel">
         <property name="text">
          <string>0.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
         </property>
        </widget>
       </item>
@@ -157,16 +450,47 @@
         <property name="text">
          <string>0%</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="mindDataHeader">
+      <property name="text">
+       <string>Данные о состоянии разума:</string>
+      </property>
+      <property name="property" stdset="0">
+       <string>sectionHeader=true</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QGridLayout" name="gridLayout_2">
+      <property name="property" stdset="0">
+       <string>dataGrid=true</string>
+      </property>
+      <property name="horizontalSpacing">
+       <number>8</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>8</number>
+      </property>
       <item row="0" column="1">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Внимание</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
         </property>
        </widget>
       </item>
@@ -175,12 +499,24 @@
         <property name="text">
          <string>Расслабление</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
        <widget class="QLabel" name="relaxRawLabel">
         <property name="text">
          <string>0.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
         </property>
        </widget>
       </item>
@@ -189,12 +525,24 @@
         <property name="text">
          <string>0.0</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
       <item row="1" column="1">
        <widget class="QLabel" name="attentionPercentLabel">
         <property name="text">
          <string>0.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
         </property>
        </widget>
       </item>
@@ -203,6 +551,12 @@
         <property name="text">
          <string>0.0</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=value</string>
+        </property>
        </widget>
       </item>
       <item row="1" column="0">
@@ -210,12 +564,24 @@
         <property name="text">
          <string>Процент</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
+        </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>Сырой</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="property" stdset="0">
+         <string>labelType=gridHeader</string>
         </property>
        </widget>
       </item>

@@ -1,0 +1,196 @@
+.Header {
+  position: fixed;
+  top: 20px;
+  z-index: 1000;
+  width: 100%;
+  box-sizing: border-box;
+  :root {
+    --linear-ease: linear(
+      0,
+      0.068,
+      0.19 2.7%,
+      0.804 8.1%,
+      1.037,
+      1.199 13.2%,
+      1.245,
+      1.27 15.8%,
+      1.274,
+      1.272 17.4%,
+      1.249 19.1%,
+      0.996 28%,
+      0.949,
+      0.928 33.3%,
+      0.926,
+      0.933 36.8%,
+      1.001 45.6%,
+      1.013,
+      1.019 50.8%,
+      1.018 54.4%,
+      1 63.1%,
+      0.995 68%,
+      1.001 85%,
+      1
+    );
+
+    // Define color variables for particles
+    --color-1: #ff3bff;
+    --color-2: #ecbfbf;
+    --color-3: #5c24ff;
+    --color-4: #d94fd5;
+  }
+
+  .headerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 30px;
+    box-sizing: border-box;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #f3f4f6;
+    cursor: pointer;
+    z-index: 1001;
+  }
+
+  .HeaderContainerInner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    background: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    width: fit-content;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    nav {
+      ul {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          position: relative;
+          margin: 0 1rem;
+
+          a {
+            position: relative;
+            display: block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: #d1d5db;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            z-index: 2;
+
+            &:hover {
+              color: #f3f4f6;
+            }
+          }
+
+          &.active a {
+            color: #f3f4f6;
+          }
+        }
+      }
+    }
+
+    .effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+
+      &.text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+
+        &.active {
+          opacity: 1;
+        }
+      }
+
+      &.filter {
+        filter: url("#goo");
+      }
+    }
+  }
+
+  .profileIcon {
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.3s ease;
+    z-index: 1001;
+    background-color: var(--bg);
+    padding: 10px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-self: center;
+    align-items: center;
+    &:hover {
+      color: #f3f4f6;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(var(--purple-base), 0.3);
+    }
+  }
+
+  .particle {
+    --start-x: 0px;
+    --start-y: 0px;
+    --end-x: 0px;
+    --end-y: 0px;
+    --time: 0ms;
+    --scale: 1;
+    --color: white;
+    --rotate: 0deg;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: particle var(--time) ease-out forwards;
+
+    .point {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--color);
+      transform: scale(var(--scale)) rotate(var(--rotate));
+    }
+  }
+
+  @keyframes particle {
+    0% {
+      transform: translate(var(--start-x), var(--start-y));
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--end-x), var(--end-y));
+      opacity: 0;
+    }
+  }
+}
