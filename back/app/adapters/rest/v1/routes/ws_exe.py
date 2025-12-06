@@ -141,7 +141,7 @@ async def client_ws(
                 logger.debug("Client WS: video tracking ended user_id=%s", user_id)
                 await websocket.send_json({"type": "video_tracking_ended"})
             elif msg_type == "video_frame":
-                timecode_raw = message.get("timecode")
+                timecode_raw = message.get("timecode") or message.get("time_code")
                 video_id_raw = message.get("video_id")
                 screenshot_url = message.get("screenshot_url")
 
