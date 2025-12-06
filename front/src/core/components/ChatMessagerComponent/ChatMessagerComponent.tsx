@@ -36,10 +36,7 @@ function ChatMessagerComponent() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  // Функция для генерации ответа бота (временно hardcoded)
   const generateBotResponse = (userMessage: string): string => {
-    // Здесь будет логика для генерации ответа
-    // Пока используем заглушку
     const responses = [
       "Понимаю ваш запрос. Это интересный вопрос!",
       "Спасибо за ваше сообщение. Я изучаю его содержание.",
@@ -49,11 +46,8 @@ function ChatMessagerComponent() {
       "Спасибо за обращение. Я постараюсь помочь вам с этим.",
     ]
 
-    // Возвращаем случайный ответ из массива
     return responses[Math.floor(Math.random() * responses.length)]
   }
-
-  // Функция для отправки сообщения
   const handleSendMessage = async () => {
     if (inputValue.trim() === "" || isLoading) return
 
@@ -69,9 +63,7 @@ function ChatMessagerComponent() {
     setInputValue("")
     setIsLoading(true)
 
-    // Симуляция задержки сети
     setTimeout(() => {
-      // Генерируем ответ бота
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         text: generateBotResponse(inputValue),
@@ -84,7 +76,6 @@ function ChatMessagerComponent() {
     }, 1500)
   }
 
-  // Обработка отправки по Enter
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()

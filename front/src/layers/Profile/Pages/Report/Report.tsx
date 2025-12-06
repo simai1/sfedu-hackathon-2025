@@ -2,7 +2,6 @@ import { useState } from "react"
 import ReportCard, { type ReportItem } from "./components/ReportCard/ReportCard"
 import styles from "./Report.module.scss"
 
-// Моковые данные для примера
 const mockReportItems: ReportItem[] = [
   {
     id: "1",
