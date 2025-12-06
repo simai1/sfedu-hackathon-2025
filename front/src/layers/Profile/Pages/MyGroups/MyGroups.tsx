@@ -21,6 +21,9 @@ function MyGroups() {
   const [groups, setGroups] = useState<MyGroup[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
+  const handleWatchVideo = () => {
+    toast.warning("Функция доступна с тарифом PRO")
+  }
   useEffect(() => {
     const load = async () => {
       try {
@@ -66,9 +69,9 @@ function MyGroups() {
                           {s.created_at ? new Date(s.created_at).toLocaleString() : ""}
                         </span>
                       </div>
-                      <a className={styles.watchButton} href={s.video_url} target="_blank" rel="noreferrer">
+                      <button className={styles.watchButton} onClick={() => handleWatchVideo()}>
                         Смотреть
-                      </a>
+                      </button>
                     </div>
                   ))
                 )}

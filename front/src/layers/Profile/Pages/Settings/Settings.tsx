@@ -144,7 +144,7 @@ function Settings() {
             <div className={styles.toggleSlider}></div>
           </div>
         </div>
-            
+          
         {!showPasswordForm ? (
           <button
             className={styles.changePasswordButton}

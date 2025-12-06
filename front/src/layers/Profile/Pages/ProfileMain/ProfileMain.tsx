@@ -5,7 +5,6 @@ import { Role, useUserStore } from "../../../../store/userStore"
 import { usePairToken, useGeneratePairToken } from "../../../../hooks/usePairToken"
 import { joinOrganization } from "../../../../api/organization"
 import { apiUpdateUser } from "../../../../api/users"
-import SubscriptionPlans from "../../components/SubscriptionPlans/SubscriptionPlans"
 import { toast } from "react-toastify"
 
 function ProfileMain() {
@@ -204,10 +203,6 @@ function ProfileMain() {
           )}
         </div>
 
-        <div className={styles.infoItem}>
-          <label>Дата регистрации:</label>
-          <span>{profileData.registrationDate}</span>
-        </div>
       </div>
 
       <div className={styles.apiTokenContainer}>
@@ -326,7 +321,6 @@ function ProfileMain() {
         )}
       </div>
 
-      <SubscriptionPlans currentPlan="free" />
     </div>
   )
 }
