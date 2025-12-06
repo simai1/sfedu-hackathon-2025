@@ -44,7 +44,7 @@ function Analysis() {
       setIsSocketConnected(true)
     }, 1000)
   }
-  
+
   const generateScreenshotTriggers = (duration: number) => {
     const triggers: ScreenshotTrigger[] = []
     for (let time = 0; time < duration; time += 2) {
@@ -161,11 +161,7 @@ function Analysis() {
               </div>
             )}
 
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
-
-            <div className={styles.actionButtons}>
+<div className={styles.actionButtons}>
               <button
                 className={styles.startButton}
                 onClick={handleStartWatching}
@@ -177,6 +173,12 @@ function Analysis() {
                 Загрузить другое видео
               </button>
             </div>
+            
+            <div className={styles.chartContainer}>
+              <KeyIndicators />
+            </div>
+
+           
           </div>
         )}
 
