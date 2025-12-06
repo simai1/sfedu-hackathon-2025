@@ -28,3 +28,12 @@ export const apiAddGroupSession = async (groupId: string, file: File) => {
   return response.data
 }
 
+export const apiDeleteGroupSessions = async (groupId: string) => {
+  await apiRequest("delete", `${GROUPS_BASE}/${groupId}/sessions`)
+}
+
+export const apiListMyGroups = async () => {
+  const response = await apiRequest("get", `${GROUPS_BASE}/my`)
+  return response.data
+}
+

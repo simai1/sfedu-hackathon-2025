@@ -4,7 +4,13 @@ import { useUserStore, Role } from "../../../../store/userStore"
 import styles from "./Groups.module.scss"
 import CreateGroupModal from "./components/CreateGroupModal/CreateGroupModal"
 import GroupCard from "./components/GroupCard/GroupCard"
-import { apiCreateGroup, apiListGroups, apiAddGroupMember, apiAddGroupSession } from "../../../../api/groups"
+import {
+  apiCreateGroup,
+  apiListGroups,
+  apiAddGroupMember,
+  apiAddGroupSession,
+  apiDeleteGroupSessions,
+} from "../../../../api/groups"
 import { getOrganizationMembers } from "../../../../api/organization"
 import { toast } from "react-toastify"
 
@@ -64,7 +70,7 @@ function Groups() {
           joined_at: m.joined_at,
           watched: false,
         })),
-        sessions: (g.sessions || []).map((s: any) => ({
+        sessions: (g.sessions ?? []).map((s: any) => ({
           id: s.id,
           videoUrl: s.video_url || s.videoUrl,
           videoName: s.video_name || s.videoName || "Видео",
@@ -92,7 +98,7 @@ function Groups() {
     try {
       await apiCreateGroup({ name: groupData.name, description: groupData.description })
       toast.success("Группа создана")
-      setIsCreateModalOpen(false)
+    setIsCreateModalOpen(false)
       await loadData()
     } catch (e: any) {
       toast.error(e?.response?.data?.message || e?.message || "Не удалось создать группу")
@@ -114,7 +120,7 @@ function Groups() {
                     name: added.name,
                     email: added.email,
                     joined_at: added.joined_at,
-                    watched: false,
+            watched: false,
                   },
                 ],
               }
@@ -129,31 +135,21 @@ function Groups() {
 
   const handleAddSession = async (groupId: string, file: File) => {
     try {
-      const session = await apiAddGroupSession(groupId, file)
-      setGroups((prev) =>
-        prev.map((g) =>
-          g.id === groupId
-            ? {
-                ...g,
-                sessions: [
-                  ...g.sessions,
-                  {
-                    id: session.id,
-                    videoUrl: session.video_url || session.videoUrl,
-                    videoName: session.video_name || session.videoName || file.name,
-                    createdAt: session.created_at || session.createdAt,
-                    watchedCount: 0,
-                    totalMembers: g.members.length,
-                    canAnalyze: false,
-                  },
-                ],
-              }
-            : g
-        )
-      )
+      await apiAddGroupSession(groupId, file)
+      await loadData() // подтянуть свежие сессии с бэка
       toast.success("Видео добавлено в группу")
     } catch (e: any) {
       toast.error(e?.response?.data?.message || e?.message || "Не удалось добавить видео")
+    }
+  }
+
+  const handleDeleteSessions = async (groupId: string) => {
+    try {
+      await apiDeleteGroupSessions(groupId)
+      await loadData()
+      toast.success("Видео удалено")
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось удалить видео")
     }
   }
 
@@ -206,6 +202,7 @@ function Groups() {
               orgMembers={orgMembers}
               onAddMember={handleAddMember}
               onAddSession={handleAddSession}
+              onDeleteSessions={handleDeleteSessions}
               onAnalyze={handleAnalyze}
             />
           ))}

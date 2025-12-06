@@ -20,3 +20,9 @@ class GroupController:
     async def add_session(self, access_token: str, group_id: uuid.UUID, filename: str | None, content: bytes) -> GroupSession:
         return await self.service.add_session(access_token, group_id, filename, content)
 
+    async def delete_sessions(self, access_token: str, group_id: uuid.UUID) -> None:
+        return await self.service.delete_sessions(access_token, group_id)
+
+    async def list_for_user(self, access_token: str):
+        return await self.service.list_groups_for_user(access_token)
+

@@ -68,3 +68,29 @@ class GroupService:
         video = await self.video_service.upload(filename, content)
         return await self.group_repo.add_session(group_id, video.id, filename)
 
+    async def delete_sessions(self, access_token: str, group_id: uuid.UUID) -> None:
+        org_user = await self._get_org_user(access_token)
+        groups = await self.group_repo.list_by_organization(org_user.organization_id)
+        if not any(g.id == group_id for g in groups):
+            raise InvalidDataError("group", "organization_id", "mismatch")
+        await self.group_repo.delete_sessions(group_id)
+
+    async def list_groups_for_user(self, access_token: str) -> list[GroupWithMembers]:
+        payload = self.token_service.validate_access_token(access_token)
+        user = await self.user_repo.get_one_by_id(uuid.UUID(payload.sub))
+        if not user:
+            raise NotFoundError("user", "id", payload.sub)
+        groups = await self.group_repo.list_by_user(user.id)
+        result: list[GroupWithMembers] = []
+        for g in groups:
+            members = await self.group_repo.get_members(g.id)
+            sessions = await self.group_repo.list_sessions(g.id)
+            result.append(
+                GroupWithMembers(
+                    **g.model_dump(),
+                    members=members,
+                    sessions=sessions,
+                )
+            )
+        return result
+

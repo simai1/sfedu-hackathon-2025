@@ -48,3 +48,20 @@ async def add_session(
     content = await file.read()
     return await controller.add_session(access_token=token, group_id=group_id, filename=file.filename, content=content)
 
+
+@router.delete("/{group_id}/sessions", status_code=204)
+async def delete_sessions(
+    group_id: uuid.UUID = Path(...),
+    token: str = Depends(oauth2_scheme),
+    controller: GroupController = Depends(get_controller),
+):
+    await controller.delete_sessions(access_token=token, group_id=group_id)
+
+
+@router.get("/my", response_model=list[GroupWithMembers])
+async def list_my_groups(
+    token: str = Depends(oauth2_scheme),
+    controller: GroupController = Depends(get_controller),
+):
+    return await controller.list_for_user(access_token=token)
+

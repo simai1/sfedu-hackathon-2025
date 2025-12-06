@@ -8,10 +8,11 @@ interface GroupCardProps {
   orgMembers: { id: string; name?: string; email: string }[]
   onAddMember: (groupId: string, memberId: string) => void
   onAddSession: (groupId: string, videoFile: File) => void
+  onDeleteSessions: (groupId: string) => void
   onAnalyze: (groupId: string, sessionId: string) => void
 }
 
-function GroupCard({ group, orgMembers, onAddMember, onAddSession, onAnalyze }: GroupCardProps) {
+function GroupCard({ group, orgMembers, onAddMember, onAddSession, onDeleteSessions, onAnalyze }: GroupCardProps) {
   const [isAddingMember, setIsAddingMember] = useState(false)
   const [selectedMember, setSelectedMember] = useState<string>("")
   const [isAddingSession, setIsAddingSession] = useState(false)
@@ -41,10 +42,9 @@ function GroupCard({ group, orgMembers, onAddMember, onAddSession, onAnalyze }: 
     }
   }
 
-  const watchedCount = group.members.filter((m) => m.watched).length
   const totalMembers = group.members.length
 
-  // Обновляем canAnalyze для сессий
+  // Обновляем canAnalyze для сессий (пока watchedCount заглушка)
   const updatedSessions = group.sessions.map((session) => ({
     ...session,
     canAnalyze: session.watchedCount === totalMembers && totalMembers > 0,
@@ -185,11 +185,7 @@ function GroupCard({ group, orgMembers, onAddMember, onAddSession, onAnalyze }: 
                   <div key={session.id} className={styles.sessionItem}>
                     <div className={styles.sessionInfo}>
                       <span className={styles.sessionName}>{session.videoName}</span>
-                      {session.videoUrl && (
-                        <a className={styles.watchLink} href={session.videoUrl} target="_blank" rel="noreferrer">
-                          Смотреть
-                        </a>
-                      )}
+                     
                       <span className={styles.sessionStats}>
                         Просмотрели: {session.watchedCount} / {session.totalMembers}
                       </span>

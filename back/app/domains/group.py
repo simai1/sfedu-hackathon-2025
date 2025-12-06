@@ -36,7 +36,3 @@ class GroupWithMembers(Group):
     members: list[GroupMember]
     sessions: list[GroupSession] = []
 
-
-class GroupWithMembers(Group):
-    members: list[GroupMember]
-

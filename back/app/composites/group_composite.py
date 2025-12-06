@@ -3,12 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.sqlalchemy.group_repo import GroupRepo
 from app.adapters.sqlalchemy.user_repo import UserRepo
+from app.adapters.sqlalchemy.video_repo import VideoRepo
 from app.core.db import get_session
 from app.service.group_service import GroupService
 from app.adapters.rest.v1.controllers.group import GroupController
 from app.composites.token_composite import get_service as get_token_service
 from app.service.video_service import VideoService
-from app.adapters.sqlalchemy.video_repo import VideoRepo
 
 
 async def get_group_repo(session: AsyncSession = Depends(get_session)):
@@ -17,6 +17,9 @@ async def get_group_repo(session: AsyncSession = Depends(get_session)):
 
 async def get_user_repo(session: AsyncSession = Depends(get_session)):
     return UserRepo(session)
+
+async def get_video_repo(session: AsyncSession = Depends(get_session)):
+    return VideoRepo(session)
 
 
 async def get_service(

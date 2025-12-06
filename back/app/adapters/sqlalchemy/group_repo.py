@@ -31,6 +31,16 @@ class GroupRepo:
         models = result.scalars().all()
         return [Group(**m.as_dict()) for m in models]
 
+    async def list_by_user(self, user_id: uuid.UUID) -> List[Group]:
+        stmt = (
+            select(GroupModel)
+            .join(GroupMemberModel, GroupMemberModel.group_id == GroupModel.id)
+            .where(GroupMemberModel.user_id == user_id)
+        )
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+        return [Group(**m.as_dict()) for m in models]
+
     async def add_member(self, group_id: uuid.UUID, user_id: uuid.UUID) -> GroupMember:
         membership = GroupMemberModel(group_id=group_id, user_id=user_id)
         self.session.add(membership)
@@ -66,6 +76,9 @@ class GroupRepo:
         return members
 
     async def add_session(self, group_id: uuid.UUID, video_id: uuid.UUID, video_name: str | None) -> GroupSession:
+        # Ensure single session per group: delete previous sessions (and linked videos) first
+        await self.delete_sessions(group_id)
+
         session_model = GroupSessionModel(
             group_id=group_id,
             video_id=video_id,
@@ -105,4 +118,24 @@ class GroupRepo:
                 )
             )
         return sessions
+
+    async def delete_sessions(self, group_id: uuid.UUID) -> None:
+        # find existing sessions to remove videos as well
+        stmt = select(GroupSessionModel).where(GroupSessionModel.group_id == group_id)
+        result = await self.session.execute(stmt)
+        existing = result.scalars().all()
+        video_ids = [s.video_id for s in existing]
+
+        # delete sessions
+        await self.session.execute(
+            GroupSessionModel.__table__.delete().where(GroupSessionModel.group_id == group_id)
+        )
+
+        # delete associated videos (files are not removed here)
+        if video_ids:
+            await self.session.execute(
+                VideoModel.__table__.delete().where(VideoModel.id.in_(video_ids))
+            )
+
+        await self.session.commit()
 
