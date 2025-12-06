@@ -1,18 +1,22 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import styles from "./Register.module.scss"
 import { registerEndpoint } from "../../../../api/login"
 import { useUserStore } from "../../../../store/userStore"
 import { toast } from "react-toastify"
+import { Role } from "../../../../store/userStore" // Импортируем перечисление Role
 
 interface RegisterProps {
   onSwitchToLogin: () => void
 }
 
 const Register = ({ onSwitchToLogin }: RegisterProps) => {
+  const navigate = useNavigate()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [isOrganization, setIsOrganization] = useState(false) // Новое состояние для роли
   const [errors, setErrors] = useState({
     name: "",
     email: "",
@@ -105,24 +109,34 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
     if (validateForm()) {
       setIsLoading(true)
       try {
-        const response = await registerEndpoint({ name, email, password })
+        // Добавляем роль в данные для регистрации
+        const role = isOrganization ? "organization" : "user"
+        const response = await registerEndpoint({ name, email, password, role })
         console.log("Register response:", response)
 
-        // Set token and user data in the store
         setToken(response.token)
-        setUser(response.user)
+        setUser({
+          id: response.id,
+          name: response.name,
+          email: response.email,
+          role:
+            response.role || (isOrganization ? Role.ORGANIZATION : Role.USER), // Добавляем роль в пользовательские данные
+        })
 
-        // Clear form and errors
         setName("")
         setEmail("")
         setPassword("")
         setConfirmPassword("")
+        setIsOrganization(false)
         setErrors({
           name: "",
           email: "",
           password: "",
           confirmPassword: "",
         })
+
+        toast.success("Регистрация успешна!")
+        navigate("/profile")
       } catch (error: any) {
         console.error("Registration error:", error)
         const errorMessage =
@@ -139,11 +153,21 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
           confirmPassword: "",
         }
 
-        if (errorMessageLower.includes("email") || errorMessageLower.includes("почт")) {
+        if (
+          errorMessageLower.includes("email") ||
+          errorMessageLower.includes("почт")
+        ) {
           newErrors.email = errorMessage
-        } else if (errorMessageLower.includes("password") || errorMessageLower.includes("парол")) {
+        } else if (
+          errorMessageLower.includes("password") ||
+          errorMessageLower.includes("парол")
+        ) {
           newErrors.password = errorMessage
-        } else if (errorMessageLower.includes("name") || errorMessageLower.includes("имя") || errorMessageLower.includes("фио")) {
+        } else if (
+          errorMessageLower.includes("name") ||
+          errorMessageLower.includes("имя") ||
+          errorMessageLower.includes("фио")
+        ) {
           newErrors.name = errorMessage
         }
         // Если ошибка не связана с конкретным полем, показываем только в тосте
@@ -225,6 +249,17 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
                 {errors.confirmPassword}
               </span>
             )}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>
+              <input
+                type="checkbox"
+                checked={isOrganization}
+                onChange={(e) => setIsOrganization(e.target.checked)}
+              />
+              Регистрация организации
+            </label>
           </div>
 
           <button

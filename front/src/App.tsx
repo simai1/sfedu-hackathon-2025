@@ -4,6 +4,8 @@ import { useEffect } from "react"
 import { routes } from "./routes/routes"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import { ThemeInitializer } from "./core/components/ThemeInitializer/ThemeInitializer"
+import WebSocketManager from "./core/components/WebSocketManager/WebSocketManager"
 
 function ScrollToTop() {
   const locations = useLocation()
@@ -16,6 +18,8 @@ function ScrollToTop() {
 function App() {
   return (
     <div className="App">
+      <ThemeInitializer />
+      <WebSocketManager />
       <ScrollToTop />
       <Routes>
         {routes.map(({ path, element, children }, i) => (

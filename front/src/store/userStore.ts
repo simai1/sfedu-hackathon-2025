@@ -1,7 +1,9 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export enum Role {
   ORGANIZATION = "ORGANIZATION",
+  USER = "USER",
   STUDENT = "STUDENT",
   APPLICANT = "APPLICANT",
   ADMIN = "ADMIN",
@@ -10,10 +12,12 @@ export enum Role {
 }
 
 export interface User {
-  id: number;
-  username: string;
+  id: string;
+  name: string;
   email: string;
-  role: Role;
+  role?: Role;
+  organizationCode?: string | null;
+  organizationName?: string | null;
 }
 
 interface UserStore {
@@ -25,55 +29,110 @@ interface UserStore {
   setToken: (token: string | null) => void;
   login: (credentials: { username: string; password: string }) => Promise<void>;
   register: (userData: { username: string; email: string; password: string }) => Promise<void>;
+  linkToOrganization: (code: string) => Promise<{ success: boolean; organizationName: string }>;
 }
 
-export const useUserStore = create<UserStore>((set) => ({
-  token: null,
-  user: null,
-  setUser: (data) => set({ user: data }),
-  setRole: (role: Role) =>
-    set((state) => {
-      if (!state.user) return state;
-      return { ...state, user: { ...state.user, role } };
+const mapBackendRole = (role?: string): Role => {
+  if (!role) return Role.USER;
+  const normalized = role.toLowerCase();
+  if (normalized === "organization") return Role.ORGANIZATION;
+  return Role.USER;
+};
+
+export const useUserStore = create<UserStore>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      setUser: (data) => set({ user: data }),
+      setRole: (role: Role) =>
+        set((state) => {
+          if (!state.user) return state;
+          return { ...state, user: { ...state.user, role } };
+        }),
+      clearUser: () => set({ user: null, token: null }),
+      setToken: (token) => {
+        if (token === null) {
+          set({ token: null, user: null });
+        } else {
+          set({ token });
+        }
+      },
+      login: async (credentials) => {
+        console.log("Logging in with:", credentials);
+        // TODO: заменить на реальный API вызов
+        // const response = await api.login(credentials);
+        // Демонстрационный ответ в формате, как приходит с бэка
+        const response = {
+          id: "1",
+          name: credentials.username,
+          email: "user@example.com",
+          role: "user",
+          token: "fake-jwt-token",
+        };
+
+        set({
+          token: response.token,
+          user: {
+            id: response.id,
+            name: response.name,
+            email: response.email,
+            role: mapBackendRole(response.role),
+          },
+        });
+      },
+      register: async (userData) => {
+        console.log("Registering with:", userData);
+        // TODO: заменить на реальный API вызов
+        // const response = await api.register(userData);
+        // Демонстрационный ответ в формате, как приходит с бэка
+        const response = {
+          id: "1",
+          name: userData.username,
+          email: userData.email,
+          role: "user",
+          token: "fake-jwt-token",
+        };
+
+        set({
+          token: response.token,
+          user: {
+            id: response.id,
+            name: response.name,
+            email: response.email,
+            role: mapBackendRole(response.role),
+          },
+        });
+      },
+      linkToOrganization: async (code: string) => {
+        const normalizedCode = code.trim();
+        if (!normalizedCode) {
+          throw new Error("Код организации не может быть пустым");
+        }
+
+        const organizationName = `Организация ${normalizedCode.slice(-4)}`;
+
+        set((state) => {
+          if (!state.user) return state;
+          return {
+            ...state,
+            user: {
+              ...state.user,
+              organizationCode: normalizedCode,
+              organizationName,
+            },
+          };
+        });
+
+        return { success: true, organizationName };
+      },
     }),
-  clearUser: () => set({ user: null, token: null }),
-  setToken: (token) => {
-    if (token === null) {
-      set({ token: null, user: null });
-    } else {
-      set({ token });
+    {
+      name: "user-storage",
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+      }),
     }
-  },
-  login: async (credentials) => {
-    // Simulate API call
-    console.log("Logging in with:", credentials);
-    // In a real app, you would make an API call here
-    // const response = await api.login(credentials);
-    // set({ token: response.token, user: response.user });
-    set({ 
-      token: "fake-jwt-token", 
-      user: { 
-        id: 1, 
-        username: credentials.username, 
-        email: "user@example.com", 
-        role: Role.STUDENT
-      } 
-    });
-  },
-  register: async (userData) => {
-    // Simulate API call
-    console.log("Registering with:", userData);
-    // In a real app, you would make an API call here
-    // const response = await api.register(userData);
-    // set({ token: response.token, user: response.user });
-    set({ 
-      token: "fake-jwt-token", 
-      user: { 
-        id: 1, 
-        username: userData.username,
-        email: userData.email, 
-        role: Role.STUDENT
-      } 
-    });
-  },
-}));
+  )
+);

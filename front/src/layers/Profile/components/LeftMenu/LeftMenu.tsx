@@ -1,15 +1,19 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
+import { Role, useUserStore } from "../../../../store/userStore"
 
 interface MenuItem {
   label: string
   path: string
   icon: React.ReactNode
+  onlyForOrganization?: boolean
 }
 
 function LeftMenu() {
   const location = useLocation()
+  const { user } = useUserStore()
+  const isOrganization = user?.role === Role.ORGANIZATION
 
   const menuItems: MenuItem[] = [
     {
@@ -18,9 +22,20 @@ function LeftMenu() {
       icon: <User size={20} />,
     },
     {
+      label: "Группы",
+      path: "/profile/groups",
+      icon: <Users size={20} />,
+      onlyForOrganization: true,
+    },
+    {
       label: "Анализ",
       path: "/profile/analysis",
       icon: <BarChart3 size={20} />,
+    },
+    {
+      label: "Графики",
+      path: "/profile/graphics",
+      icon: <ChartSpline size={20} />,
     },
     {
       label: "Отчеты",
@@ -37,20 +52,21 @@ function LeftMenu() {
       path: "/profile/settings",
       icon: <Settings size={20} />,
     },
+ 
   ]
+
+  const filteredItems = menuItems.filter((item) => (item.onlyForOrganization ? isOrganization : true))
 
   return (
     <div className={styles.leftMenu}>
       <nav>
         <ul className={styles.menuList}>
-          {menuItems.map((item, index) => (
-            <li key={index} className={styles.menuItem}>
+          {filteredItems.map((item) => (
+            <li key={item.path} className={styles.menuItem}>
               <Link
                 to={item.path}
                 className={
-                  location.pathname === item.path
-                    ? `${styles.link} ${styles.active}`
-                    : styles.link
+                  location.pathname === item.path ? `${styles.link} ${styles.active}` : styles.link
                 }
               >
                 <span className={styles.icon}>{item.icon}</span>

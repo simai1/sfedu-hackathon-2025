@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--blue-500);
+  background-color: var(--profile-bg);
   padding: 1rem 1.5rem;
   border-radius: 0.75rem;
   margin-bottom: 2rem;
@@ -17,7 +17,7 @@
       height: 40px;
       border-radius: 50%;
       overflow: hidden;
-      background-color: var(--black-400);
+      background-color: var(--profile-card-bg);
       padding: 5px;
       box-sizing: border-box;
       display: flex;
@@ -32,16 +32,36 @@
 
     .userDetails {
       .userName {
-        color: #f3f4f6;
+        color: var(--profile-text);
         font-size: 1.1rem;
         font-weight: 600;
         margin: 0;
       }
 
       .userEmail {
-        color: #9ca3af;
+        color: var(--profile-text-secondary);
         font-size: 0.9rem;
         margin: 0;
+      }
+
+      .userMeta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.35rem;
+      }
+
+      .roleBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background-color: var(--profile-input-bg);
+        border: 1px solid var(--profile-border);
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        color: var(--profile-text);
+        font-size: 0.8rem;
+        text-transform: capitalize;
       }
     }
   }
@@ -49,7 +69,7 @@
   .connectionInfo {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 
     .tokenContainer {
       display: flex;
@@ -57,20 +77,20 @@
       gap: 0.5rem;
 
       .tokenLabel {
-        color: #9ca3af;
+        color: var(--profile-text-secondary);
         font-size: 0.9rem;
       }
 
       .tokenField {
         display: flex;
         align-items: center;
-        background-color: #111827;
-        border: 1px solid #4b5563;
+        background-color: var(--profile-input-bg);
+        border: 1px solid var(--profile-border);
         border-radius: 0.375rem;
         padding: 0.25rem;
 
         .tokenValue {
-          color: #f3f4f6;
+          color: var(--profile-text);
           font-family: monospace;
           font-size: 0.85rem;
           padding: 0 0.5rem;
@@ -85,13 +105,13 @@
           background-color: transparent;
           border: none;
           border-radius: 0.25rem;
-          color: #9ca3af;
+          color: var(--profile-text-secondary);
           cursor: pointer;
           transition: all 0.2s ease;
 
           &:hover {
-            background-color: #374151;
-            color: #f3f4f6;
+            background-color: var(--profile-hover-bg);
+            color: var(--profile-text);
           }
         }
       }
@@ -109,22 +129,105 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
+        position: relative;
+        transition: all 0.3s ease;
 
         &.connected {
-          background-color: #10b981;
-          color: #111827;
+          background-color: var(--green-500);
+          color: var(--black-500);
+          animation: pulseGreen 2s ease-in-out infinite;
+        }
+
+        &.connecting {
+          background-color: #f59e0b; // Желтый цвет
+          color: var(--white-500);
+          animation: pulseYellow 1.5s ease-in-out infinite;
         }
 
         &.disconnected {
-          background-color: #ef4444;
-          color: #f3f4f6;
+          background-color: var(--red-500);
+          color: var(--white-500);
+          animation: pulseRed 2s ease-in-out infinite;
+        }
+
+        &.error {
+          background-color: var(--red-500);
+          color: var(--white-500);
+          animation: pulseRed 1s ease-in-out infinite;
+        }
+
+        .spinning {
+          animation: spin 1s linear infinite;
         }
       }
 
       .statusText {
-        color: #f3f4f6;
+        color: var(--profile-text);
         font-size: 0.9rem;
+        transition: color 0.3s ease;
       }
     }
+
+    .helpButton {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: transparent;
+      border: 1px solid var(--profile-border);
+      border-radius: 0.5rem;
+      color: var(--profile-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: var(--profile-hover-bg);
+        color: var(--profile-text);
+        border-color: var(--purple-400);
+      }
+    }
+  }
+}
+
+@keyframes pulseGreen {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes pulseYellow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulseRed {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

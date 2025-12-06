@@ -1,21 +1,51 @@
 import styles from "./UploadFile.module.scss";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, X, Play, FileVideo } from "lucide-react";
 
-function UploadFile() {
+interface UploadFileProps {
+  onFileSelect?: (file: File | null) => void;
+}
+
+function UploadFile({ onFileSelect }: UploadFileProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Создаем превью видео
+  useEffect(() => {
+    if (selectedFile && selectedFile.type.startsWith("video/")) {
+      const url = URL.createObjectURL(selectedFile);
+      setVideoPreview(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setVideoPreview(null);
+    }
+  }, [selectedFile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    setSelectedFile(file);
+    if (file && file.type.startsWith("video/")) {
+      setSelectedFile(file);
+      if (onFileSelect) {
+        onFileSelect(file);
+      }
+    }
   };
 
   const handleRemoveFile = (event: React.MouseEvent) => {
-    event.stopPropagation(); // Предотвращаем всплытие события
+    event.stopPropagation();
     setSelectedFile(null);
+    setVideoPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (onFileSelect) {
+      onFileSelect(null);
     }
   };
 
@@ -35,124 +65,116 @@ function UploadFile() {
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
       const file = files[0];
-      // Проверяем, является ли файл видео
       if (file.type.startsWith("video/")) {
         setSelectedFile(file);
+        if (onFileSelect) {
+          onFileSelect(file);
+        }
       }
     }
   };
 
   const triggerFileSelect = () => {
-    // if (fileInputRef.current) {
-    //   fileInputRef.current.click();
-    // }
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
   return (
     <div className={styles.UploadFile}>
-      <div
-        className={`${styles.header} ${isDragOver ? styles.dragOver : ""}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-          <g
-            id="SVGRepo_tracerCarrier"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></g>
-          <g id="SVGRepo_iconCarrier">
-            <path
-              d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10C19.2091 10 21 11.7909 21 14C21 15.4806 20.1956 16.8084 19 17.5M7 10C4.79086 10 3 11.7909 3 14C3 15.4806 3.8044 16.8084 5 17.5M7 10C7.43285 10 7.84965 10.0688 8.24006 10.1959M12 12V21M12 12L15 15M12 12L9 15"
-              stroke="#000000"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>{" "}
-          </g>
-        </svg>{" "}
-        <p className={styles.description}>
-          {selectedFile
-            ? selectedFile.name
-            : isDragOver
-            ? "Drop video here"
-            : "Browse File to upload!"}
-        </p>
-      </div>
-      <div className={styles.footerContainer}>
-        <label
-          htmlFor="file"
-          className={styles.footer}
+      {!selectedFile ? (
+        // Состояние загрузки
+        <div
+          className={`${styles.uploadArea} ${isDragOver ? styles.dragOver : ""}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           onClick={triggerFileSelect}
         >
-          <svg
-            fill="#000000"
-            viewBox="0 0 32 32"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-            <g
-              id="SVGRepo_tracerCarrier"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></g>
-            <g id="SVGRepo_iconCarrier">
-              <path d="M15.331 6H8.5v20h15V14.154h-8.169z"></path>
-              <path d="M18.153 6h-.009v5.342H23.5v-.002z"></path>
-            </g>
-          </svg>
-          <p className={styles.fileName}>
-            {selectedFile ? selectedFile.name : "Загрузить файл"}
-          </p>
-        </label>
-        {selectedFile && (
+          <div className={styles.uploadContent}>
+            <div className={styles.uploadIcon}>
+              <Upload size={48} />
+            </div>
+            <h3 className={styles.uploadTitle}>
+              {isDragOver ? "Отпустите файл здесь" : "Загрузите видео файл"}
+            </h3>
+            <p className={styles.uploadDescription}>
+              Перетащите файл сюда или нажмите для выбора
+            </p>
+            <div className={styles.uploadHint}>
+              <FileVideo size={16} />
+              <span>Поддерживаются видео файлы</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Состояние с выбранным файлом
+        <div className={styles.filePreview}>
+          <div className={styles.previewHeader}>
+            <div className={styles.fileInfo}>
+              <FileVideo size={20} />
+              <div className={styles.fileDetails}>
+                <p className={styles.fileName}>{selectedFile.name}</p>
+                <p className={styles.fileSize}>{formatFileSize(selectedFile.size)}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveFile}
+              className={styles.removeButton}
+              title="Удалить файл"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {videoPreview && (
+            <div className={styles.videoPreview}>
+              <video
+                ref={videoRef}
+                src={videoPreview}
+                controls
+                className={styles.video}
+                preload="metadata"
+              />
+              <div className={styles.videoOverlay}>
+                <button
+                  type="button"
+                  className={styles.playButton}
+                  onClick={() => videoRef.current?.play()}
+                >
+                  <Play size={24} fill="currentColor" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={handleRemoveFile}
-            className={styles.removeButton}
+            onClick={triggerFileSelect}
+            className={styles.changeFileButton}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                {" "}
-                <path
-                  d="M5.16565 10.1534C5.07629 8.99181 5.99473 8 7.15975 8H16.8402C18.0053 8 18.9237 8.9918 18.8344 10.1534L18.142 19.1534C18.0619 20.1954 17.193 21 16.1479 21H7.85206C6.80699 21 5.93811 20.1954 5.85795 19.1534L5.16565 10.1534Z"
-                  stroke="#000000"
-                  stroke-width="2"
-                ></path>{" "}
-                <path
-                  d="M19.5 5H4.5"
-                  stroke="#000000"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                ></path>{" "}
-                <path
-                  d="M10 3C10 2.44772 10.4477 2 11 2H13C13.5523 2 14 2.44772 14 3V5H10V3Z"
-                  stroke="#000000"
-                  stroke-width="2"
-                ></path>{" "}
-              </g>
-            </svg>
+            <Upload size={16} />
+            Выбрать другой файл
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
       <input
         id="file"
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="video/*"
+        className={styles.hiddenInput}
       />
     </div>
   );
