@@ -42,8 +42,21 @@ def upgrade() -> None:
         sa.UniqueConstraint('group_id', 'user_id', name='uq_group_member')
     )
 
+    op.create_table(
+        'group_sessions',
+        sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+        sa.Column('group_id', sa.UUID(), nullable=False),
+        sa.Column('video_id', sa.UUID(), nullable=False),
+        sa.Column('video_name', sa.String(length=255), nullable=True),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now())"), nullable=False),
+        sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['video_id'], ['videos.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+    )
+
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_table('group_sessions')
     op.drop_table('group_members')
     op.drop_table('groups')

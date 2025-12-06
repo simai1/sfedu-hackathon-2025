@@ -185,6 +185,11 @@ function GroupCard({ group, orgMembers, onAddMember, onAddSession, onAnalyze }: 
                   <div key={session.id} className={styles.sessionItem}>
                     <div className={styles.sessionInfo}>
                       <span className={styles.sessionName}>{session.videoName}</span>
+                      {session.videoUrl && (
+                        <a className={styles.watchLink} href={session.videoUrl} target="_blank" rel="noreferrer">
+                          Смотреть
+                        </a>
+                      )}
                       <span className={styles.sessionStats}>
                         Просмотрели: {session.watchedCount} / {session.totalMembers}
                       </span>

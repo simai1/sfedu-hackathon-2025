@@ -4,9 +4,10 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.group import Group, GroupMember, CreateGroup
-from app.models.group import GroupModel, GroupMemberModel
+from app.domains.group import Group, GroupMember, CreateGroup, GroupSession
+from app.models.group import GroupModel, GroupMemberModel, GroupSessionModel
 from app.models.user import UserModel
+from app.models.video import VideoModel
 
 
 class GroupRepo:
@@ -63,4 +64,45 @@ class GroupRepo:
                 )
             )
         return members
+
+    async def add_session(self, group_id: uuid.UUID, video_id: uuid.UUID, video_name: str | None) -> GroupSession:
+        session_model = GroupSessionModel(
+            group_id=group_id,
+            video_id=video_id,
+            video_name=video_name,
+        )
+        self.session.add(session_model)
+        await self.session.commit()
+        await self.session.refresh(session_model)
+        video = await self.session.get(VideoModel, video_id)
+        return GroupSession(
+            id=session_model.id,
+            group_id=group_id,
+            video_id=video_id,
+            video_name=video_name or (video.url if video else None),
+            video_url=video.url if video else "",
+            created_at=session_model.created_at,
+        )
+
+    async def list_sessions(self, group_id: uuid.UUID) -> list[GroupSession]:
+        stmt = (
+            select(GroupSessionModel, VideoModel)
+            .join(VideoModel, VideoModel.id == GroupSessionModel.video_id)
+            .where(GroupSessionModel.group_id == group_id)
+        )
+        result = await self.session.execute(stmt)
+        rows = result.all()
+        sessions: list[GroupSession] = []
+        for session_model, video in rows:
+            sessions.append(
+                GroupSession(
+                    id=session_model.id,
+                    group_id=session_model.group_id,
+                    video_id=session_model.video_id,
+                    video_name=session_model.video_name or video.url,
+                    video_url=video.url,
+                    created_at=session_model.created_at,
+                )
+            )
+        return sessions
 

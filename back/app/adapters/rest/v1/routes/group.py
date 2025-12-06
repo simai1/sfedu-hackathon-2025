@@ -1,10 +1,10 @@
 import uuid
-from fastapi import APIRouter, Depends, Body, Path
+from fastapi import APIRouter, Depends, Body, Path, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
 
 from app.adapters.rest.v1.controllers.group import GroupController
 from app.composites.group_composite import get_controller
-from app.domains.group import Group, GroupWithMembers, CreateGroup, GroupMember
+from app.domains.group import Group, GroupWithMembers, CreateGroup, GroupMember, GroupSession
 
 router = APIRouter()
 
@@ -36,4 +36,15 @@ async def add_member(
     controller: GroupController = Depends(get_controller),
 ):
     return await controller.add_member(access_token=token, group_id=group_id, member_user_id=member_user_id)
+
+
+@router.post("/{group_id}/sessions", response_model=GroupSession)
+async def add_session(
+    group_id: uuid.UUID = Path(...),
+    file: UploadFile = File(...),
+    token: str = Depends(oauth2_scheme),
+    controller: GroupController = Depends(get_controller),
+):
+    content = await file.read()
+    return await controller.add_session(access_token=token, group_id=group_id, filename=file.filename, content=content)
 

@@ -23,6 +23,20 @@ class GroupMember(BaseModel):
     joined_at: datetime.datetime
 
 
+class GroupSession(BaseModel):
+    id: uuid.UUID
+    group_id: uuid.UUID
+    video_id: uuid.UUID
+    video_url: str
+    video_name: str | None = None
+    created_at: datetime.datetime
+
+
+class GroupWithMembers(Group):
+    members: list[GroupMember]
+    sessions: list[GroupSession] = []
+
+
 class GroupWithMembers(Group):
     members: list[GroupMember]
 

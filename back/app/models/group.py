@@ -70,3 +70,37 @@ class GroupMemberModel(Base):
             "joined_at": self.joined_at,
         }
 
+
+class GroupSessionModel(Base):
+    __tablename__ = "group_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        nullable=False,
+    )
+    group_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    video_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("videos.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    video_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        server_default=text("TIMEZONE('utc', now())"), nullable=False
+    )
+
+    def as_dict(self):
+        return {
+            "id": str(self.id),
+            "group_id": str(self.group_id),
+            "video_id": str(self.video_id),
+            "video_name": self.video_name,
+            "created_at": self.created_at,
+        }
+

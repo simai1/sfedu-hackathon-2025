@@ -19,3 +19,12 @@ export const apiAddGroupMember = async (groupId: string, memberUserId: string) =
   return response.data
 }
 
+export const apiAddGroupSession = async (groupId: string, file: File) => {
+  const formData = new FormData()
+  formData.append("file", file)
+  const response = await apiRequest("post", `${GROUPS_BASE}/${groupId}/sessions`, formData, {
+    "Content-Type": "multipart/form-data",
+  })
+  return response.data
+}
+

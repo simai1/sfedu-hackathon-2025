@@ -4,7 +4,7 @@ import { useUserStore, Role } from "../../../../store/userStore"
 import styles from "./Groups.module.scss"
 import CreateGroupModal from "./components/CreateGroupModal/CreateGroupModal"
 import GroupCard from "./components/GroupCard/GroupCard"
-import { apiCreateGroup, apiListGroups, apiAddGroupMember } from "../../../../api/groups"
+import { apiCreateGroup, apiListGroups, apiAddGroupMember, apiAddGroupSession } from "../../../../api/groups"
 import { getOrganizationMembers } from "../../../../api/organization"
 import { toast } from "react-toastify"
 
@@ -64,7 +64,15 @@ function Groups() {
           joined_at: m.joined_at,
           watched: false,
         })),
-        sessions: [],
+        sessions: (g.sessions || []).map((s: any) => ({
+          id: s.id,
+          videoUrl: s.video_url || s.videoUrl,
+          videoName: s.video_name || s.videoName || "Видео",
+          createdAt: s.created_at || s.createdAt,
+          watchedCount: 0,
+          totalMembers: (g.members?.length || 0),
+          canAnalyze: false,
+        })),
       }))
       setGroups(mappedGroups)
       setOrgMembers(membersResp || [])
@@ -119,7 +127,36 @@ function Groups() {
     }
   }
 
-  // Заглушка: пока сессии на бэке нет, оставляем обработчики без логики
+  const handleAddSession = async (groupId: string, file: File) => {
+    try {
+      const session = await apiAddGroupSession(groupId, file)
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                sessions: [
+                  ...g.sessions,
+                  {
+                    id: session.id,
+                    videoUrl: session.video_url || session.videoUrl,
+                    videoName: session.video_name || session.videoName || file.name,
+                    createdAt: session.created_at || session.createdAt,
+                    watchedCount: 0,
+                    totalMembers: g.members.length,
+                    canAnalyze: false,
+                  },
+                ],
+              }
+            : g
+        )
+      )
+      toast.success("Видео добавлено в группу")
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || "Не удалось добавить видео")
+    }
+  }
+
   const handleAnalyze = (groupId: string, sessionId: string) => {
     console.log("Запуск комплексного анализа для группы:", groupId, "сессии:", sessionId)
   }
@@ -159,10 +196,6 @@ function Groups() {
           <Users size={64} />
           <h2>Нет групп</h2>
           <p>Создайте первую группу для начала работы</p>
-          <button className={styles.createButton} onClick={() => setIsCreateModalOpen(true)}>
-            <Plus size={20} />
-            Создать группу
-          </button>
         </div>
       ) : (
         <div className={styles.groupsGrid}>
@@ -172,7 +205,7 @@ function Groups() {
               group={group}
               orgMembers={orgMembers}
               onAddMember={handleAddMember}
-              onAddSession={() => {}}
+              onAddSession={handleAddSession}
               onAnalyze={handleAnalyze}
             />
           ))}
