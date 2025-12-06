@@ -787,7 +787,7 @@ class TokenScreen(QMainWindow):
         self.connectButton.setEnabled(False)
         
         # Создаем WebSocket клиент
-        self.ws_client = WebSocketClient("ws://147.45.184.2:3000/ws/device")
+        self.ws_client = WebSocketClient("ws://5.129.252.186:3000/ws/device")
         self.ws_client.connected.connect(self.__on_websocket_connected)
         self.ws_client.disconnected.connect(self.__on_websocket_disconnected)
         self.ws_client.error.connect(self.__on_websocket_error)

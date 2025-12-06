@@ -13,7 +13,7 @@ class WebSocketClient(QObject):
     error = pyqtSignal(str)
     message_received = pyqtSignal(dict)
     
-    def __init__(self, url: str = "ws://147.45.184.2:3000/ws/device"):
+    def __init__(self, url: str = "ws://5.129.252.186:3000/ws/device"):
         super().__init__()
         self.url = url
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
