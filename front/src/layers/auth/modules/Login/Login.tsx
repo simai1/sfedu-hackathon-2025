@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import styles from "./Login.module.scss"
 import { loginEndpoint } from "../../../../api/login"
-import { useUserStore } from "../../../../store/userStore"
+import { Role, useUserStore } from "../../../../store/userStore"
 import { toast } from "react-toastify"
 
 interface LoginProps {
@@ -19,6 +19,13 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const { setToken, setUser } = useUserStore()
+
+  const normalizeRole = (role?: string) => {
+    if (!role) return Role.USER
+    const normalized = role.toLowerCase()
+    if (normalized === "organization") return Role.ORGANIZATION
+    return Role.USER
+  }
 
   // Функции для сброса ошибок при вводе
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +81,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
           id: response.id,
           name: response.name,
           email: response.email,
+          role: normalizeRole(response.role),
         })
 
         // Clear form and errors
@@ -108,16 +116,16 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
         <h2 className={styles.title}>Вход</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label htmlFor="username">Имя пользователя</label>
+            <label htmlFor="email">Логин</label>
             <input
               type="text"
-              id="username"
+              id="email"
               value={username}
               onChange={handleUsernameChange}
               className={`${styles.input} ${
                 errors.username ? styles.error : ""
               }`}
-              placeholder="Введите имя пользователя"
+              placeholder="Введите email"
             />
             {errors.username && (
               <span className={styles.errorMessage}>{errors.username}</span>

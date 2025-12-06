@@ -42,9 +42,9 @@ function Analysis() {
   const connectToSocket = () => {
     setTimeout(() => {
       setIsSocketConnected(true)
-      console.log("Соединение с сервером установлено")
     }, 1000)
   }
+  
   const generateScreenshotTriggers = (duration: number) => {
     const triggers: ScreenshotTrigger[] = []
     for (let time = 0; time < duration; time += 2) {
