@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText, ChartSpline } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
 
 interface MenuItem {
@@ -42,6 +42,11 @@ function LeftMenu() {
       path: "/profile/settings",
       icon: <Settings size={20} />,
     },
+    {
+      label: "Группы",
+      path: "/profile/groups",
+      icon: <Users size={20} />,
+    }
   ]
 
   return (
