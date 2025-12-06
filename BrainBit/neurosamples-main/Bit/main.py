@@ -3,7 +3,7 @@ import os
 import logging
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
-from PyQt6.QtCore import qInstallMessageHandler, QtMsgType
+from PyQt6.QtCore import qInstallMessageHandler, QtMsgType, QTimer
 from PyQt6.uic import loadUi
 from neurosdk.cmn_types import SensorState
 
@@ -692,6 +692,8 @@ class TokenScreen(QMainWindow):
         self.token = None
         self.ws_client = None
         self.calibration_data = {}  # Хранилище данных после калибровки
+        self.eeg_data_buffer = {}  # Буфер для накопления данных всех каналов
+        self.send_timer = None  # Таймер для отправки данных раз в секунду
         
         # Инициализируем UI элементы
         if hasattr(self, 'statusLabel'):
@@ -744,6 +746,11 @@ class TokenScreen(QMainWindow):
             
     def __on_websocket_disconnected(self):
         """Обработчик отключения"""
+        # Останавливаем таймер отправки данных
+        if self.send_timer:
+            self.send_timer.stop()
+            self.send_timer = None
+        
         if hasattr(self, 'statusLabel'):
             self.statusLabel.setText("Соединение разорвано")
         if hasattr(self, 'loadingProgressBar'):
@@ -752,6 +759,11 @@ class TokenScreen(QMainWindow):
         
     def __on_websocket_error(self, error_msg: str):
         """Обработчик ошибок"""
+        # Останавливаем таймер отправки данных
+        if self.send_timer:
+            self.send_timer.stop()
+            self.send_timer = None
+        
         if hasattr(self, 'errorLabel'):
             self.errorLabel.setText(f"Ошибка: {error_msg}")
         if hasattr(self, 'statusLabel'):
@@ -803,44 +815,84 @@ class TokenScreen(QMainWindow):
             original_mind_callback = controller.lastMindDataCallback
             original_spectral_callback = controller.lastSpectralDataCallback
             
-            def send_mind_data(data, channel):
+            # Инициализируем структуру данных для всех каналов
+            self.eeg_data_buffer = {
+                "channels": {
+                    "O1": {"mind": None, "spectral": None},
+                    "O2": {"mind": None, "spectral": None},
+                    "T3": {"mind": None, "spectral": None},
+                    "T4": {"mind": None, "spectral": None}
+                }
+            }
+            
+            def collect_mind_data(data, channel):
                 # Вызываем оригинальный callback
                 if original_mind_callback:
                     original_mind_callback(data, channel)
-                # Отправляем данные через WebSocket
-                if self.ws_client and self.ws_client.is_connected():
-                    eeg_data = {
-                        "type": "mind_data",
-                        "channel": channel,
-                        "attention": data.rel_attention,
-                        "relaxation": data.rel_relaxation,
-                        "inst_attention": data.inst_attention,
-                        "inst_relaxation": data.inst_relaxation
+                # Сохраняем данные в буфер
+                if channel in self.eeg_data_buffer["channels"]:
+                    self.eeg_data_buffer["channels"][channel]["mind"] = {
+                        "relative_attention": float(data.rel_attention),
+                        "relative_relaxation": float(data.rel_relaxation),
+                        "instant_attention": float(data.inst_attention),
+                        "instant_relaxation": float(data.inst_relaxation)
                     }
-                    self.ws_client.send_eeg_sample(eeg_data)
             
-            def send_spectral_data(spectral_data, channel):
+            def collect_spectral_data(spectral_data, channel):
                 # Вызываем оригинальный callback
                 if original_spectral_callback:
                     original_spectral_callback(spectral_data, channel)
-                # Отправляем данные через WebSocket
-                if self.ws_client and self.ws_client.is_connected():
-                    eeg_data = {
-                        "type": "spectral_data",
-                        "channel": channel,
-                        "delta": spectral_data.delta,
-                        "theta": spectral_data.theta,
-                        "alpha": spectral_data.alpha,
-                        "beta": spectral_data.beta,
-                        "gamma": spectral_data.gamma
+                # Сохраняем данные в буфер
+                if channel in self.eeg_data_buffer["channels"]:
+                    self.eeg_data_buffer["channels"][channel]["spectral"] = {
+                        "delta": float(spectral_data.delta),
+                        "theta": float(spectral_data.theta),
+                        "alpha": float(spectral_data.alpha),
+                        "beta": float(spectral_data.beta),
+                        "gamma": float(spectral_data.gamma)
                     }
-                    self.ws_client.send_eeg_sample(eeg_data)
             
             # Устанавливаем новые callback'и
-            controller.lastMindDataCallback = send_mind_data
-            controller.lastSpectralDataCallback = send_spectral_data
+            controller.lastMindDataCallback = collect_mind_data
+            controller.lastSpectralDataCallback = collect_spectral_data
+            
+            # Создаем таймер для отправки данных раз в секунду
+            self.send_timer = QTimer()
+            self.send_timer.timeout.connect(self.__send_eeg_data_periodically)
+            self.send_timer.start(1000)  # Отправляем каждую секунду (1000 мс)
+    
+    def __send_eeg_data_periodically(self):
+        """Периодическая отправка накопленных данных"""
+        if self.ws_client and self.ws_client.is_connected():
+            # Формируем читаемую структуру данных
+            eeg_sample = {
+                "channels": {}
+            }
+            
+            # Копируем данные из буфера, исключая None значения
+            for channel, channel_data in self.eeg_data_buffer["channels"].items():
+                channel_entry = {}
+                
+                if channel_data["mind"] is not None:
+                    channel_entry["mind"] = channel_data["mind"]
+                
+                if channel_data["spectral"] is not None:
+                    channel_entry["spectral"] = channel_data["spectral"]
+                
+                # Добавляем канал только если есть хотя бы одни данные
+                if channel_entry:
+                    eeg_sample["channels"][channel] = channel_entry
+            
+            # Отправляем только если есть данные
+            if eeg_sample["channels"]:
+                self.ws_client.send_eeg_sample(eeg_sample)
 
     def __close_screen(self):
+        # Останавливаем таймер отправки данных
+        if self.send_timer:
+            self.send_timer.stop()
+            self.send_timer = None
+        
         # Отключаемся от WebSocket при закрытии
         if self.ws_client:
             self.ws_client.stop()

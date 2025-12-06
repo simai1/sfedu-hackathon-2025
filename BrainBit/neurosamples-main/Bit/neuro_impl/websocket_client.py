@@ -73,7 +73,7 @@ class WebSocketClient(QObject):
         if self.worker:
             self.worker.send_message({
                 "type": "eeg_sample",
-                "data": json.dumps(data, ensure_ascii=False)
+                "data": data
             })
             
     def is_connected(self) -> bool:
