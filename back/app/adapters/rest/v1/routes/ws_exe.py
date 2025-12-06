@@ -21,10 +21,10 @@ async def device_ws(
         if first.get("type") != "pair":
             await websocket.close(code=4000)
             return
-# {
-#   "type": "paired",
-#   "pair_token": "553f6cef-cf9e-4ad6-90ba-f75aaccf4b57"
-# }
+        # {
+        #   "type": "paired",
+        #   "pair_token": "553f6cef-cf9e-4ad6-90ba-f75aaccf4b57"
+        # }
         pair_token = first.get("pair_token")
         pair_token_data = await controller.validate(pair_token)
 

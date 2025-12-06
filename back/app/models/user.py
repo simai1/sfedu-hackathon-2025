@@ -25,6 +25,8 @@ class UserModel(Base):
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
+    role: Mapped[str] = mapped_column(String(255), nullable=True)
+
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
     users_pair_tokens: Mapped[list["PairTokenModel"]] = relationship(back_populates="user")
@@ -43,6 +45,7 @@ class UserModel(Base):
             "id": str(self.id),
             "name": self.name,
             "email": self.email,
+            "role": self.role,
             "password_hash": self.password_hash,
             "created_at": self.created_at,
             "updated_at": self.updated_at,

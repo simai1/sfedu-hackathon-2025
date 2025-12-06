@@ -20,6 +20,7 @@ class UserService():
             id=user.id,
             name=user.name,
             email=user.email,
+            role=user.role,
             token=token,
             )
 
@@ -34,6 +35,7 @@ class UserService():
             id=user.id,
             name=user.name,
             email=user.email,
+            role=user.role,
             token=token,
             )
 

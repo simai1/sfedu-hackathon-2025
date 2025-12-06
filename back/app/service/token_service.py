@@ -16,6 +16,7 @@ class TokenService():
         now = datetime.datetime.now(datetime.timezone.utc)
         payload = Payload(
             sub=str(user.id),
+            role=user.role,
             iat=now,
             exp=now + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
