@@ -114,6 +114,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
         const response = await registerEndpoint({ name, email, password, role })
         console.log("Register response:", response)
 
+        // Set token and user data in the store (persist middleware автоматически сохранит в localStorage)
         setToken(response.token)
         setUser({
           id: response.id,
@@ -123,11 +124,12 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
             response.role || (isOrganization ? Role.ORGANIZATION : Role.USER), // Добавляем роль в пользовательские данные
         })
 
+        // Clear form and errors
         setName("")
         setEmail("")
         setPassword("")
         setConfirmPassword("")
-        setIsOrganization(false)
+        setIsOrganization(false) // Сбрасываем чекбокс
         setErrors({
           name: "",
           email: "",
@@ -135,6 +137,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
           confirmPassword: "",
         })
 
+        // Редирект в профиль
         toast.success("Регистрация успешна!")
         navigate("/profile")
       } catch (error: any) {

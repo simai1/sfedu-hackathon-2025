@@ -43,26 +43,6 @@
         font-size: 0.9rem;
         margin: 0;
       }
-
-      .userMeta {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.35rem;
-      }
-
-      .roleBadge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background-color: var(--profile-input-bg);
-        border: 1px solid var(--profile-border);
-        border-radius: 0.5rem;
-        padding: 0.25rem 0.6rem;
-        color: var(--profile-text);
-        font-size: 0.8rem;
-        text-transform: capitalize;
-      }
     }
   }
 

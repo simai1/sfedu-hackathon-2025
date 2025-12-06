@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { Copy, Wifi, WifiOff, Loader2, HelpCircle, Building2 } from "lucide-react"
+import { Copy, Wifi, WifiOff, Loader2, HelpCircle } from "lucide-react"
 import styles from "./ProfileHeader.module.scss"
 import { User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { Role, useUserStore } from "../../../../store/userStore"
+import { useUserStore } from "../../../../store/userStore"
 import { usePairToken } from "../../../../hooks/usePairToken"
 import { useWebSocketStore } from "../../../../store/websocketStore"
 import HelpModal from "../../../../core/components/HelpModal/HelpModal"
@@ -65,20 +65,11 @@ function ProfileHeader() {
           }}
         >
           <div className={styles.avatar}>
-            {
-              user?.role === Role.ORGANIZATION ? <Building2 size={40} /> : <User size={40} />
-            }
+            <User size={40} />
           </div>
           <div className={styles.userDetails}>
             <h3 className={styles.userName}>{user?.name || "Пользователь"}</h3>
             <p className={styles.userEmail}>{user?.email || ""}</p>
-            <div className={styles.userMeta}>
-              {user?.role === Role.ORGANIZATION && (
-                <span className={styles.roleBadge}>
-                  Организация
-                </span>
-              )}
-            </div>
           </div>
         </div>
 

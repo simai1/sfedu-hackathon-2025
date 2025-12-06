@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { Plus, Users } from "lucide-react"
-import { useUserStore } from "../../../../store/userStore"
+import { useUserStore, Role } from "../../../../store/userStore"
 import styles from "./Groups.module.scss"
 import CreateGroupModal from "./components/CreateGroupModal/CreateGroupModal"
 import GroupCard from "./components/GroupCard/GroupCard"
-import { uploadVideo } from "../../../../api/files"
 
 export interface GroupMember {
   id: string
@@ -37,7 +36,6 @@ export interface Group {
 function Groups() {
   const { user } = useUserStore()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const [groups, setGroups] = useState<Group[]>([
     {
       id: "1",
@@ -63,6 +61,8 @@ function Groups() {
       ],
     },
   ])
+
+  const isOrganization = user?.role === Role.ORGANIZATION
 
   const handleCreateGroup = (groupData: { name: string; description: string }) => {
     const newGroup: Group = {
@@ -97,42 +97,32 @@ function Groups() {
     )
   }
 
-  const handleAddSession = async (groupId: string, videoFile: File) => {
+  const handleAddSession = (groupId: string, videoFile: File) => {
     const group = groups.find((g) => g.id === groupId)
     if (!group) return
 
-    try {
-      setIsUploading(true)
-      const response = await uploadVideo(videoFile)
-      const data = response?.data
-
-      const totalMembers = group.members.length
-      const newSession: GroupSession = {
-        id: data?.id || Date.now().toString(),
-        videoUrl: data?.url || data?.video_url || "",
-        videoName: videoFile.name,
-        createdAt: new Date().toISOString(),
-        watchedCount: 0,
-        totalMembers,
-        canAnalyze: false,
-      }
-
-      setGroups(
-        groups.map((g) => {
-          if (g.id === groupId) {
-            return {
-              ...g,
-              sessions: [...g.sessions, newSession],
-            }
-          }
-          return g
-        })
-      )
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsUploading(false)
+    const videoUrl = URL.createObjectURL(videoFile)
+    const totalMembers = group.members.length
+    const newSession: GroupSession = {
+      id: Date.now().toString(),
+      videoUrl,
+      videoName: videoFile.name,
+      createdAt: new Date().toISOString(),
+      watchedCount: 0,
+      totalMembers,
+      canAnalyze: false,
     }
+    setGroups(
+      groups.map((g) => {
+        if (g.id === groupId) {
+          return {
+            ...g,
+            sessions: [...g.sessions, newSession],
+          }
+        }
+        return g
+      })
+    )
   }
 
   const handleAnalyze = (groupId: string, sessionId: string) => {
@@ -183,7 +173,6 @@ function Groups() {
               onAddMember={handleAddMember}
               onAddSession={handleAddSession}
               onAnalyze={handleAnalyze}
-              isUploading={isUploading}
             />
           ))}
         </div>

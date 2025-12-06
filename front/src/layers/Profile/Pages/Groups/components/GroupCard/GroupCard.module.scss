@@ -152,9 +152,6 @@
 .submitSmallButton {
   background: linear-gradient(135deg, var(--purple-500), var(--purple-400));
   color: white;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -164,10 +161,6 @@
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .loader {
-    animation: spin 1s linear infinite;
   }
 }
 

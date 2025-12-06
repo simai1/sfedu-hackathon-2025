@@ -33,16 +33,6 @@
         display: flex;
         justify-content: center;
       }
-
-      .uploadStatus {
-        color: var(--profile-text-secondary);
-        font-size: 0.95rem;
-      }
-
-      .uploadError {
-        color: var(--red-500);
-        font-size: 0.95rem;
-      }
     }
 
     // Секция готовности
@@ -72,7 +62,6 @@
           .statusDot {
             background-color: var(--green-500);
             animation: pulse 2s infinite;
-            margin-right: 8px;
           }
         }
 
@@ -358,7 +347,7 @@
 
       .startButton {
         background-color: var(--green-500);
-        color: var(--black-500);
+        color: var(--white-500);
 
         &:hover:not(:disabled) {
           background-color: var(--green-400);

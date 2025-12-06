@@ -15,28 +15,28 @@
     transform: translateY(-2px);
   }
 
-  .thumbnailContainer {
-    position: relative;
-    flex-shrink: 0;
-    width: 200px;
-    height: 120px;
-    border-radius: 0.5rem;
-    overflow: hidden;
+    .thumbnailContainer {
+      position: relative;
+      flex-shrink: 0;
+      width: 200px;
+      height: 120px;
+      border-radius: 0.5rem;
+      overflow: hidden;
       background-color: var(--profile-card-bg);
 
-    .thumbnail {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+      .thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
       .emptyState {
-      width: 100%;
-      height: 100%;
-      display: flex;
+        width: 100%;
+        height: 100%;
+        display: flex;
         flex-direction: column;
-      align-items: center;
-      justify-content: center;
+        align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         color: var(--profile-text-muted);
         background-color: var(--profile-card-bg);
@@ -50,19 +50,19 @@
           font-weight: 500;
           color: var(--profile-text-secondary);
         }
-    }
+      }
 
-    .duration {
-      position: absolute;
-      bottom: 0.5rem;
-      right: 0.5rem;
+      .duration {
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
         background-color: var(--profile-card-bg);
         color: var(--profile-text);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
 
     .status {
       position: absolute;
