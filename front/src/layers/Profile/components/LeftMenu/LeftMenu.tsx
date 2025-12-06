@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users, MessageCircle } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
 import { Role, useUserStore } from "../../../../store/userStore"
 
@@ -20,6 +20,11 @@ function LeftMenu() {
       label: "Профиль",
       path: "/profile",
       icon: <User size={20} />,
+    },
+    {
+      label: "Нейро помощник",
+      path: "/profile/assistant",
+      icon: <MessageCircle size={20} />,
     },
     {
       label: "Группы",

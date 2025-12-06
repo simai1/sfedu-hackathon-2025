@@ -795,9 +795,7 @@ function Analysis() {
               </div>
             )}
 
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
+           
 
             <div className={styles.actionButtons}>
               <button
@@ -810,6 +808,10 @@ function Analysis() {
               <button className={styles.resetButton} onClick={handleReset}>
                 Загрузить другое видео
               </button>
+            </div>
+
+            <div className={styles.chartContainer}>
+              <KeyIndicators />
             </div>
           </div>
         )}

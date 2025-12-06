@@ -77,9 +77,6 @@ function ProfileHeader() {
                   Организация
                 </span>
               )}
-              {user?.role !== Role.ORGANIZATION && user?.role && (
-                <span className={styles.roleBadge}>{user.role}</span>
-              )}
             </div>
           </div>
         </div>
