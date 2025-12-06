@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class PendingFrame:
-    timestamp: str
+    timecode: str
     relaxation: float
     concentration: float
 
@@ -50,9 +50,9 @@ class EngagementTracker:
             return None
 
         if concentration >= last * (1 + self.spike_threshold):
-            ts = str(int(time.time() * 1000))
-            frame = PendingFrame(timestamp=ts, relaxation=relaxation, concentration=concentration)
-            state.pending_frames[ts] = frame
+            tc = str(int(time.time() * 1000))
+            frame = PendingFrame(timecode=tc, relaxation=relaxation, concentration=concentration)
+            state.pending_frames[tc] = frame
             return frame
 
         return None
@@ -60,7 +60,7 @@ class EngagementTracker:
     def attach_video_frame(
         self,
         user_id: str,
-        timestamp: str,
+        timecode: str,
         video_id: uuid.UUID,
         screenshot_url: str,
     ) -> tuple[float, float, str, uuid.UUID, str] | None:
@@ -68,11 +68,11 @@ class EngagementTracker:
         if not state:
             return None
 
-        frame = state.pending_frames.pop(timestamp, None)
+        frame = state.pending_frames.pop(timecode, None)
         if not frame:
             return None
 
-        return frame.relaxation, frame.concentration, frame.timestamp, video_id, screenshot_url
+        return frame.relaxation, frame.concentration, frame.timecode, video_id, screenshot_url
 
     def _aggregate(self, sample: dict) -> tuple[float, float] | None:
         channels = sample.get("channels") or {}

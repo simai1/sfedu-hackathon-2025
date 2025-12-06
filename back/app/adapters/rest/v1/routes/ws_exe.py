@@ -85,12 +85,12 @@ async def device_ws(
                 frame = engagement_tracker.handle_sample(user_id, eeg_data)
                 if frame:
                     logger.debug(
-                        "Device WS: engagement frame detected user_id=%s timestamp=%s",
-                        user_id, frame.timestamp
+                        "Device WS: engagement frame detected user_id=%s timecode=%s",
+                        user_id, frame.timecode
                     )
                     await manager.send_to_clients(user_id, {
                         "type": "request_screenshot",
-                        "timestamp": frame.timestamp,
+                        "timecode": frame.timecode,
                     })
 
     except WebSocketDisconnect:
@@ -141,11 +141,11 @@ async def client_ws(
                 logger.debug("Client WS: video tracking ended user_id=%s", user_id)
                 await websocket.send_json({"type": "video_tracking_ended"})
             elif msg_type == "video_frame":
-                timestamp_raw = message.get("timestamp")
+                timecode_raw = message.get("timecode")
                 video_id_raw = message.get("video_id")
                 screenshot_url = message.get("screenshot_url")
 
-                if timestamp_raw is None or not video_id_raw or not screenshot_url:
+                if timecode_raw is None or not video_id_raw or not screenshot_url:
                     logger.debug(
                         "Client WS: video_frame missing fields user_id=%s payload=%s",
                         user_id, message
@@ -153,10 +153,10 @@ async def client_ws(
                     await websocket.send_json({"type": "error", "message": "video_frame missing fields"})
                     continue
 
-                timestamp = str(timestamp_raw)
+                timecode = str(timecode_raw)
                 video_id = uuid.UUID(video_id_raw)
                 stored = engagement_tracker.attach_video_frame(
-                    user_id, timestamp, video_id, screenshot_url
+                    user_id, timecode, video_id, screenshot_url
                 )
                 if stored:
                     relaxation, concentration, timecode, video_id, screenshot_url = stored
@@ -177,10 +177,10 @@ async def client_ws(
                     })
                 else:
                     logger.debug(
-                        "Client WS: timestamp not pending user_id=%s timestamp=%s",
-                        user_id, timestamp
+                        "Client WS: timecode not pending user_id=%s timecode=%s",
+                        user_id, timecode
                     )
-                    await websocket.send_json({"type": "error", "message": "timestamp not pending"})
+                    await websocket.send_json({"type": "error", "message": "timecode not pending"})
             else:
                 logger.debug("Client WS: unknown message type user_id=%s payload=%s", user_id, message)
                 await websocket.send_json({"type": "error", "message": "unknown message type"})
