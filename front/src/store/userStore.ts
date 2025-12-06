@@ -11,6 +11,8 @@ export interface User {
   name: string
   email: string
   role?: Role
+  organizationCode?: string | null
+  organizationName?: string | null
 }
 
 interface UserStore {
@@ -27,6 +29,14 @@ interface UserStore {
     password: string
     role: string
   }) => Promise<void>
+  linkToOrganization: (code: string) => Promise<{ success: boolean; organizationName: string }>
+}
+
+const mapBackendRole = (role?: string): Role => {
+  if (!role) return Role.USER
+  const normalized = role.toLowerCase()
+  if (normalized === "organization") return Role.ORGANIZATION
+  return Role.USER
 }
 
 export const useUserStore = create<UserStore>()(
@@ -72,9 +82,31 @@ export const useUserStore = create<UserStore>()(
             id: "1",
             name: userData.username,
             email: userData.email,
-            role: Role.USER,
+            role: mapBackendRole(userData.role),
           },
         })
+      },
+      linkToOrganization: async (code: string) => {
+        const normalizedCode = code.trim()
+        if (!normalizedCode) {
+          throw new Error("Код организации не может быть пустым")
+        }
+
+        const organizationName = `Организация ${normalizedCode.slice(-4)}`
+
+        set((state) => {
+          if (!state.user) return state
+          return {
+            ...state,
+            user: {
+              ...state.user,
+              organizationCode: normalizedCode,
+              organizationName,
+            },
+          }
+        })
+
+        return { success: true, organizationName }
       },
     }),
     {

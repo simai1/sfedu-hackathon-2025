@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import styles from "./Login.module.scss"
 import { loginEndpoint } from "../../../../api/login"
-import { useUserStore } from "../../../../store/userStore"
+import { Role, useUserStore } from "../../../../store/userStore"
 import { toast } from "react-toastify"
 
 interface LoginProps {
@@ -19,6 +19,13 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const { setToken, setUser } = useUserStore()
+
+  const normalizeRole = (role?: string) => {
+    if (!role) return Role.USER
+    const normalized = role.toLowerCase()
+    if (normalized === "organization") return Role.ORGANIZATION
+    return Role.USER
+  }
 
   // Функции для сброса ошибок при вводе
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +81,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
           id: response.id,
           name: response.name,
           email: response.email,
+          role: normalizeRole(response.role),
         })
 
         // Clear form and errors
