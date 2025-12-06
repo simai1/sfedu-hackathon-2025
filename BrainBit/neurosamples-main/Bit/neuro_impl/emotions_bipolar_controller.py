@@ -31,7 +31,10 @@ class EmotionBipolar:
         self.__math.set_calibration_length(self.calibration_length)
         self.__math.set_mental_estimation_mode(False)
         self.__math.set_skip_wins_after_artifact(nwins_skip_after_artifact)
-        self.__math.set_zero_spect_waves(True, 1, 1, 1, 1, 1)
+        # Для расчетов ментальных уровней (концентрация и расслабленность) 
+        # SDK рекомендует обнулять дельту и гамму, используя только тета, альфа и бета
+        # Параметры: (active, delta, theta, alpha, beta, gamma)
+        self.__math.set_zero_spect_waves(True, 0, 1, 1, 1, 0)
         self.__math.set_spect_normalization_by_bands_width(True)
 
         self.__is_calibrated = False

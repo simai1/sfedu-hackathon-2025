@@ -34,7 +34,10 @@ class EmotionMonopolar:
             self.__maths[BB_channels[i]].set_calibration_length(calibration_length)
             self.__maths[BB_channels[i]].set_mental_estimation_mode(False)
             self.__maths[BB_channels[i]].set_skip_wins_after_artifact(nwins_skip_after_artifact)
-            self.__maths[BB_channels[i]].set_zero_spect_waves(True, 1, 1, 1, 1, 1)
+            # Для расчетов ментальных уровней (концентрация и расслабленность) 
+            # SDK рекомендует обнулять дельту и гамму, используя только тета, альфа и бета
+            # Параметры: (active, delta, theta, alpha, beta, gamma)
+            self.__maths[BB_channels[i]].set_zero_spect_waves(True, 0, 1, 1, 1, 0)
             self.__maths[BB_channels[i]].set_spect_normalization_by_bands_width(True)
 
         self.__is_calibrated = {'O1': False, 'O2': False, 'T3': False, 'T4': False}
