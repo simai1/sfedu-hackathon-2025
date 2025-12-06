@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  max-width: calc(100vw - 300px);
+  box-sizing: border-box;
 
   .analysis {
     background-color: var(--profile-bg);
@@ -204,6 +206,7 @@
       .screenshotsScrollContainer {
         margin-top: 1rem;
         width: 100%;
+        max-width: calc(100vw - 300px);
         overflow: hidden;
 
         .screenshotsTitle {
@@ -301,7 +304,7 @@
             width: 100%;
             height: 300px;
             min-height: 300px;
-            
+
             > div {
               width: 100% !important;
               height: 300px !important;
@@ -595,7 +598,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

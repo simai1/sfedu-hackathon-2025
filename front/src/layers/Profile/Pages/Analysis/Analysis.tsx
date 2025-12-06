@@ -224,11 +224,23 @@ function Analysis() {
             // Создаем скриншот в любом случае (для отображения пользователю)
             // captureScreenshot() автоматически вызовет onScreenshot callback,
             // который добавит скриншот в capturedScreenshots
+
+            // Получаем timecode СРАЗУ, до создания скриншота, чтобы зафиксировать точное время
+            const currentVideoTime =
+              videoPlayerRef.current?.getCurrentTime() || 0;
+            const timecode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
+
+            console.log("Таймкод видео (до создания скриншота):", {
+              currentVideoTime,
+              timecode,
+            });
+
             const imageData = videoPlayerRef.current.captureScreenshot();
             console.log("Результат captureScreenshot:", {
               hasImageData: !!imageData,
               imageDataLength: imageData?.length || 0,
               currentScreenshotsCount: capturedScreenshots.length,
+              timecode,
             });
 
             if (!imageData) {
@@ -243,7 +255,9 @@ function Analysis() {
 
             console.log(
               "Скриншот успешно создан, imageData длина:",
-              imageData.length
+              imageData.length,
+              "timecode:",
+              timecode
             );
 
             // Используем ref для получения актуального значения uploadedVideoId
@@ -264,6 +278,7 @@ function Analysis() {
                   "=== Начинаем загрузку фото на сервер через /v1/photos ==="
                 );
                 console.log("imageData длина:", imageData.length);
+                console.log("timecode:", timecode);
                 console.log(
                   "uploadedVideoId (из ref):",
                   uploadedVideoIdRef.current
@@ -310,24 +325,14 @@ function Analysis() {
 
                 console.log("=== Photo URL получен ===");
                 console.log("screenshotUrl:", screenshotUrl);
-
-                // Получаем текущее время видео для time_code
-                const currentVideoTime =
-                  videoPlayerRef.current?.getCurrentTime() || 0;
-                const timeCode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
-
-                console.log("Таймкод видео:", {
-                  currentVideoTime,
-                  timeCode,
-                });
+                console.log("timecode для отправки:", timecode);
 
                 // Отправляем video_frame на сервер
                 const videoFrameMessage = {
                   type: "video_frame",
-                  timestamp: timestamp.toString(),
+                  timecode: timecode,
                   video_id: currentVideoId,
                   screenshot_url: screenshotUrl,
-                  time_code: timeCode,
                 };
 
                 console.log("=== Отправка video_frame в WebSocket ===");
