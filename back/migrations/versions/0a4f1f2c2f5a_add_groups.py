@@ -1,7 +1,7 @@
 """add groups
 
 Revision ID: 0a4f1f2c2f5a
-Revises: 5c96f6da3dd6
+Revises: 8e5dccee861b
 Create Date: 2025-12-06 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '0a4f1f2c2f5a'
-down_revision: Union[str, Sequence[str], None] = '5c96f6da3dd6'
+down_revision: Union[str, Sequence[str], None] = '8e5dccee861b'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -47,4 +47,3 @@ def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table('group_members')
     op.drop_table('groups')
-
