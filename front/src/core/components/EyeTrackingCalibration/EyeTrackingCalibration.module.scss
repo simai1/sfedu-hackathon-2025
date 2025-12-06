@@ -1,0 +1,133 @@
+.calibrationContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  color: var(--white-500);
+
+  .calibrationHeader {
+    text-align: center;
+    margin-bottom: 3rem;
+    z-index: 1;
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--white-500);
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: var(--white-400);
+      margin-bottom: 2rem;
+    }
+
+    .progressBar {
+      width: 300px;
+      height: 8px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0 auto 1rem;
+
+      .progressFill {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--purple-500),
+          var(--purple-400)
+        );
+        transition: width 0.3s ease;
+      }
+    }
+
+    .progressText {
+      font-size: 0.9rem;
+      color: var(--white-300);
+      margin: 0;
+    }
+  }
+
+  .calibrationPoint {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid var(--white-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+
+    &.collecting {
+      border-color: var(--green-500);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+      animation: pulse 1s infinite;
+
+      .pointInner {
+        background-color: var(--green-500);
+      }
+    }
+
+    .pointInner {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: var(--white-500);
+      transition: background-color 0.3s ease;
+    }
+  }
+
+  .cancelButton {
+    position: absolute;
+    bottom: 2rem;
+    padding: 0.75rem 2rem;
+    background-color: var(--red-500);
+    color: var(--white-500);
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 3;
+
+    &:hover {
+      background-color: var(--red-400);
+      transform: translateY(-2px);
+    }
+  }
+
+  .instructions {
+    position: absolute;
+    bottom: 6rem;
+    text-align: center;
+    z-index: 1;
+
+    p {
+      font-size: 1.2rem;
+      color: var(--white-400);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+

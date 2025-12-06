@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users, MessageCircle, Play } from "lucide-react"
+import { User, BarChart3, Settings, History, ScrollText, ChartSpline, Users, MessageCircle, Play, Music, Eye } from "lucide-react"
 import styles from "./LeftMenu.module.scss"
 import { Role, useUserStore } from "../../../../store/userStore"
 
@@ -18,7 +18,7 @@ function LeftMenu() {
   const isOrganization = user?.role === Role.ORGANIZATION
   const isLinkedToOrg = Boolean(user?.organizationCode)
   const isUserRole = user?.role === Role.USER
-  
+
   const menuItems: MenuItem[] = [
     {
       label: "Профиль",
@@ -56,6 +56,16 @@ function LeftMenu() {
       icon: <BarChart3 size={20} />,
     },
     {
+      label: "Анализ аудио",
+      path: "/profile/audio-analysis",
+      icon: <Music size={20} />,
+    },
+    {
+      label: "Отслеживание взгляда",
+      path: "/profile/eye-tracking",
+      icon: <Eye size={20} />,
+    },
+    {
       label: "Графики",
       path: "/profile/graphics",
       icon: <ChartSpline size={20} />,
@@ -75,8 +85,7 @@ function LeftMenu() {
       path: "/profile/settings",
       icon: <Settings size={20} />,
     },
-
-  ]
+  ];
 
   const filteredItems = menuItems.filter((item) => {
     if (item.onlyForOrganization && !isOrganization) return false
@@ -94,7 +103,9 @@ function LeftMenu() {
               <Link
                 to={item.path}
                 className={
-                  location.pathname === item.path ? `${styles.link} ${styles.active}` : styles.link
+                  location.pathname === item.path
+                    ? `${styles.link} ${styles.active}`
+                    : styles.link
                 }
               >
                 <span className={styles.icon}>{item.icon}</span>
@@ -105,7 +116,7 @@ function LeftMenu() {
         </ul>
       </nav>
     </div>
-  )
+  );
 }
 
-export default LeftMenu
+export default LeftMenu;
