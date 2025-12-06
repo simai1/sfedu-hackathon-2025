@@ -2,7 +2,7 @@ import datetime
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, text
+from sqlalchemy import String, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +29,10 @@ class UserModel(Base):
 
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True
+    )
+
     users_pair_tokens: Mapped[list["PairTokenModel"]] = relationship(back_populates="user")
 
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -47,6 +51,7 @@ class UserModel(Base):
             "email": self.email,
             "role": self.role,
             "password_hash": self.password_hash,
+            "organization_id": str(self.organization_id) if self.organization_id else None,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

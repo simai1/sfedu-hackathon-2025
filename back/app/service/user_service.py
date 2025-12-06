@@ -19,12 +19,24 @@ class UserService():
             raise AlreadyUserError("email")
 
         user = await self.repo.create(create_user)
+        role = user.role or "user"
+        if role != user.role:
+            user = User(
+                id=user.id,
+                name=user.name,
+                email=user.email,
+                role=role,
+                password_hash=user.password_hash,
+                organization_id=user.organization_id,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            )
         token = self.token_service.generate_access_token(user)
         return AuthUser(
             id=user.id,
             name=user.name,
             email=user.email,
-            role=user.role,
+            role=role,
             token=token,
             )
 
@@ -34,12 +46,24 @@ class UserService():
             raise NotFoundError("user", "email", validate_user.email)
         if not verify(validate_user.password, user.password_hash):
             raise InvalidDataError("user", "email or password", (validate_user.email, validate_user.password))
+        role = user.role or "user"
+        if role != user.role:
+            user = User(
+                id=user.id,
+                name=user.name,
+                email=user.email,
+                role=role,
+                password_hash=user.password_hash,
+                organization_id=user.organization_id,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            )
         token = self.token_service.generate_access_token(user)
         return AuthUser(
             id=user.id,
             name=user.name,
             email=user.email,
-            role=user.role,
+            role=role,
             token=token,
             )
 
