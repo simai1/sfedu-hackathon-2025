@@ -83,12 +83,20 @@ class EngagementTracker:
         concentration_values: list[float] = []
         for channel in channels.values():
             mind = channel.get("mind") or {}
-            # Instant values are already in percents (0-100)
-            instant_relax = mind.get("instant_relaxation")
-            instant_attention = mind.get("instant_attention")
-            if instant_relax is not None:
+            # Use relative values (0-1), fallback to instant percents (0-100) for older payloads.
+            rel_relax = mind.get("rel_relaxation")
+            rel_attention = mind.get("rel_attention")
+            instant_relax = mind.get("instant_relaxation", mind.get("inst_relaxation"))
+            instant_attention = mind.get("instant_attention", mind.get("inst_attention"))
+
+            if rel_relax is not None:
+                relax_values.append(float(rel_relax) * 100)
+            elif instant_relax is not None:
                 relax_values.append(float(instant_relax))
-            if instant_attention is not None:
+
+            if rel_attention is not None:
+                concentration_values.append(float(rel_attention) * 100)
+            elif instant_attention is not None:
                 concentration_values.append(float(instant_attention))
 
         if not concentration_values or not relax_values:
