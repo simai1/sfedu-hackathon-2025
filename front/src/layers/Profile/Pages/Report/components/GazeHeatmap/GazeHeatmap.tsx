@@ -1,4 +1,5 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
+import ReactECharts from "echarts-for-react";
 import styles from "./GazeHeatmap.module.scss";
 
 export interface GazePoint {
@@ -14,197 +15,215 @@ interface GazeHeatmapProps {
   gazePoints: GazePoint[];
   width?: number;
   height?: number;
+  realtime?: boolean; // Режим обновления в реальном времени
+}
+
+// Функция для генерации данных тепловой карты из координат взгляда
+function generateHeatmapData(
+  gazePoints: GazePoint[],
+  gridWidth: number = 200,
+  gridHeight: number = 100
+): number[][] {
+  // Фильтруем только валидные точки (relativeX и relativeY от 0 до 1)
+  const validPoints = gazePoints.filter(
+    (p) =>
+      p.relativeX >= 0 &&
+      p.relativeX <= 1 &&
+      p.relativeY >= 0 &&
+      p.relativeY <= 1
+  );
+
+  if (validPoints.length === 0) {
+    return [];
+  }
+
+  // Создаем сетку для тепловой карты
+  const grid: number[][] = [];
+  const radius = 20; // Радиус влияния каждой точки
+
+  // Инициализируем сетку
+  for (let i = 0; i < gridHeight; i++) {
+    grid[i] = [];
+    for (let j = 0; j < gridWidth; j++) {
+      grid[i][j] = 0;
+    }
+  }
+
+  // Подсчитываем интенсивность в каждой ячейке сетки
+  validPoints.forEach((point) => {
+    const gridX = point.relativeX * gridWidth;
+    const gridY = point.relativeY * gridHeight;
+
+    // Добавляем вес к ячейке и соседним ячейкам с учетом расстояния
+    const influenceRadius = 5;
+    for (let dx = -influenceRadius; dx <= influenceRadius; dx++) {
+      for (let dy = -influenceRadius; dy <= influenceRadius; dy++) {
+        const x = Math.floor(gridX + dx);
+        const y = Math.floor(gridY + dy);
+        if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          // Используем гауссову функцию для более плавного распределения
+          const weight = Math.exp(
+            -(distance * distance) / (2 * radius * radius)
+          );
+          grid[y][x] += weight;
+        }
+      }
+    }
+  });
+
+  // Преобразуем сетку в формат данных для ECharts [x, y, value]
+  const data: number[][] = [];
+  for (let i = 0; i < gridHeight; i++) {
+    for (let j = 0; j < gridWidth; j++) {
+      if (grid[i][j] > 0) {
+        data.push([j, i, grid[i][j]]);
+      }
+    }
+  }
+
+  return data;
 }
 
 function GazeHeatmap({
   gazePoints,
   width = 800,
   height = 450,
+  realtime = false,
 }: GazeHeatmapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<ReactECharts>(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Генерируем данные для тепловой карты
+  const heatmapData = useMemo(() => {
+    return generateHeatmapData(gazePoints, 200, 100);
+  }, [gazePoints]);
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Генерируем оси X и Y
+  const xData = useMemo(() => {
+    return Array.from({ length: 200 }, (_, i) => i);
+  }, []);
 
-    // Очищаем canvas
-    ctx.clearRect(0, 0, width, height);
+  const yData = useMemo(() => {
+    return Array.from({ length: 100 }, (_, i) => i);
+  }, []);
 
-    if (gazePoints.length === 0) {
-      // Показываем сообщение, если нет данных
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#888";
-      ctx.font = "16px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        "Нет данных о взгляде для отображения",
-        width / 2,
-        height / 2
-      );
-      return;
-    }
+  // Находим максимальное значение для нормализации
+  const maxValue = useMemo(() => {
+    if (heatmapData.length === 0) return 1;
+    return Math.max(...heatmapData.map((d) => d[2]));
+  }, [heatmapData]);
 
-    // Фильтруем только валидные точки (relativeX и relativeY от 0 до 1)
-    const validPoints = gazePoints.filter(
-      (p) =>
-        p.relativeX >= 0 &&
-        p.relativeX <= 1 &&
-        p.relativeY >= 0 &&
-        p.relativeY <= 1
-    );
-
-    if (validPoints.length === 0) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#888";
-      ctx.font = "16px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Нет валидных данных о взгляде", width / 2, height / 2);
-      return;
-    }
-
-    // Создаем карту интенсивности (heatmap)
-    const gridSize = 80; // Увеличиваем размер сетки для более плавной карты
-    const grid: number[][] = [];
-    const radius = 40; // Радиус влияния каждой точки
-
-    // Инициализируем сетку
-    for (let i = 0; i < gridSize; i++) {
-      grid[i] = [];
-      for (let j = 0; j < gridSize; j++) {
-        grid[i][j] = 0;
-      }
-    }
-
-    // Подсчитываем интенсивность в каждой ячейке сетки
-    validPoints.forEach((point) => {
-      const gridX = point.relativeX * gridSize;
-      const gridY = point.relativeY * gridSize;
-
-      // Добавляем вес к ячейке и соседним ячейкам с учетом расстояния
-      const influenceRadius = 4;
-      for (let dx = -influenceRadius; dx <= influenceRadius; dx++) {
-        for (let dy = -influenceRadius; dy <= influenceRadius; dy++) {
-          const x = Math.floor(gridX + dx);
-          const y = Math.floor(gridY + dy);
-          if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
-            // Вычисляем расстояние в пикселях canvas
-            const pixelDx = (x - gridX) * (width / gridSize);
-            const pixelDy = (y - gridY) * (height / gridSize);
-            const distance = Math.sqrt(pixelDx * pixelDx + pixelDy * pixelDy);
-            // Используем гауссову функцию для более плавного распределения
-            const weight = Math.exp(
-              -(distance * distance) / (2 * radius * radius)
-            );
-            grid[y][x] += weight;
+  // Опции для ECharts
+  const option = useMemo(() => {
+    return {
+      tooltip: {
+        position: "top",
+        formatter: (params: any) => {
+          if (params.data) {
+            const [x, y, value] = params.data;
+            return `X: ${x}<br/>Y: ${y}<br/>Интенсивность: ${value.toFixed(2)}`;
           }
-        }
-      }
-    });
-
-    // Находим максимальное значение для нормализации
-    let maxValue = 0;
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        if (grid[i][j] > maxValue) {
-          maxValue = grid[i][j];
-        }
-      }
-    }
-
-    // Функция для получения цвета по интенсивности
-    const getHeatColor = (intensity: number): string => {
-      // Нормализуем интенсивность от 0 до 1
-      const normalized = maxValue > 0 ? Math.min(intensity / maxValue, 1) : 0;
-
-      // Цветовая палитра от синего (холодный) к красному (горячий)
-      if (normalized < 0.25) {
-        // Синий -> Голубой
-        const t = normalized / 0.25;
-        return `rgba(0, ${Math.floor(100 + t * 155)}, ${Math.floor(
-          200 + t * 55
-        )}, ${0.3 + t * 0.4})`;
-      } else if (normalized < 0.5) {
-        // Голубой -> Желтый
-        const t = (normalized - 0.25) / 0.25;
-        return `rgba(${Math.floor(100 + t * 155)}, ${Math.floor(
-          255 - t * 100
-        )}, 0, ${0.7 + t * 0.2})`;
-      } else if (normalized < 0.75) {
-        // Желтый -> Оранжевый
-        const t = (normalized - 0.5) / 0.25;
-        return `rgba(255, ${Math.floor(155 - t * 100)}, 0, ${0.9 + t * 0.1})`;
-      } else {
-        // Оранжевый -> Красный
-        const t = (normalized - 0.75) / 0.25;
-        return `rgba(255, ${Math.floor(55 - t * 55)}, 0, 1)`;
-      }
+          return "";
+        },
+      },
+      grid: {
+        height: "80%",
+        top: "10%",
+      },
+      xAxis: {
+        type: "category",
+        data: xData,
+        splitArea: {
+          show: true,
+        },
+        show: false, // Скрываем оси для более чистого вида
+      },
+      yAxis: {
+        type: "category",
+        data: yData,
+        splitArea: {
+          show: true,
+        },
+        show: false, // Скрываем оси для более чистого вида
+      },
+      visualMap: {
+        min: 0,
+        max: maxValue,
+        calculable: true,
+        realtime: realtime,
+        inRange: {
+          color: [
+            "#313695",
+            "#4575b4",
+            "#74add1",
+            "#abd9e9",
+            "#e0f3f8",
+            "#ffffbf",
+            "#fee090",
+            "#fdae61",
+            "#f46d43",
+            "#d73027",
+            "#a50026",
+          ],
+        },
+        left: "right",
+        top: "center",
+      },
+      series: [
+        {
+          name: "Тепловая карта взгляда",
+          type: "heatmap",
+          data: heatmapData,
+          label: {
+            show: false,
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
+          progressive: 1000,
+          animation: realtime,
+        },
+      ],
     };
+  }, [heatmapData, xData, yData, maxValue, realtime]);
 
-    // Рисуем тепловую карту
-    const cellWidth = width / gridSize;
-    const cellHeight = height / gridSize;
-
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        if (grid[i][j] > 0) {
-          const intensity = grid[i][j];
-          const color = getHeatColor(intensity);
-
-          // Создаем радиальный градиент для плавного перехода
-          const centerX = j * cellWidth + cellWidth / 2;
-          const centerY = i * cellHeight + cellHeight / 2;
-          const gradient = ctx.createRadialGradient(
-            centerX,
-            centerY,
-            0,
-            centerX,
-            centerY,
-            Math.max(cellWidth, cellHeight) * 1.5
-          );
-
-          gradient.addColorStop(0, color);
-          gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-          ctx.fillStyle = gradient;
-          ctx.fillRect(
-            j * cellWidth - cellWidth / 2,
-            i * cellHeight - cellHeight / 2,
-            cellWidth * 2,
-            cellHeight * 2
-          );
-        }
-      }
+  // Обновляем график в реальном времени
+  useEffect(() => {
+    if (realtime && chartRef.current) {
+      const chartInstance = chartRef.current.getEchartsInstance();
+      chartInstance.setOption(option, { notMerge: true });
     }
+  }, [option, realtime]);
 
-    // Не рисуем отдельные точки, чтобы не перегружать визуализацию
-    // Тепловая карта сама показывает области концентрации взгляда
-  }, [gazePoints, width, height]);
+  if (gazePoints.length === 0 || heatmapData.length === 0) {
+    return (
+      <div className={styles.heatmapContainer}>
+        <h3 className={styles.title}>Тепловая карта взгляда</h3>
+        <p className={styles.description}>
+          Нет данных о взгляде для отображения
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.heatmapContainer}>
       <h3 className={styles.title}>Тепловая карта взгляда</h3>
       <p className={styles.description}>
-        Показывает области видео, на которые вы смотрели чаще всего
+        {realtime
+          ? "Обновляется в реальном времени на основе координат взгляда"
+          : "Показывает области видео, на которые вы смотрели чаще всего"}
       </p>
       <div className={styles.canvasWrapper}>
-        <canvas
-          ref={canvasRef}
-          width={width}
-          height={height}
-          className={styles.canvas}
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{ width: width, height: height }}
+          opts={{ renderer: "canvas", devicePixelRatio: 2 }}
         />
-        <div className={styles.legend}>
-          <span>Редко</span>
-          <div className={styles.legendBar}>
-            <div className={styles.legendGradient}></div>
-          </div>
-          <span>Часто</span>
-        </div>
       </div>
     </div>
   );
