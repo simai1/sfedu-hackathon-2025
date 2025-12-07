@@ -60,3 +60,14 @@ li {
   margin: 0;
   padding: 0;
 }
+div[id="webgazerFaceFeedbackBox"] {
+  display: none !important;
+  z-index: -1 !important;
+  opacity: 0 !important;
+}
+div[id="webgazerVideoContainer"] {
+  position: fixed !important;
+  bottom: 0 !important;
+  top: auto !important;
+  transform: translateY(0%);
+}

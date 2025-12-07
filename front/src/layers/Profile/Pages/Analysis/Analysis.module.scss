@@ -862,119 +862,119 @@
   }
 }
 
-// Стили для видео с камеры из библиотеки react-eye-tracking
-// Позиционируем видео в левом нижнем углу
-:global {
-  // Стили для видео камеры из react-eye-tracking/webgazer
-  // Различные возможные селекторы для видео с камеры
-  video[data-webgazer-video],
-  video.webgazerVideoElement,
-  video[id*="webgazer"],
-  video[class*="webgazer"],
-  video[class*="camera"],
-  video[class*="eye-tracking"],
-  #webgazerVideoCanvas,
-  #webgazerVideoFeed,
-  .webgazer-video-container,
-  .webgazer-video,
-  .eye-tracking-video,
-  [class*="webgazer"] video,
-  [id*="webgazer"] video,
-  [class*="eye-tracking"] video {
-    position: fixed !important;
-    bottom: 24px !important;
-    left: 24px !important;
-    width: 200px !important;
-    height: 150px !important;
-    z-index: 1200 !important;
-    border-radius: 0.5rem !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    object-fit: cover !important;
-    background: rgba(0, 0, 0, 0.5) !important;
-    max-width: 200px !important;
-    max-height: 150px !important;
-    outline: none !important;
-  }
+// // Стили для видео с камеры из библиотеки react-eye-tracking
+// // Позиционируем видео в левом нижнем углу
+// :global {
+//   // Стили для видео камеры из react-eye-tracking/webgazer
+//   // Различные возможные селекторы для видео с камеры
+//   video[data-webgazer-video],
+//   video.webgazerVideoElement,
+//   video[id*="webgazer"],
+//   video[class*="webgazer"],
+//   video[class*="camera"],
+//   video[class*="eye-tracking"],
+//   #webgazerVideoCanvas,
+//   #webgazerVideoFeed,
+//   .webgazer-video-container,
+//   .webgazer-video,
+//   .eye-tracking-video,
+//   [class*="webgazer"] video,
+//   [id*="webgazer"] video,
+//   [class*="eye-tracking"] video {
+//     position: fixed !important;
+//     bottom: 24px !important;
+//     left: 24px !important;
+//     width: 200px !important;
+//     height: 150px !important;
+//     z-index: 1200 !important;
+//     border-radius: 0.5rem !important;
+//     border: none !important;
+//     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+//     object-fit: cover !important;
+//     background: rgba(0, 0, 0, 0.5) !important;
+//     max-width: 200px !important;
+//     max-height: 150px !important;
+//     outline: none !important;
+//   }
 
-  // Контейнеры для видео
-  div:has(video[data-webgazer-video]),
-  div:has(video.webgazerVideoElement),
-  div:has(#webgazerVideoCanvas),
-  div[id*="webgazer"]:has(video),
-  div[class*="webgazer"]:has(video),
-  div[class*="eye-tracking"]:has(video),
-  [class*="webgazer"],
-  [id*="webgazer"] {
-    position: fixed !important;
-    bottom: 24px !important;
-    left: 24px !important;
-    z-index: 1200 !important;
-    width: 200px !important;
-    height: 150px !important;
-    max-width: 200px !important;
-    max-height: 150px !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-  div[id="webgazerGazeDot"] {
-    width: 10px !important;
-    height: 10px !important;
-  }
+//   // Контейнеры для видео
+//   div:has(video[data-webgazer-video]),
+//   div:has(video.webgazerVideoElement),
+//   div:has(#webgazerVideoCanvas),
+//   div[id*="webgazer"]:has(video),
+//   div[class*="webgazer"]:has(video),
+//   div[class*="eye-tracking"]:has(video),
+//   [class*="webgazer"],
+//   [id*="webgazer"] {
+//     position: fixed !important;
+//     bottom: 24px !important;
+//     left: 24px !important;
+//     z-index: 1200 !important;
+//     width: 200px !important;
+//     height: 150px !important;
+//     max-width: 200px !important;
+//     max-height: 150px !important;
+//     border: none !important;
+//     outline: none !important;
+//     box-shadow: none !important;
+//   }
+//   div[id="webgazerGazeDot"] {
+//     width: 10px !important;
+//     height: 10px !important;
+//   }
 
-  // Canvas для webgazer (если используется)
-  canvas[data-webgazer-canvas],
-  canvas.webgazerCanvasElement,
-  canvas[id*="webgazer"] {
-    position: fixed !important;
-    bottom: 24px !important;
-    left: 24px !important;
-    z-index: 1201 !important;
-    width: 200px !important;
-    height: 150px !important;
-    border-radius: 0.5rem !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    max-width: 200px !important;
-    max-height: 150px !important;
-    outline: none !important;
-  }
+//   // Canvas для webgazer (если используется)
+//   canvas[data-webgazer-canvas],
+//   canvas.webgazerCanvasElement,
+//   canvas[id*="webgazer"] {
+//     position: fixed !important;
+//     bottom: 24px !important;
+//     left: 24px !important;
+//     z-index: 1201 !important;
+//     width: 200px !important;
+//     height: 150px !important;
+//     border-radius: 0.5rem !important;
+//     border: none !important;
+//     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+//     max-width: 200px !important;
+//     max-height: 150px !important;
+//     outline: none !important;
+//   }
 
-  // Убираем стандартное позиционирование webgazer
-  #webgazerVideoFeed,
-  #webgazerVideoCanvas {
-    top: auto !important;
-    right: auto !important;
-    border: none !important;
-    outline: none !important;
-  }
+//   // Убираем стандартное позиционирование webgazer
+//   #webgazerVideoFeed,
+//   #webgazerVideoCanvas {
+//     top: auto !important;
+//     right: auto !important;
+//     border: none !important;
+//     outline: none !important;
+//   }
 
-  // Убираем все возможные обводки у всех элементов связанных с камерой
-  *[class*="webgazer"],
-  *[id*="webgazer"],
-  *[class*="eye-tracking"],
-  *[class*="camera"] {
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    outline: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  }
+//   // Убираем все возможные обводки у всех элементов связанных с камерой
+//   *[class*="webgazer"],
+//   *[id*="webgazer"],
+//   *[class*="eye-tracking"],
+//   *[class*="camera"] {
+//     border-top: none !important;
+//     border-left: none !important;
+//     border-right: none !important;
+//     border-bottom: none !important;
+//     outline: none !important;
+//     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+//   }
 
-  // Специально для видео элементов - убираем все обводки
-  video {
-    &[class*="webgazer"],
-    &[id*="webgazer"],
-    &[class*="camera"],
-    &[class*="eye-tracking"] {
-      border: none !important;
-      border-top: none !important;
-      border-left: none !important;
-      border-right: none !important;
-      border-bottom: none !important;
-      outline: none !important;
-    }
-  }
-}
+//   // Специально для видео элементов - убираем все обводки
+//   video {
+//     &[class*="webgazer"],
+//     &[id*="webgazer"],
+//     &[class*="camera"],
+//     &[class*="eye-tracking"] {
+//       border: none !important;
+//       border-top: none !important;
+//       border-left: none !important;
+//       border-right: none !important;
+//       border-bottom: none !important;
+//       outline: none !important;
+//     }
+//   }
+// }

@@ -1041,6 +1041,33 @@ function Analysis() {
     }
 
     setState("finished");
+
+    // Сохраняем данные взгляда в localStorage для использования в отчете
+    const currentVideoId = uploadedVideoIdRef.current || uploadedVideoId;
+    if (currentVideoId && gazeHistoryRef.current.length > 0) {
+      try {
+        // Сохраняем только валидные точки (relativeX и relativeY от 0 до 1)
+        const validGazePoints = gazeHistoryRef.current.filter(
+          (p) =>
+            p.relativeX >= 0 &&
+            p.relativeX <= 1 &&
+            p.relativeY >= 0 &&
+            p.relativeY <= 1
+        );
+
+        if (validGazePoints.length > 0) {
+          localStorage.setItem(
+            `gaze_data_${currentVideoId}`,
+            JSON.stringify(validGazePoints)
+          );
+          console.log(
+            `[GAZE] Сохранено ${validGazePoints.length} точек взгляда для video_id: ${currentVideoId}`
+          );
+        }
+      } catch (err) {
+        console.error("[GAZE] Ошибка при сохранении данных взгляда:", err);
+      }
+    }
   };
 
   const handleGenerateReport = async () => {
@@ -1072,6 +1099,32 @@ function Analysis() {
 
       setReportAnalysis(analysisText);
       setState("reportGenerated");
+
+      // Сохраняем данные взгляда в localStorage для использования в отчете
+      if (currentVideoId && gazeHistoryRef.current.length > 0) {
+        try {
+          // Сохраняем только валидные точки (relativeX и relativeY от 0 до 1)
+          const validGazePoints = gazeHistoryRef.current.filter(
+            (p) =>
+              p.relativeX >= 0 &&
+              p.relativeX <= 1 &&
+              p.relativeY >= 0 &&
+              p.relativeY <= 1
+          );
+
+          if (validGazePoints.length > 0) {
+            localStorage.setItem(
+              `gaze_data_${currentVideoId}`,
+              JSON.stringify(validGazePoints)
+            );
+            console.log(
+              `[GAZE] Сохранено ${validGazePoints.length} точек взгляда для video_id: ${currentVideoId}`
+            );
+          }
+        } catch (err) {
+          console.error("[GAZE] Ошибка при сохранении данных взгляда:", err);
+        }
+      }
 
       // Автоматически отправляем отчет в чат и спрашиваем что улучшить
       if (analysisText) {
