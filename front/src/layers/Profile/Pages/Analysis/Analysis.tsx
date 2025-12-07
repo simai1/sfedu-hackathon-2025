@@ -1687,6 +1687,9 @@ function Analysis() {
     if (window.webgazer) {
       try {
         window.webgazer.end();
+        window.webgazer.destroy();
+        window.webgazer = null;
+        window.document.getElementById("webgazerVideoContainer")?.remove();
       } catch (error) {
         console.error("Ошибка при остановке WebGazer:", error);
       }
