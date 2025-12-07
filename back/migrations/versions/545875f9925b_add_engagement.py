@@ -26,6 +26,7 @@ def upgrade() -> None:
     sa.Column('video_id', sa.UUID(), nullable=False),
     sa.Column('relaxation', sa.Float(), nullable=False),
     sa.Column('concentration', sa.Float(), nullable=False),
+    sa.Column('timecode', sa.String(length=255), nullable=True),
     sa.Column('screenshot_url', sa.String(length=255), nullable=False),
     sa.ForeignKeyConstraint(['video_id'], ['videos.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')

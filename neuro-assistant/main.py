@@ -2,7 +2,6 @@ import os
 import json
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse

@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     DB_PWD: str
     DB_NAME: str
 
+    AGENT_HOST: str
+
     UPLOAD_DIR: str = "uploads"
 
     @property
