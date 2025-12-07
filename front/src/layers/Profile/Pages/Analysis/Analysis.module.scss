@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  max-width: calc(100vw - 300px);
 
   .analysis {
     background-color: var(--profile-bg);
@@ -345,6 +346,7 @@
       flex-direction: column;
       gap: 1.5rem;
       width: 100%;
+      max-width: calc(100vw - 300px);
 
       @media (max-width: 768px) {
         gap: 1rem;
@@ -396,6 +398,7 @@
         margin-top: 1rem;
         width: 100%;
         overflow: hidden;
+        max-width: calc(100vw - 300px);
 
         .screenshotsTitle {
           color: var(--profile-text);

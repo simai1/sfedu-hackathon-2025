@@ -138,7 +138,6 @@ function Analysis() {
     if (!eyeTrackingEnabled) {
       setEyeTrackingEnabled(true);
     }
-
     setShowCameraPreview(true);
     setCalibrationCompleted(false);
     setShowCalibration(true);
