@@ -8,6 +8,7 @@ from app.models.video import VideoModel
 from app.models.engagement import EngagementModel
 from app.models.organization import OrganizationModel
 from app.models.group import GroupModel, GroupMemberModel, GroupSessionModel
+from app.models.history import HistoryModel
 
 __all__ = [
     "Base",
@@ -19,4 +20,5 @@ __all__ = [
     "GroupModel",
     "GroupMemberModel",
     "GroupSessionModel",
+    "HistoryModel",
 ]
