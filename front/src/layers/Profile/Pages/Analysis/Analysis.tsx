@@ -2148,7 +2148,6 @@ function Analysis() {
                 <button
                   className={styles.startButton}
                   onClick={handleStartWatching}
-                  disabled={!isSocketConnected || isUploading}
                 >
                   Начать просмотр
                 </button>
