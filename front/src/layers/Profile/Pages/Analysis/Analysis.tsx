@@ -13,6 +13,9 @@ import { uploadVideo, uploadPhoto, analyzeEEG } from "../../../../api/files";
 import { useUserStore } from "../../../../store/userStore";
 import { useWebSocketStore } from "../../../../store/websocketStore";
 import { useChatAssistantStore } from "../../../../store/chatAssistantStore";
+import GazeHeatmap, {
+  type GazePoint as GazePointType,
+} from "../Report/components/GazeHeatmap/GazeHeatmap";
 import styles from "./Analysis.module.scss";
 
 type AnalysisState =
@@ -66,6 +69,9 @@ function Analysis() {
   const [calibrationCompleted, setCalibrationCompleted] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [gazeIndicator, setGazeIndicator] = useState<GazePoint | null>(null);
+  const [gazePointsForHeatmap, setGazePointsForHeatmap] = useState<
+    GazePointType[]
+  >([]);
   const videoDurationRef = useRef<number>(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const videoOverlayRef = useRef<HTMLDivElement | null>(null);
@@ -75,6 +81,8 @@ function Analysis() {
   const latestGazeRef = useRef<GazePoint | null>(null);
   const gazeHistoryRef = useRef<GazePoint[]>([]);
   const gazeAnimationFrameRef = useRef<number | null>(null);
+  const gazeSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const heatmapUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const getHasCalibrationData = useCallback(() => {
     const points = window.webgazer?.getStoredPoints?.();
@@ -168,10 +176,59 @@ function Analysis() {
 
       latestGazeRef.current = sample;
 
-      if (state === "watching") {
+      // Записываем координаты взгляда в массив для тепловой карты
+      // Записываем все координаты, даже если они вне фрейма видео
+      if (state === "watching" && eyeTrackingEnabled) {
         gazeHistoryRef.current.push(sample);
-        if (gazeHistoryRef.current.length > 5000) {
+
+        // Ограничиваем размер массива для производительности
+        // Храним последние 10000 точек (увеличено для более детальной тепловой карты)
+        if (gazeHistoryRef.current.length > 10000) {
           gazeHistoryRef.current.shift();
+        }
+
+        // Выводим координаты в консоль для отладки
+        // Логируем каждую 10-ю точку для более частого вывода
+        if (gazeHistoryRef.current.length % 10 === 0) {
+          const validPoints = gazeHistoryRef.current.filter(
+            (p) =>
+              p.relativeX >= 0 &&
+              p.relativeX <= 1 &&
+              p.relativeY >= 0 &&
+              p.relativeY <= 1
+          );
+
+          // Показываем последние 5 координат из массива
+          const last5Points = gazeHistoryRef.current.slice(-5);
+
+          console.log(`[GAZE] Массив координат взгляда:`, {
+            totalPoints: gazeHistoryRef.current.length,
+            validPoints: validPoints.length,
+            latestCoordinate: sample,
+            last5Coordinates: last5Points.map((p, idx) => ({
+              index: gazeHistoryRef.current.length - 5 + idx,
+              viewportX: p.viewportX,
+              viewportY: p.viewportY,
+              relativeX: p.relativeX.toFixed(3),
+              relativeY: p.relativeY.toFixed(3),
+              videoTime: p.videoTime.toFixed(2),
+              timestamp: new Date(p.timestamp).toLocaleTimeString(),
+            })),
+          });
+
+          // Также выводим весь массив координат (можно закомментировать если слишком много)
+          console.log(
+            `[GAZE] Полный массив координат (${gazeHistoryRef.current.length} точек):`,
+            gazeHistoryRef.current.map((p, idx) => ({
+              index: idx,
+              viewportX: p.viewportX,
+              viewportY: p.viewportY,
+              relativeX: p.relativeX,
+              relativeY: p.relativeY,
+              videoTime: p.videoTime,
+              timestamp: p.timestamp,
+            }))
+          );
         }
       }
 
@@ -246,12 +303,92 @@ function Analysis() {
     }
   }, [state]);
 
+  // Периодическое автосохранение данных взгляда в localStorage
+  // Это гарантирует сохранение данных даже если пользователь закроет страницу
+  useEffect(() => {
+    if (state === "watching" && eyeTrackingEnabled) {
+      // Сохраняем данные каждые 5 секунд
+      gazeSaveIntervalRef.current = setInterval(() => {
+        const currentVideoId = uploadedVideoIdRef.current || uploadedVideoId;
+        if (currentVideoId && gazeHistoryRef.current.length > 0) {
+          try {
+            // Сохраняем только валидные точки (relativeX и relativeY от 0 до 1)
+            const validGazePoints = gazeHistoryRef.current.filter(
+              (p) =>
+                p.relativeX >= 0 &&
+                p.relativeX <= 1 &&
+                p.relativeY >= 0 &&
+                p.relativeY <= 1
+            );
+
+            if (validGazePoints.length > 0) {
+              localStorage.setItem(
+                `gaze_data_${currentVideoId}`,
+                JSON.stringify(validGazePoints)
+              );
+              console.log(
+                `[GAZE] Автосохранение: ${validGazePoints.length} точек взгляда для video_id: ${currentVideoId}`
+              );
+            }
+          } catch (err) {
+            console.error(
+              "[GAZE] Ошибка при автосохранении данных взгляда:",
+              err
+            );
+          }
+        }
+      }, 5000); // Каждые 5 секунд
+
+      return () => {
+        if (gazeSaveIntervalRef.current) {
+          clearInterval(gazeSaveIntervalRef.current);
+          gazeSaveIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Останавливаем автосохранение когда не в режиме просмотра
+      if (gazeSaveIntervalRef.current) {
+        clearInterval(gazeSaveIntervalRef.current);
+        gazeSaveIntervalRef.current = null;
+      }
+    }
+  }, [state, eyeTrackingEnabled, uploadedVideoId]);
+
+  // Обновление данных для тепловой карты в реальном времени
+  useEffect(() => {
+    if (state === "watching" && eyeTrackingEnabled) {
+      // Обновляем данные для тепловой карты каждые 500мс для плавной анимации
+      heatmapUpdateIntervalRef.current = setInterval(() => {
+        // Копируем данные из ref в state для обновления компонента
+        setGazePointsForHeatmap([...gazeHistoryRef.current]);
+      }, 500);
+
+      return () => {
+        if (heatmapUpdateIntervalRef.current) {
+          clearInterval(heatmapUpdateIntervalRef.current);
+          heatmapUpdateIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Останавливаем обновление когда не в режиме просмотра
+      if (heatmapUpdateIntervalRef.current) {
+        clearInterval(heatmapUpdateIntervalRef.current);
+        heatmapUpdateIntervalRef.current = null;
+      }
+      // Очищаем данные при выходе из режима просмотра
+      setGazePointsForHeatmap([]);
+    }
+  }, [state, eyeTrackingEnabled]);
+
   // Останавливаем камеру при выходе из режима просмотра
   useEffect(() => {
     if (state !== "watching" && eyeTrackingEnabled) {
       if (window.webgazer) {
         try {
           window.webgazer.end();
+          window.webgazer.destroy();
+          window.webgazer = null;
+          window.document.getElementById("webgazerVideoContainer")?.remove();
         } catch (error) {
           console.error("Ошибка при остановке WebGazer:", error);
         }
@@ -1568,6 +1705,18 @@ function Analysis() {
     latestGazeRef.current = null;
     gazeHistoryRef.current = [];
 
+    // Останавливаем автосохранение
+    if (gazeSaveIntervalRef.current) {
+      clearInterval(gazeSaveIntervalRef.current);
+      gazeSaveIntervalRef.current = null;
+    }
+
+    // Останавливаем обновление тепловой карты
+    if (heatmapUpdateIntervalRef.current) {
+      clearInterval(heatmapUpdateIntervalRef.current);
+      heatmapUpdateIntervalRef.current = null;
+    }
+
     // Останавливаем отслеживание взгляда и камеру
     if (window.webgazer) {
       try {
@@ -1586,6 +1735,16 @@ function Analysis() {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
+      }
+      // Останавливаем автосохранение при размонтировании
+      if (gazeSaveIntervalRef.current) {
+        clearInterval(gazeSaveIntervalRef.current);
+        gazeSaveIntervalRef.current = null;
+      }
+      // Останавливаем обновление тепловой карты при размонтировании
+      if (heatmapUpdateIntervalRef.current) {
+        clearInterval(heatmapUpdateIntervalRef.current);
+        heatmapUpdateIntervalRef.current = null;
       }
       // Закрываем WebSocket при размонтировании
       if (wsRef.current) {
@@ -1716,6 +1875,21 @@ function Analysis() {
     latestGazeRef.current = null;
     gazeHistoryRef.current = [];
     setCameraPermission("unknown");
+
+    // Останавливаем автосохранение
+    if (gazeSaveIntervalRef.current) {
+      clearInterval(gazeSaveIntervalRef.current);
+      gazeSaveIntervalRef.current = null;
+    }
+
+    // Останавливаем обновление тепловой карты
+    if (heatmapUpdateIntervalRef.current) {
+      clearInterval(heatmapUpdateIntervalRef.current);
+      heatmapUpdateIntervalRef.current = null;
+    }
+
+    // Очищаем данные тепловой карты
+    setGazePointsForHeatmap([]);
   };
 
   // Отладочная информация (можно убрать в продакшене)
@@ -2064,6 +2238,27 @@ function Analysis() {
                   <div className={styles.chartContainerSmall}>
                     <KeyIndicators />
                   </div>
+
+                  {/* Тепловая карта взгляда в реальном времени */}
+                  {eyeTrackingEnabled &&
+                    gazePointsForHeatmap.length > 0 &&
+                    state === "watching" && (
+                      <div
+                        style={{
+                          marginTop: "2rem",
+                          padding: "1.5rem",
+                          backgroundColor: "var(--profile-bg-secondary)",
+                          borderRadius: "0.75rem",
+                        }}
+                      >
+                        <GazeHeatmap
+                          gazePoints={gazePointsForHeatmap}
+                          width={800}
+                          height={450}
+                          realtime={true}
+                        />
+                      </div>
+                    )}
 
                   {uploadError && (
                     <div
