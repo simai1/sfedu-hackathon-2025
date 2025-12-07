@@ -1791,21 +1791,6 @@ function Analysis() {
                 <KeyIndicators />
               </div>
 
-              <div className={styles.stats}>
-                <div className={styles.statItem}>
-                  <h3>Общее время</h3>
-                  <p>120 часов</p>
-                </div>
-                <div className={styles.statItem}>
-                  <h3>Завершенные задачи</h3>
-                  <p>42</p>
-                </div>
-                <div className={styles.statItem}>
-                  <h3>Уровень вовлеченности</h3>
-                  <p>85%</p>
-                </div>
-              </div>
-
               <div className={styles.actionButtons}>
                 <button
                   className={styles.generateButton}
@@ -1857,21 +1842,6 @@ function Analysis() {
 
               <div className={styles.chartContainer}>
                 <KeyIndicators />
-              </div>
-
-              <div className={styles.stats}>
-                <div className={styles.statItem}>
-                  <h3>Общее время</h3>
-                  <p>120 часов</p>
-                </div>
-                <div className={styles.statItem}>
-                  <h3>Завершенные задачи</h3>
-                  <p>42</p>
-                </div>
-                <div className={styles.statItem}>
-                  <h3>Уровень вовлеченности</h3>
-                  <p>85%</p>
-                </div>
               </div>
 
               {/* Скриншоты с максимальными активностями */}
