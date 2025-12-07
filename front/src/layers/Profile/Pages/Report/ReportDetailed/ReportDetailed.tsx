@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getHistory } from "../../../../../api/files";
 import styles from "./ReportDetailed.module.scss";
 import { FileUp } from "lucide-react";
+import GazeHeatmap, {
+  type GazePoint,
+} from "../components/GazeHeatmap/GazeHeatmap";
 
 interface HistoryItem {
   id: string;
@@ -32,6 +35,7 @@ function ReportDetailed() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
+  const [gazePoints, setGazePoints] = useState<GazePoint[]>([]);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -60,6 +64,24 @@ function ReportDetailed() {
         // TODO: Загрузить скриншоты по video_id, если есть API
         // Пока оставляем пустым массивом
         setScreenshots([]);
+
+        // Загружаем данные взгляда из localStorage по video_id
+        // Данные сохраняются в Analysis.tsx при просмотре видео
+        if (foundReport.video_id) {
+          try {
+            const storedGazeData = localStorage.getItem(
+              `gaze_data_${foundReport.video_id}`
+            );
+            if (storedGazeData) {
+              const parsedData = JSON.parse(storedGazeData);
+              if (Array.isArray(parsedData) && parsedData.length > 0) {
+                setGazePoints(parsedData);
+              }
+            }
+          } catch (err) {
+            console.error("Ошибка при загрузке данных взгляда:", err);
+          }
+        }
       } catch (err: any) {
         console.error("Ошибка при загрузке отчета:", err);
         setError(
@@ -495,6 +517,9 @@ function ReportDetailed() {
           {renderMarkdown(report.analysis)}
         </div>
       </div>
+
+      {/* Тепловая карта взгляда */}
+      {gazePoints.length > 0 && <GazeHeatmap gazePoints={gazePoints} />}
 
       {/* Скриншоты, если есть */}
       {screenshots.length > 0 && (
