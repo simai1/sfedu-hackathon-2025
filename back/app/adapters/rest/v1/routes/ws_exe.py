@@ -154,6 +154,7 @@ async def client_ws(
                 if stored:
                     relaxation, concentration = stored
                     engagement = await engagement_service.create(
+                        user_id=uuid.UUID(user_id),
                         video_id=video_id,
                         relaxation=relaxation,
                         concentration=concentration,

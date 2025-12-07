@@ -50,8 +50,8 @@ class GroupRepo:
         user = await self.session.get(UserModel, user_id)
         return GroupMember(
             id=user_id,
-            name=user.name,
-            email=user.email,
+            name=user.name, # type: ignore
+            email=user.email, # type: ignore
             joined_at=membership.joined_at,
         )
 

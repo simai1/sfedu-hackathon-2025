@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class Engagement(BaseModel):
     id: uuid.UUID
+    user_id: uuid.UUID | None = None
     video_id: uuid.UUID
     relaxation: float
     concentration: float
@@ -13,6 +14,7 @@ class Engagement(BaseModel):
 
 
 class CreateEngagement(BaseModel):
+    user_id: uuid.UUID | None = None
     video_id: uuid.UUID
     relaxation: float | None
     concentration: float
