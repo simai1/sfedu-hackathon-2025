@@ -9,7 +9,7 @@ import VideoPlayer, {
   type ScreenshotTrigger,
   type VideoPlayerRef,
 } from "../../../../core/components/VideoPlayer/VideoPlayer";
-import { uploadVideo, uploadPhoto } from "../../../../api/files";
+import { uploadVideo, uploadPhoto, analyzeEEG } from "../../../../api/files";
 import { useUserStore } from "../../../../store/userStore";
 import { useWebSocketStore } from "../../../../store/websocketStore";
 import styles from "./Analysis.module.scss";
@@ -50,6 +50,7 @@ function Analysis() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [isReportGenerating, setIsReportGenerating] = useState(false);
+  const [reportAnalysis, setReportAnalysis] = useState<string | null>(null);
   const [screenshotTriggers, setScreenshotTriggers] = useState<
     ScreenshotTrigger[]
   >([]);
@@ -258,6 +259,18 @@ function Analysis() {
     }
   }, [state, eyeTrackingEnabled]);
 
+  const generateScreenshotTriggers = (duration: number) => {
+    const triggers: ScreenshotTrigger[] = [];
+    for (let time = 0; time < duration; time += 2) {
+      triggers.push({
+        type: "custom",
+        timestamp: time,
+        message: `Автоматический скриншот`,
+      });
+    }
+    return triggers;
+  };
+
   const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
       setUploadError(null);
@@ -367,6 +380,8 @@ function Analysis() {
       console.log("Токен первые 10 символов:", token.substring(0, 10));
 
       const ws = new WebSocket(wsUrl);
+      // Устанавливаем wsRef.current сразу после создания WebSocket
+      wsRef.current = ws;
       let connectionTimeout: NodeJS.Timeout | null = null;
 
       // Таймаут для соединения (10 секунд)
@@ -421,18 +436,45 @@ function Analysis() {
             console.log("Отслеживание видео завершено");
           } else if (data.type === "request_screenshot") {
             // Сервер запрашивает скриншот
-            const timestamp = data.timestamp;
-            console.log("Запрос скриншота на timestamp:", timestamp);
-            console.log("Состояние для скриншота:", {
+            // Используем timestamp из запроса, или текущее время видео, или Date.now() как fallback
+            let timestamp = data.timestamp;
+
+            // Если timestamp отсутствует, используем текущее время видео или текущее время
+            if (timestamp === undefined || timestamp === null) {
+              const videoTime = videoPlayerRef.current?.getCurrentTime();
+              timestamp = videoTime ? Math.floor(videoTime * 1000) : Date.now();
+              console.warn(
+                "[SCREENSHOT REQUEST] timestamp отсутствует в запросе, используем fallback:",
+                timestamp
+              );
+            }
+
+            console.log(
+              "🔵 [SCREENSHOT REQUEST] Получен запрос скриншота на timestamp:",
+              timestamp,
+              "тип:",
+              typeof timestamp
+            );
+
+            // Используем ref для получения актуального значения uploadedVideoId
+            const currentVideoIdFromRef = uploadedVideoIdRef.current;
+            const currentVideoIdFromState = uploadedVideoId;
+
+            console.log("[SCREENSHOT REQUEST] Состояние для скриншота:", {
               hasVideoPlayerRef: !!videoPlayerRef.current,
-              uploadedVideoId,
+              uploadedVideoIdFromState: currentVideoIdFromState,
+              uploadedVideoIdFromRef: currentVideoIdFromRef,
               videoURL: !!videoURL,
-              wsReady: wsRef.current?.readyState === WebSocket.OPEN,
+              wsReady: ws.readyState === WebSocket.OPEN,
+              wsRefReady: wsRef.current?.readyState === WebSocket.OPEN,
+              state,
+              timestamp,
+              timestampType: typeof timestamp,
             });
 
             if (!videoPlayerRef.current) {
               console.error(
-                "videoPlayerRef.current отсутствует, скриншот не может быть создан"
+                "❌ [SCREENSHOT REQUEST] videoPlayerRef.current отсутствует, скриншот не может быть создан"
               );
               return;
             }
@@ -464,8 +506,9 @@ function Analysis() {
 
             // Используем ref для получения актуального значения uploadedVideoId
             // (чтобы избежать проблемы с замыканием в обработчике WebSocket)
+            // Приоритет отдаем ref, так как он всегда актуален
             const currentVideoId =
-              uploadedVideoIdRef.current || uploadedVideoId;
+              currentVideoIdFromRef || currentVideoIdFromState;
 
             console.log("Проверка uploadedVideoId:", {
               fromRef: uploadedVideoIdRef.current,
@@ -475,117 +518,337 @@ function Analysis() {
 
             // Отправляем на сервер только если есть uploadedVideoId
             if (currentVideoId) {
-              try {
-                console.log(
-                  "=== Начинаем загрузку фото на сервер через /v1/photos ==="
-                );
-                console.log("imageData длина:", imageData.length);
-                console.log(
-                  "uploadedVideoId (из ref):",
-                  uploadedVideoIdRef.current
-                );
-                console.log("uploadedVideoId (из state):", uploadedVideoId);
-                console.log("currentVideoId:", currentVideoId);
+              // Сохраняем timestamp в локальную переменную для использования в асинхронной функции
+              const screenshotTimestamp = timestamp;
 
-                // Загружаем фото на сервер через /v1/photos
-                const photoResponse = await uploadPhoto(
-                  imageData,
-                  `screenshot-${Date.now()}.png`
-                );
-
-                console.log("=== Ответ от сервера при загрузке фото ===");
-                console.log("Полный ответ:", photoResponse);
-                console.log("photoResponse.data:", photoResponse?.data);
-                console.log(
-                  "photoResponse.data?.url:",
-                  photoResponse?.data?.url
-                );
-
-                // Извлекаем URL из ответа
-                // Сервер возвращает {"url": "..."}
-                const photoData = photoResponse?.data;
-                let screenshotUrl = null;
-
-                if (photoData) {
-                  // Проверяем разные возможные форматы ответа
-                  screenshotUrl =
-                    photoData.url || photoData.photo_url || photoData.image_url;
-                }
-
-                if (!screenshotUrl) {
-                  console.error("URL не найден в ответе сервера!", {
-                    photoResponse,
-                    photoData,
-                    responseKeys: photoResponse
-                      ? Object.keys(photoResponse)
-                      : [],
-                    dataKeys: photoData ? Object.keys(photoData) : [],
-                  });
-                  throw new Error("URL не найден в ответе сервера");
-                }
-
-                console.log("=== Photo URL получен ===");
-                console.log("screenshotUrl:", screenshotUrl);
-
-                // Получаем текущее время видео для time_code
-                const currentVideoTime =
-                  videoPlayerRef.current?.getCurrentTime() || 0;
-                const timeCode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
-
-                console.log("Таймкод видео:", {
-                  currentVideoTime,
-                  timeCode,
-                });
-
-                const gazePositionPayload = latestGazeRef.current
-                  ? {
-                      viewport_x: latestGazeRef.current.viewportX,
-                      viewport_y: latestGazeRef.current.viewportY,
-                      relative_x: latestGazeRef.current.relativeX,
-                      relative_y: latestGazeRef.current.relativeY,
-                      video_time: latestGazeRef.current.videoTime,
-                      captured_at: latestGazeRef.current.timestamp,
-                    }
-                  : undefined;
-
-                // Отправляем video_frame на сервер
-                const videoFrameMessage = {
-                  type: "video_frame",
-                  timestamp: timestamp.toString(),
-                  video_id: currentVideoId,
-                  screenshot_url: screenshotUrl,
-                  time_code: timeCode,
-                  gaze_position: gazePositionPayload,
-                };
-
-                console.log("=== Отправка video_frame в WebSocket ===");
-                console.log("videoFrameMessage:", videoFrameMessage);
-                console.log("WebSocket readyState:", wsRef.current?.readyState);
-
-                if (wsRef.current?.readyState === WebSocket.OPEN) {
-                  wsRef.current.send(JSON.stringify(videoFrameMessage));
+              // Выполняем асинхронную операцию без await в обработчике
+              // чтобы не блокировать обработку других сообщений
+              (async () => {
+                try {
                   console.log(
-                    "video_frame успешно отправлен:",
-                    videoFrameMessage
+                    "=== [SCREENSHOT] Начинаем загрузку фото на сервер через /v1/photos ==="
                   );
-                } else {
-                  console.error("WebSocket не готов для отправки video_frame", {
-                    readyState: wsRef.current?.readyState,
-                    wsExists: !!wsRef.current,
+                  console.log(
+                    "[SCREENSHOT] imageData длина:",
+                    imageData.length
+                  );
+                  console.log(
+                    "[SCREENSHOT] uploadedVideoId (из ref):",
+                    uploadedVideoIdRef.current
+                  );
+                  console.log(
+                    "[SCREENSHOT] uploadedVideoId (из state):",
+                    uploadedVideoId
+                  );
+                  console.log("[SCREENSHOT] currentVideoId:", currentVideoId);
+                  console.log(
+                    "[SCREENSHOT] WebSocket состояние перед загрузкой:",
+                    {
+                      readyState: ws.readyState,
+                      isOpen: ws.readyState === WebSocket.OPEN,
+                    }
+                  );
+
+                  // Загружаем фото на сервер через /v1/photos
+                  let photoResponse;
+                  try {
+                    photoResponse = await uploadPhoto(
+                      imageData,
+                      `screenshot-${Date.now()}.png`
+                    );
+                    console.log(
+                      "[SCREENSHOT] ✅ Фото успешно загружено на сервер"
+                    );
+                  } catch (uploadError: any) {
+                    console.error(
+                      "[SCREENSHOT] ❌ Ошибка при загрузке фото:",
+                      uploadError
+                    );
+                    // Логируем детали ошибки axios
+                    if (uploadError?.response) {
+                      console.error("[SCREENSHOT] Ошибка response:", {
+                        status: uploadError.response.status,
+                        statusText: uploadError.response.statusText,
+                        data: uploadError.response.data,
+                        headers: uploadError.response.headers,
+                      });
+                    }
+                    if (uploadError?.request) {
+                      console.error(
+                        "[SCREENSHOT] Ошибка request:",
+                        uploadError.request
+                      );
+                    }
+                    if (uploadError?.message) {
+                      console.error(
+                        "[SCREENSHOT] Ошибка message:",
+                        uploadError.message
+                      );
+                    }
+                    throw uploadError;
+                  }
+
+                  console.log(
+                    "=== [SCREENSHOT] Ответ от сервера при загрузке фото ==="
+                  );
+                  console.log("[SCREENSHOT] Полный ответ:", photoResponse);
+                  console.log(
+                    "[SCREENSHOT] photoResponse:",
+                    JSON.stringify(photoResponse, null, 2)
+                  );
+                  console.log(
+                    "[SCREENSHOT] photoResponse.data:",
+                    photoResponse?.data
+                  );
+                  console.log(
+                    "[SCREENSHOT] photoResponse.data?.url:",
+                    photoResponse?.data?.url
+                  );
+
+                  // Извлекаем URL из ответа
+                  // Сервер возвращает {"url": "..."} в response.data
+                  // Но также проверяем, может быть ответ пришел напрямую
+                  let screenshotUrl = null;
+
+                  // Проверяем разные возможные форматы ответа
+                  if (photoResponse?.data?.url) {
+                    screenshotUrl = photoResponse.data.url;
+                    console.log(
+                      "[SCREENSHOT] URL найден в photoResponse.data.url"
+                    );
+                  } else if (photoResponse?.data?.photo_url) {
+                    screenshotUrl = photoResponse.data.photo_url;
+                    console.log(
+                      "[SCREENSHOT] URL найден в photoResponse.data.photo_url"
+                    );
+                  } else if (photoResponse?.data?.image_url) {
+                    screenshotUrl = photoResponse.data.image_url;
+                    console.log(
+                      "[SCREENSHOT] URL найден в photoResponse.data.image_url"
+                    );
+                  } else if (
+                    photoResponse?.data &&
+                    typeof photoResponse.data === "string"
+                  ) {
+                    // Возможно, ответ пришел как строка
+                    screenshotUrl = photoResponse.data as string;
+                    console.log(
+                      "[SCREENSHOT] URL найден как строка в photoResponse.data"
+                    );
+                  }
+
+                  if (screenshotUrl) {
+                    console.log(
+                      "[SCREENSHOT] ✅ Извлеченный screenshotUrl:",
+                      screenshotUrl
+                    );
+                  } else {
+                    console.error(
+                      "[SCREENSHOT] ❌ URL не найден в ответе сервера!",
+                      {
+                        photoResponse,
+                        photoResponseType: typeof photoResponse,
+                        photoResponseData: photoResponse?.data,
+                        photoResponseDataType: typeof photoResponse?.data,
+                        responseKeys: photoResponse
+                          ? Object.keys(photoResponse)
+                          : [],
+                        dataKeys: photoResponse?.data
+                          ? Object.keys(photoResponse.data)
+                          : [],
+                        fullResponse: JSON.stringify(photoResponse, null, 2),
+                      }
+                    );
+                    throw new Error("URL не найден в ответе сервера");
+                  }
+
+                  console.log("=== [SCREENSHOT] Photo URL получен ===");
+                  console.log("[SCREENSHOT] screenshotUrl:", screenshotUrl);
+
+                  // Проверяем состояние WebSocket после асинхронной загрузки фото
+                  // так как за это время соединение могло закрыться
+                  // Используем wsRef.current для получения актуальной ссылки на WebSocket
+                  const currentWs = wsRef.current;
+
+                  console.log(
+                    "[SCREENSHOT] Проверка WebSocket после загрузки фото:",
+                    {
+                      wsReadyState: ws.readyState,
+                      wsIsOpen: ws.readyState === WebSocket.OPEN,
+                      wsRefReadyState: currentWs?.readyState,
+                      wsRefIsOpen: currentWs?.readyState === WebSocket.OPEN,
+                      wsSame: ws === currentWs,
+                    }
+                  );
+
+                  // Проверяем оба WebSocket - локальный и из ref
+                  // Используем тот, который открыт, или ref если он актуален
+                  const wsToUse =
+                    currentWs && currentWs.readyState === WebSocket.OPEN
+                      ? currentWs
+                      : ws.readyState === WebSocket.OPEN
+                      ? ws
+                      : null;
+
+                  if (!wsToUse || wsToUse.readyState !== WebSocket.OPEN) {
+                    console.error(
+                      "[SCREENSHOT] ❌ WebSocket закрыт во время загрузки фото",
+                      {
+                        wsReadyState: ws.readyState,
+                        wsRefReadyState: currentWs?.readyState,
+                        wsStates: {
+                          CONNECTING: WebSocket.CONNECTING,
+                          OPEN: WebSocket.OPEN,
+                          CLOSING: WebSocket.CLOSING,
+                          CLOSED: WebSocket.CLOSED,
+                        },
+                      }
+                    );
+                    throw new Error(
+                      "WebSocket соединение закрыто во время загрузки фото"
+                    );
+                  }
+
+                  // Получаем текущее время видео для time_code
+                  const currentVideoTime =
+                    videoPlayerRef.current?.getCurrentTime() || 0;
+                  const timeCode = Math.floor(currentVideoTime); // Таймкод в секундах (целое число)
+
+                  console.log("[SCREENSHOT] Таймкод видео:", {
+                    currentVideoTime,
+                    timeCode,
                   });
+
+                  const gazePositionPayload = latestGazeRef.current
+                    ? {
+                        viewport_x: latestGazeRef.current.viewportX,
+                        viewport_y: latestGazeRef.current.viewportY,
+                        relative_x: latestGazeRef.current.relativeX,
+                        relative_y: latestGazeRef.current.relativeY,
+                        video_time: latestGazeRef.current.videoTime,
+                        captured_at: latestGazeRef.current.timestamp,
+                      }
+                    : undefined;
+
+                  // Валидация данных перед отправкой
+                  if (!screenshotTimestamp) {
+                    console.error(
+                      "[SCREENSHOT] screenshotTimestamp отсутствует:",
+                      {
+                        screenshotTimestamp,
+                        originalTimestamp: timestamp,
+                      }
+                    );
+                    throw new Error("timestamp отсутствует");
+                  }
+                  if (!currentVideoId) {
+                    throw new Error("currentVideoId отсутствует");
+                  }
+                  if (!screenshotUrl) {
+                    throw new Error("screenshotUrl отсутствует");
+                  }
+
+                  console.log(
+                    "[SCREENSHOT] Используемый timestamp для отправки:",
+                    {
+                      screenshotTimestamp,
+                      screenshotTimestampType: typeof screenshotTimestamp,
+                      screenshotTimestampString: screenshotTimestamp.toString(),
+                    }
+                  );
+
+                  // Отправляем video_frame на сервер
+                  const videoFrameMessage = {
+                    type: "video_frame",
+                    timestamp: screenshotTimestamp.toString(),
+                    video_id: currentVideoId,
+                    screenshot_url: screenshotUrl,
+                    time_code: timeCode,
+                    gaze_position: gazePositionPayload,
+                  };
+
+                  console.log(
+                    "=== [SCREENSHOT] Отправка video_frame в WebSocket ==="
+                  );
+                  console.log(
+                    "[SCREENSHOT] videoFrameMessage:",
+                    JSON.stringify(videoFrameMessage, null, 2)
+                  );
+                  console.log("[SCREENSHOT] Проверка данных:", {
+                    hasTimestamp: !!screenshotTimestamp,
+                    hasVideoId: !!currentVideoId,
+                    hasScreenshotUrl: !!screenshotUrl,
+                    hasTimeCode: timeCode !== undefined,
+                  });
+                  console.log("[SCREENSHOT] WebSocket для отправки:", {
+                    wsToUseReadyState: wsToUse.readyState,
+                    wsToUseIsOpen: wsToUse.readyState === WebSocket.OPEN,
+                    wsToUseSameAsWs: wsToUse === ws,
+                    wsToUseSameAsRef: wsToUse === wsRef.current,
+                  });
+
+                  // Используем актуальный WebSocket из проверки выше
+                  try {
+                    const messageString = JSON.stringify(videoFrameMessage);
+                    console.log(
+                      "[SCREENSHOT] Отправляем сообщение (длина):",
+                      messageString.length
+                    );
+                    console.log(
+                      "[SCREENSHOT] Сообщение для отправки:",
+                      messageString.substring(0, 200) + "..."
+                    );
+
+                    wsToUse.send(messageString);
+
+                    console.log(
+                      "[SCREENSHOT] ✅ video_frame успешно отправлен:",
+                      videoFrameMessage
+                    );
+                  } catch (sendError) {
+                    console.error(
+                      "[SCREENSHOT] ❌ Ошибка при отправке video_frame:",
+                      sendError
+                    );
+                    if (sendError instanceof Error) {
+                      console.error(
+                        "[SCREENSHOT] Сообщение об ошибке:",
+                        sendError.message
+                      );
+                      console.error(
+                        "[SCREENSHOT] Стек ошибки:",
+                        sendError.stack
+                      );
+                    }
+                    throw sendError;
+                  }
+                } catch (error) {
+                  console.error(
+                    "[SCREENSHOT] ❌ Ошибка в процессе отправки скриншота:",
+                    error
+                  );
+                  if (error instanceof Error) {
+                    console.error(
+                      "[SCREENSHOT] Сообщение об ошибке:",
+                      error.message
+                    );
+                    console.error("[SCREENSHOT] Стек ошибки:", error.stack);
+                  }
+                  // Показываем ошибку пользователю
+                  setUploadError(
+                    `Ошибка отправки скриншота: ${
+                      error instanceof Error
+                        ? error.message
+                        : "Неизвестная ошибка"
+                    }`
+                  );
                 }
-              } catch (error) {
-                console.error("Ошибка загрузки фото:", error);
-                if (error instanceof Error) {
-                  console.error("Сообщение об ошибке:", error.message);
-                  console.error("Стек ошибки:", error.stack);
-                }
-              }
+              })(); // Вызываем асинхронную функцию немедленно
             } else {
               console.warn(
-                "uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
+                "[SCREENSHOT] ⚠️ uploadedVideoId отсутствует, скриншот создан для отображения, но не отправлен на сервер"
               );
-              console.warn("Текущее состояние:", {
+              console.warn("[SCREENSHOT] Текущее состояние:", {
                 uploadedVideoId,
                 state,
                 videoFile: !!videoFile,
@@ -669,8 +932,6 @@ function Analysis() {
           console.log("WebSocket закрыт без кода статуса (1005)");
         }
       };
-
-      wsRef.current = ws;
     } catch (error) {
       console.error("Ошибка создания WebSocket:", error);
       setIsSocketConnected(false);
@@ -678,17 +939,6 @@ function Analysis() {
         "Не удалось создать WebSocket соединение. Проверьте настройки браузера."
       );
     }
-  };
-  const generateScreenshotTriggers = (duration: number) => {
-    const triggers: ScreenshotTrigger[] = [];
-    for (let time = 0; time < duration; time += 2) {
-      triggers.push({
-        type: "custom",
-        timestamp: time,
-        message: `Автоматический скриншот`,
-      });
-    }
-    return triggers;
   };
 
   const handleStartWatching = () => {
@@ -721,20 +971,24 @@ function Analysis() {
       return;
     }
 
+    // Калибровка теперь опциональна - можно смотреть видео без неё
+    // Проверяем только если включено отслеживание взгляда
     if (eyeTrackingEnabled) {
       if (cameraPermission !== "granted") {
-        setUploadError(
+        // Предупреждаем, но не блокируем просмотр
+        console.warn(
           "Доступ к камере не разрешен — тепловая карта и красный индикатор взгляда не будут построены."
         );
-        return;
+        // Не блокируем просмотр, просто предупреждаем
       }
 
-      if (cameraPermission === "granted" && !calibrationCompleted) {
-        setUploadError(
-          "Пройдите калибровку: нажмите «Начать калибровку» и кликните по всем точкам 5 раз."
-        );
-        return;
-      }
+      // Калибровка больше не обязательна - можно смотреть видео без неё
+      // if (cameraPermission === "granted" && !calibrationCompleted) {
+      //   setUploadError(
+      //     "Пройдите калибровку: нажмите «Начать калибровку» и кликните по всем точкам 5 раз."
+      //   );
+      //   return;
+      // }
 
       if (isCalibrating) {
         setUploadError(
@@ -788,12 +1042,44 @@ function Analysis() {
   };
 
   const handleGenerateReport = async () => {
-    setIsReportGenerating(true);
+    // Используем ref для получения актуального значения uploadedVideoId
+    const currentVideoId = uploadedVideoIdRef.current || uploadedVideoId;
 
-    setTimeout(() => {
-      setIsReportGenerating(false);
+    if (!currentVideoId) {
+      setUploadError("ID видео не найден. Пожалуйста, загрузите видео заново.");
+      return;
+    }
+
+    console.log("[REPORT] Генерация отчета для video_id:", {
+      fromRef: uploadedVideoIdRef.current,
+      fromState: uploadedVideoId,
+      currentVideoId,
+    });
+
+    setIsReportGenerating(true);
+    setUploadError(null);
+
+    try {
+      const response = await analyzeEEG(currentVideoId);
+      console.log("[REPORT] Ответ от сервера при анализе:", response);
+
+      const analysisText = response?.data?.analysis;
+      if (!analysisText) {
+        throw new Error("Анализ не найден в ответе сервера");
+      }
+
+      setReportAnalysis(analysisText);
       setState("reportGenerated");
-    }, 2000);
+    } catch (error) {
+      console.error("[REPORT] Ошибка при генерации отчета:", error);
+      setUploadError(
+        error instanceof Error
+          ? `Ошибка генерации отчета: ${error.message}`
+          : "Не удалось сгенерировать отчет. Попробуйте еще раз."
+      );
+    } finally {
+      setIsReportGenerating(false);
+    }
   };
 
   const handleSaveReport = async () => {
@@ -833,6 +1119,120 @@ function Analysis() {
     console.log("Скриншот добавлен в состояние");
   };
 
+  // Функция для рендеринга markdown в HTML
+  const renderMarkdown = (content: string) => {
+    const lines = content.split("\n");
+    const elements: React.ReactNode[] = [];
+    let currentParagraph: string[] = [];
+    let currentList: string[] = [];
+
+    const flushParagraph = () => {
+      if (currentParagraph.length > 0) {
+        const text = currentParagraph.join(" ");
+        elements.push(
+          <p
+            key={`p-${elements.length}`}
+            style={{ marginBottom: "1rem", lineHeight: "1.6" }}
+            dangerouslySetInnerHTML={{
+              __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
+            }}
+          />
+        );
+        currentParagraph = [];
+      }
+    };
+
+    const flushList = () => {
+      if (currentList.length > 0) {
+        elements.push(
+          <ul
+            key={`ul-${elements.length}`}
+            style={{
+              marginLeft: "1.5rem",
+              marginBottom: "1rem",
+              lineHeight: "1.6",
+            }}
+          >
+            {currentList.map((item, idx) => (
+              <li key={idx} style={{ marginBottom: "0.5rem" }}>
+                {item.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}
+              </li>
+            ))}
+          </ul>
+        );
+        currentList = [];
+      }
+    };
+
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+
+      if (trimmedLine.startsWith("# ")) {
+        flushList();
+        flushParagraph();
+        elements.push(
+          <h1
+            key={`h1-${index}`}
+            style={{
+              fontSize: "2rem",
+              fontWeight: 600,
+              marginTop: "1.5rem",
+              marginBottom: "1rem",
+            }}
+          >
+            {trimmedLine.substring(2)}
+          </h1>
+        );
+      } else if (trimmedLine.startsWith("## ")) {
+        flushList();
+        flushParagraph();
+        elements.push(
+          <h2
+            key={`h2-${index}`}
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              marginTop: "1.25rem",
+              marginBottom: "0.75rem",
+            }}
+          >
+            {trimmedLine.substring(3)}
+          </h2>
+        );
+      } else if (trimmedLine.startsWith("### ")) {
+        flushList();
+        flushParagraph();
+        elements.push(
+          <h3
+            key={`h3-${index}`}
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              marginTop: "1rem",
+              marginBottom: "0.5rem",
+            }}
+          >
+            {trimmedLine.substring(4)}
+          </h3>
+        );
+      } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
+        flushParagraph();
+        currentList.push(trimmedLine.substring(2));
+      } else if (trimmedLine === "") {
+        flushList();
+        flushParagraph();
+      } else {
+        flushList();
+        currentParagraph.push(trimmedLine);
+      }
+    });
+
+    flushList();
+    flushParagraph();
+
+    return elements;
+  };
+
   const handleReset = () => {
     // Закрываем WebSocket соединение
     if (wsRef.current) {
@@ -855,6 +1255,7 @@ function Analysis() {
     setState("upload");
     setScreenshotTriggers([]);
     setCapturedScreenshots([]);
+    setReportAnalysis(null);
     videoDurationRef.current = 0;
     setShowCalibration(false);
     setIsCalibrating(false);
@@ -1428,6 +1829,31 @@ function Analysis() {
                 <h2>Отчет сгенерирован</h2>
                 <p>Теперь вы можете задать вопросы о результатах анализа</p>
               </div>
+
+              {uploadError && (
+                <div
+                  className={styles.uploadError}
+                  style={{ marginBottom: "1rem" }}
+                >
+                  {uploadError}
+                </div>
+              )}
+
+              {reportAnalysis && (
+                <div
+                  className={styles.reportContent}
+                  style={{
+                    backgroundColor: "var(--profile-bg-secondary)",
+                    padding: "2rem",
+                    borderRadius: "0.75rem",
+                    marginBottom: "2rem",
+                    color: "var(--profile-text)",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  <div>{renderMarkdown(reportAnalysis)}</div>
+                </div>
+              )}
 
               <div className={styles.chartContainer}>
                 <KeyIndicators />
