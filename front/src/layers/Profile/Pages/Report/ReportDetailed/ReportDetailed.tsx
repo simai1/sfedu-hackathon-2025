@@ -1,324 +1,462 @@
-import React, { useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import styles from "./ReportDetailed.module.scss"
-import { FileUp } from "lucide-react"
-const mockDetailedReports: Record<string, any> = {
-  "1": {
-    id: "1",
-    title: "Отчет по анализу презентации проекта",
-    date: "2024-12-05T14:30:00",
-    type: "detailed",
-    status: "completed",
-    content: `
-# Отчет по анализу презентации проекта
+import React, { useRef, useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getHistory } from "../../../../../api/files";
+import styles from "./ReportDetailed.module.scss";
+import { FileUp } from "lucide-react";
 
-## Общая информация
-Дата проведения анализа: 5 декабря 2024, 14:30
-Длительность анализа: 15 минут 32 секунды
-Тип анализа: Детальный анализ эмоционального состояния
+interface HistoryItem {
+  id: string;
+  user_id: string;
+  video_id: string;
+  analysis: string;
+  created_at: string;
+}
 
-## Основные метрики
-
-### Уровень внимания
-Средний уровень концентрации внимания составил **85%**, что является отличным показателем. На протяжении всей презентации наблюдалась стабильная фокусировка на материале.
-
-### Уровень расслабления
-Средний показатель расслабления - **72%**. Это указывает на комфортное эмоциональное состояние без излишнего напряжения.
-
-### Уровень стресса
-Уровень стресса составил **35%**, что находится в пределах нормы. Небольшое повышение стресса наблюдалось в начале презентации, что является естественной реакцией.
-
-### Расслабленность
-Общий уровень вовлеченности - **88%**, что демонстрирует высокую заинтересованность в представленном материале.
-
-## Эмоциональные состояния по времени
-
-- **00:00 - 05:00**: Начальная стадия - легкое волнение, быстро переходящее в концентрацию
-- **05:00 - 10:00**: Период максимальной концентрации и уверенности
-- **10:00 - 15:00**: Стабильное состояние с высоким уровнем вовлеченности
-- **15:00 - 15:32**: Завершающая стадия - удовлетворение и уверенность
-
-## Выводы и рекомендации
-
-### Положительные аспекты:
-1. Высокий уровень концентрации на протяжении всей презентации
-2. Стабильное эмоциональное состояние без резких перепадов
-3. Отличная Расслабленность в процесс
-
-### Рекомендации:
-1. Рекомендуется делать небольшие паузы каждые 10-15 минут для восстановления
-2. В начале презентации можно использовать техники релаксации для снижения начального волнения
-3. Эмоциональное состояние стабильное и позитивное - поддерживать текущий подход
-
-## Заключение
-
-Презентация прошла успешно с точки зрения эмоционального состояния. Все показатели находятся в оптимальных пределах, что способствует эффективной коммуникации и восприятию информации.
-    `.trim(),
-  },
-  "2": {
-    id: "2",
-    title: "Сводный отчет: Встреча с командой",
-    date: "2024-12-04T10:15:00",
-    type: "summary",
-    status: "completed",
-    content: `
-# Сводный отчет: Встреча с командой
-
-## Краткая информация
-Дата: 4 декабря 2024, 10:15
-Длительность встречи: 42 минуты 18 секунд
-
-## Основные показатели
-
-Средний уровень внимания участников: **78%**
-Уровень вовлеченности: **82%**
-Эмоциональный фон: Позитивный
-
-## Выводы
-
-Анализ вовлеченности участников команды показал положительные результаты. Средний уровень внимания составил 78%, что указывает на высокую заинтересованность в обсуждении. Участники демонстрировали активное участие и заинтересованность в решаемых вопросах.
-    `.trim(),
-  },
-  "3": {
-    id: "3",
-    title: "Детальный анализ онлайн обучения",
-    date: "2024-12-03T16:45:00",
-    type: "analysis",
-    status: "completed",
-    content: `
-# Детальный анализ онлайн обучения
-
-## Обзор
-
-Мониторинг концентрации внимания во время онлайн обучения выявил несколько периодов снижения фокуса. Общая динамика показывает необходимость использования интерактивных элементов для поддержания вовлеченности.
-
-## Детальный анализ
-
-### Периоды высокой концентрации
-- 0-10 минут: 90% внимания
-- 20-30 минут: 85% внимания
-
-### Периоды снижения внимания
-- 10-20 минут: 65% внимания
-- 30-40 минут: 70% внимания
-
-## Рекомендации
-
-Рекомендуется использовать интерактивные элементы для поддержания вовлеченности в периоды снижения концентрации.
-    `.trim(),
-  },
-  "4": {
-    id: "4",
-    title: "Отчет по интервью кандидата",
-    date: "2024-12-02T09:20:00",
-    type: "detailed",
-    status: "draft",
-    content: `
-# Отчет по интервью кандидата
-
-## Предварительные результаты
-
-Анализ эмоциональных реакций кандидата во время интервью показал стабильное эмоциональное состояние. Уровень уверенности оставался высоким на протяжении всей беседы.
-
-*Этот отчет находится в стадии черновика и может быть дополнен.*
-    `.trim(),
-  },
+interface Screenshot {
+  id: string;
+  image: string;
+  timestamp: number;
+  formattedTime: string;
+  trigger?: {
+    type: string;
+    message?: string;
+    value?: number;
+  };
 }
 
 function ReportDetailed() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const contentRef = useRef<HTMLDivElement>(null)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [report, setReport] = useState<HistoryItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
 
-  const report = id ? mockDetailedReports[id] : null
+  useEffect(() => {
+    const fetchReport = async () => {
+      if (!id) {
+        setError("ID отчета не указан");
+        setIsLoading(false);
+        return;
+      }
 
-  if (!report) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.notFound}>
-          <h2>Отчет не найден</h2>
-          <button onClick={() => navigate("/profile/report")}>
-            Вернуться к отчетам
-          </button>
-        </div>
-      </div>
-    )
-  }
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await getHistory();
+        const historyData: HistoryItem[] = response?.data || [];
+        const foundReport = historyData.find((item) => item.id === id);
+
+        if (!foundReport) {
+          setError("Отчет не найден");
+          setIsLoading(false);
+          return;
+        }
+
+        setReport(foundReport);
+
+        // TODO: Загрузить скриншоты по video_id, если есть API
+        // Пока оставляем пустым массивом
+        setScreenshots([]);
+      } catch (err: any) {
+        console.error("Ошибка при загрузке отчета:", err);
+        setError(
+          err?.response?.data?.detail ||
+            err?.message ||
+            "Не удалось загрузить отчет"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReport();
+  }, [id]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("ru-RU", {
       day: "numeric",
       month: "long",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
-
-  const getTypeLabel = () => {
-    switch (report.type) {
-      case "analysis":
-        return "Анализ"
-      case "summary":
-        return "Сводка"
-      case "detailed":
-        return "Детальный"
-      default:
-        return "Отчет"
-    }
-  }
+    });
+  };
 
   const handleExportPdf = () => {
-    if (!contentRef.current) return
-    const printWindow = window.open("", "PRINT", "width=900,height=1200")
-    if (!printWindow) return
+    if (!contentRef.current || !report) return;
+
+    // Конвертируем markdown в HTML для PDF
+    const convertMarkdownToHTML = (markdown: string): string => {
+      const lines = markdown.split("\n");
+      let html = "";
+      let inList = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        if (line.startsWith("# ")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += `<h1>${line.substring(2)}</h1>`;
+        } else if (line.startsWith("## ")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += `<h2>${line.substring(3)}</h2>`;
+        } else if (line.startsWith("### ")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += `<h3>${line.substring(4)}</h3>`;
+        } else if (line.startsWith("- ") || line.startsWith("* ")) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          const listItem = line
+            .substring(2)
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+          html += `<li>${listItem}</li>`;
+        } else if (line === "") {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += "<br/>";
+        } else {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          const processed = line
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>");
+          html += `<p>${processed}</p>`;
+        }
+      }
+
+      if (inList) {
+        html += "</ul>";
+      }
+
+      return html;
+    };
+
+    const htmlContent = convertMarkdownToHTML(report.analysis);
+    const printWindow = window.open("", "PRINT", "width=900,height=1200");
+    if (!printWindow) {
+      alert("Не удалось открыть окно для печати. Разрешите всплывающие окна.");
+      return;
+    }
+
+    // Извлекаем заголовок из анализа
+    let title = "Отчет по анализу видео";
+    const lines = report.analysis.split("\n");
+    for (const line of lines) {
+      if (line.trim().startsWith("# ")) {
+        title = line.trim().substring(2).trim();
+        break;
+      } else if (line.trim().startsWith("## ")) {
+        title = line.trim().substring(3).trim();
+        break;
+      }
+    }
+
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>${report.title}</title>
+          <title>${title}</title>
+          <meta charset="UTF-8">
           <style>
-            body { font-family: 'Inter', sans-serif; padding: 24px; color: #111827; }
-            h1, h2 { margin: 12px 0; }
-            p { line-height: 1.6; margin: 8px 0; }
-            ul { margin: 8px 0 8px 20px; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              padding: 40px; 
+              color: #111827; 
+              line-height: 1.8;
+              max-width: 800px;
+              margin: 0 auto;
+              background: white;
+            }
+            h1 { 
+              font-size: 2rem; 
+              font-weight: 600; 
+              margin: 1.5rem 0 1rem 0;
+              color: #1f2937;
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 0.5rem;
+            }
+            h2 { 
+              font-size: 1.5rem; 
+              font-weight: 600; 
+              margin: 1.5rem 0 0.75rem 0;
+              color: #374151;
+            }
+            h3 { 
+              font-size: 1.25rem; 
+              font-weight: 600; 
+              margin: 1.25rem 0 0.5rem 0;
+              color: #4b5563;
+            }
+            p { 
+              line-height: 1.8; 
+              margin: 1rem 0; 
+              color: #374151;
+            }
+            ul { 
+              margin: 1rem 0 1rem 2rem; 
+              line-height: 1.8;
+            }
+            li { 
+              margin-bottom: 0.5rem; 
+              color: #374151;
+            }
+            strong {
+              font-weight: 600;
+              color: #111827;
+            }
+            em {
+              font-style: italic;
+              color: #4b5563;
+            }
+            @media print {
+              body { padding: 20px; }
+              @page { 
+                margin: 1.5cm;
+                size: A4;
+              }
+              h1 { page-break-after: avoid; }
+              h2, h3 { page-break-after: avoid; }
+            }
           </style>
         </head>
         <body>
-          ${contentRef.current.innerHTML}
+          <h1>${title}</h1>
+          <p style="color: #6b7280; margin-bottom: 2rem; font-size: 0.9rem;">
+            Дата создания: ${formatDate(report.created_at)}
+          </p>
+          <div style="margin-top: 2rem;">
+            ${htmlContent}
+          </div>
         </body>
       </html>
-    `)
-    printWindow.document.close()
-    printWindow.focus()
-    printWindow.print()
-    printWindow.close()
-  }
+    `);
 
+    printWindow.document.close();
+    printWindow.focus();
 
-  // Простой парсер Markdown для отображения контента
-  const renderContent = (content: string) => {
-    const lines = content.split("\n")
-    const elements: React.ReactNode[] = []
-    let currentParagraph: string[] = []
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
+  // Улучшенный рендеринг markdown (из Analysis.tsx)
+  const renderMarkdown = (content: string) => {
+    const lines = content.split("\n");
+    const elements: React.ReactNode[] = [];
+    let currentParagraph: string[] = [];
+    let currentList: string[] = [];
+
+    // Функция для обработки markdown в тексте
+    const processMarkdown = (text: string): string => {
+      let processed = text;
+      // Жирный текст **text**
+      processed = processed.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      // Курсив *text* или _text_
+      processed = processed.replace(/\*(.*?)\*/g, "<em>$1</em>");
+      processed = processed.replace(/_(.*?)_/g, "<em>$1</em>");
+      // Код `code`
+      processed = processed.replace(
+        /`(.*?)`/g,
+        "<code style='background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px; font-family: monospace;'>$1</code>"
+      );
+      // Ссылки [text](url)
+      processed = processed.replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: var(--purple-500); text-decoration: underline;">$1</a>'
+      );
+      return processed;
+    };
+
+    const flushParagraph = () => {
+      if (currentParagraph.length > 0) {
+        const text = currentParagraph.join(" ");
+        elements.push(
+          <p
+            key={`p-${elements.length}`}
+            style={{
+              marginBottom: "1rem",
+              lineHeight: "1.8",
+              color: "var(--profile-text)",
+            }}
+            dangerouslySetInnerHTML={{
+              __html: processMarkdown(text),
+            }}
+          />
+        );
+        currentParagraph = [];
+      }
+    };
+
+    const flushList = () => {
+      if (currentList.length > 0) {
+        elements.push(
+          <ul
+            key={`ul-${elements.length}`}
+            style={{
+              marginLeft: "1.5rem",
+              marginBottom: "1rem",
+              lineHeight: "1.6",
+            }}
+          >
+            {currentList.map((item, idx) => (
+              <li
+                key={idx}
+                style={{
+                  marginBottom: "0.5rem",
+                  color: "var(--profile-text)",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: processMarkdown(item),
+                }}
+              />
+            ))}
+          </ul>
+        );
+        currentList = [];
+      }
+    };
 
     lines.forEach((line, index) => {
-      const trimmedLine = line.trim()
+      const trimmedLine = line.trim();
 
       if (trimmedLine.startsWith("# ")) {
-        if (currentParagraph.length > 0) {
-          const text = currentParagraph.join(" ")
-          elements.push(
-            <p
-              key={`p-${index}`}
-              className={styles.paragraph}
-              dangerouslySetInnerHTML={{
-                __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-              }}
-            />
-          )
-          currentParagraph = []
-        }
+        flushList();
+        flushParagraph();
+        const headingText = trimmedLine.substring(2);
         elements.push(
-          <h1 key={`h1-${index}`} className={styles.h1}>
-            {trimmedLine.substring(2)}
-          </h1>
-        )
+          <h1
+            key={`h1-${index}`}
+            style={{
+              fontSize: "2rem",
+              fontWeight: 600,
+              marginTop: "1.5rem",
+              marginBottom: "1rem",
+              color: "var(--profile-text)",
+            }}
+            dangerouslySetInnerHTML={{
+              __html: processMarkdown(headingText),
+            }}
+          />
+        );
       } else if (trimmedLine.startsWith("## ")) {
-        if (currentParagraph.length > 0) {
-          const text = currentParagraph.join(" ")
-          elements.push(
-            <p
-              key={`p-${index}`}
-              className={styles.paragraph}
-              dangerouslySetInnerHTML={{
-                __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-              }}
-            />
-          )
-          currentParagraph = []
-        }
+        flushList();
+        flushParagraph();
+        const headingText = trimmedLine.substring(3);
         elements.push(
-          <h2 key={`h2-${index}`} className={styles.h2}>
-            {trimmedLine.substring(3)}
-          </h2>
-        )
+          <h2
+            key={`h2-${index}`}
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              marginTop: "1.25rem",
+              marginBottom: "0.75rem",
+              color: "var(--profile-text)",
+            }}
+            dangerouslySetInnerHTML={{
+              __html: processMarkdown(headingText),
+            }}
+          />
+        );
       } else if (trimmedLine.startsWith("### ")) {
-        if (currentParagraph.length > 0) {
-          const text = currentParagraph.join(" ")
-          elements.push(
-            <p
-              key={`p-${index}`}
-              className={styles.paragraph}
-              dangerouslySetInnerHTML={{
-                __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-              }}
-            />
-          )
-          currentParagraph = []
-        }
+        flushList();
+        flushParagraph();
+        const headingText = trimmedLine.substring(4);
         elements.push(
-          <h3 key={`h3-${index}`} className={styles.h3}>
-            {trimmedLine.substring(4)}
-          </h3>
-        )
+          <h3
+            key={`h3-${index}`}
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              marginTop: "1rem",
+              marginBottom: "0.5rem",
+              color: "var(--profile-text)",
+            }}
+            dangerouslySetInnerHTML={{
+              __html: processMarkdown(headingText),
+            }}
+          />
+        );
       } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-        if (currentParagraph.length > 0) {
-          const text = currentParagraph.join(" ")
-          elements.push(
-            <p
-              key={`p-${index}`}
-              className={styles.paragraph}
-              dangerouslySetInnerHTML={{
-                __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-              }}
-            />
-          )
-          currentParagraph = []
-        }
-        elements.push(
-          <li key={`li-${index}`} className={styles.listItem}>
-            {trimmedLine.substring(2)}
-          </li>
-        )
+        flushParagraph();
+        currentList.push(trimmedLine.substring(2));
       } else if (trimmedLine === "") {
-        if (currentParagraph.length > 0) {
-          const text = currentParagraph.join(" ")
-          elements.push(
-            <p
-              key={`p-${index}`}
-              className={styles.paragraph}
-              dangerouslySetInnerHTML={{
-                __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-              }}
-            />
-          )
-          currentParagraph = []
-        }
+        flushList();
+        flushParagraph();
       } else {
-        currentParagraph.push(trimmedLine)
+        flushList();
+        currentParagraph.push(trimmedLine);
       }
-    })
+    });
 
-    if (currentParagraph.length > 0) {
-      const text = currentParagraph.join(" ")
-      elements.push(
-        <p
-          key="p-final"
-          className={styles.paragraph}
-          dangerouslySetInnerHTML={{
-            __html: text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-          }}
-        />
-      )
+    flushList();
+    flushParagraph();
+
+    return elements;
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка отчета...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.notFound}>
+          <h2>{error || "Отчет не найден"}</h2>
+          <button onClick={() => navigate("/profile/report")}>
+            Вернуться к отчетам
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Извлекаем заголовок из анализа
+  let title = "Отчет по анализу видео";
+  const lines = report.analysis.split("\n");
+  for (const line of lines) {
+    if (line.trim().startsWith("# ")) {
+      title = line.trim().substring(2).trim();
+      break;
+    } else if (line.trim().startsWith("## ")) {
+      title = line.trim().substring(3).trim();
+      break;
     }
-
-    return elements
   }
 
   return (
     <div className={styles.container}>
-      <button className={styles.backButton} onClick={() => navigate("/profile/report")}>
+      <button
+        className={styles.backButton}
+        onClick={() => navigate("/profile/report")}
+      >
         <svg
           width="20"
           height="20"
@@ -339,18 +477,10 @@ function ReportDetailed() {
 
       <div className={styles.header}>
         <div>
-          <h1>{report.title}</h1>
-          <p className={styles.date}>{formatDate(report.date)}</p>
+          <h1>{title}</h1>
+          <p className={styles.date}>{formatDate(report.created_at)}</p>
         </div>
         <div className={styles.meta}>
-          <div className={styles.badges}>
-            {report.type && <span className={styles.type}>{getTypeLabel()}</span>}
-            {report.status && (
-              <span className={`${styles.status} ${styles[report.status]}`}>
-                {report.status === "completed" ? "Завершен" : "Черновик"}
-              </span>
-            )}
-          </div>
           <div className={styles.actions}>
             <button className={styles.exportButton} onClick={handleExportPdf}>
               <FileUp size={20} />
@@ -361,11 +491,52 @@ function ReportDetailed() {
       </div>
 
       <div className={styles.content} ref={contentRef}>
-        <div className={styles.reportContent}>{renderContent(report.content)}</div>
+        <div className={styles.reportContent}>
+          {renderMarkdown(report.analysis)}
+        </div>
       </div>
+
+      {/* Скриншоты, если есть */}
+      {screenshots.length > 0 && (
+        <div className={styles.screenshotsSection}>
+          <h2>Скриншоты с активностями ({screenshots.length})</h2>
+          <div className={styles.screenshotsGrid}>
+            {screenshots.map((screenshot) => (
+              <div key={screenshot.id} className={styles.screenshotCard}>
+                <div className={styles.screenshotImage}>
+                  <img
+                    src={screenshot.image}
+                    alt={`Screenshot at ${screenshot.formattedTime}`}
+                  />
+                  <div className={styles.screenshotTime}>
+                    {screenshot.formattedTime}
+                  </div>
+                </div>
+                {screenshot.trigger && (
+                  <div className={styles.screenshotInfo}>
+                    <div className={styles.screenshotTrigger}>
+                      {screenshot.trigger.type === "concentration_increase" &&
+                        "🧠"}
+                      {screenshot.trigger.type === "engagement_increase" &&
+                        "❤️"}
+                      {screenshot.trigger.type === "stress_peak" && "⚠️"}
+                      {screenshot.trigger.type === "attention_peak" && "📈"}
+                      <span>{screenshot.trigger.message || "Событие"}</span>
+                    </div>
+                    {screenshot.trigger.value && (
+                      <div className={styles.screenshotValue}>
+                        Значение: {screenshot.trigger.value}%
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default ReportDetailed
-
+export default ReportDetailed;

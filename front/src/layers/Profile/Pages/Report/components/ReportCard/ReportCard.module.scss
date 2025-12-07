@@ -105,6 +105,46 @@
     }
   }
 
+  .actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .actionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 0.5rem;
+    background-color: var(--profile-card-bg);
+    color: var(--profile-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--purple-500);
+      color: var(--white-500);
+      transform: translateY(-2px);
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .viewButton:hover {
+    background-color: var(--purple-500);
+  }
+
+  .downloadButton:hover {
+    background-color: var(--green-500);
+  }
+
   .arrow {
     flex-shrink: 0;
     display: flex;
@@ -112,6 +152,7 @@
     justify-content: center;
     color: var(--profile-text-muted);
     transition: all 0.2s ease;
+    margin-left: 0.5rem;
   }
 
   &:hover .arrow {
@@ -119,4 +160,3 @@
     transform: translateX(4px);
   }
 }
-

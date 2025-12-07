@@ -9,7 +9,7 @@
     gap: 0.5rem;
     background: none;
     border: none;
-    color: var(--white-500);;
+    color: var(--white-500);
     font-size: 0.9375rem;
     cursor: pointer;
     padding: 0.5rem 0;
@@ -222,5 +222,116 @@
       }
     }
   }
+
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background-color: var(--profile-bg);
+    border-radius: 0.75rem;
+    text-align: center;
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--profile-border);
+      border-top-color: var(--purple-500);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+
+    p {
+      color: var(--profile-text);
+      font-size: 1rem;
+    }
+  }
+
+  .screenshotsSection {
+    background-color: var(--profile-bg);
+    padding: 2rem;
+    border-radius: 0.75rem;
+
+    h2 {
+      color: var(--profile-text);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .screenshotsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .screenshotCard {
+      border: 1px solid var(--profile-border);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--purple-500);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .screenshotImage {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; // 16:9 aspect ratio
+        background-color: var(--profile-card-bg);
+        overflow: hidden;
+
+        img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .screenshotTime {
+          position: absolute;
+          bottom: 0.5rem;
+          left: 0.5rem;
+          background-color: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.25rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+      }
+
+      .screenshotInfo {
+        padding: 1rem;
+
+        .screenshotTrigger {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--profile-text);
+          font-size: 0.875rem;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+        }
+
+        .screenshotValue {
+          color: var(--profile-text-secondary);
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

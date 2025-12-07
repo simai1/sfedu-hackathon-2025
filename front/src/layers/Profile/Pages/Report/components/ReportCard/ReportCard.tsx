@@ -1,49 +1,61 @@
-import { useNavigate } from "react-router-dom"
-import styles from "./ReportCard.module.scss"
+import { useNavigate } from "react-router-dom";
+import styles from "./ReportCard.module.scss";
 
 export interface ReportItem {
-  id: string
-  title: string
-  date: string
-  preview: string
-  type?: "analysis" | "summary" | "detailed"
-  status?: "completed" | "draft"
+  id: string;
+  title: string;
+  date: string;
+  preview: string;
+  analysis?: string; // Полный текст анализа для просмотра
+  video_id?: string;
+  type?: "analysis" | "summary" | "detailed";
+  status?: "completed" | "draft";
 }
 
 interface ReportCardProps {
-  item: ReportItem
+  item: ReportItem;
 }
 
 function ReportCard({ item }: ReportCardProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const handleClick = () => {
-    navigate(`/profile/report/${item.id}`)
-  }
+  const handleClick = (e: React.MouseEvent) => {
+    // Если клик по кнопке действия, не открываем детальную страницу
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest(".actionButton")) {
+      return;
+    }
+    navigate(`/profile/report/${item.id}`);
+  };
+
+  const handleView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/profile/report/${item.id}`);
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("ru-RU", {
       day: "numeric",
       month: "long",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   const getTypeLabel = () => {
     switch (item.type) {
       case "analysis":
-        return "Анализ"
+        return "Анализ";
       case "summary":
-        return "Сводка"
+        return "Сводка";
       case "detailed":
-        return "Детальный"
+        return "Детальный";
       default:
-        return "Отчет"
+        return "Отчет";
     }
-  }
+  };
 
   return (
     <div className={styles.reportCard} onClick={handleClick}>
@@ -95,9 +107,7 @@ function ReportCard({ item }: ReportCardProps) {
       <div className={styles.content}>
         <div className={styles.header}>
           <h3 className={styles.title}>{item.title}</h3>
-          {item.type && (
-            <span className={styles.type}>{getTypeLabel()}</span>
-          )}
+          {item.type && <span className={styles.type}>{getTypeLabel()}</span>}
         </div>
         <p className={styles.date}>{formatDate(item.date)}</p>
         <p className={styles.preview}>{item.preview}</p>
@@ -107,26 +117,57 @@ function ReportCard({ item }: ReportCardProps) {
           </div>
         )}
       </div>
-      <div className={styles.arrow}>
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M9 18L15 12L9 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+      <div className={styles.actions}>
+        {item.analysis && (
+          <button
+            className={`${styles.actionButton} ${styles.viewButton}`}
+            onClick={handleView}
+            title="Просмотреть отчет"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+            </svg>
+          </button>
+        )}
+        <div className={styles.arrow}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9 18L15 12L9 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default ReportCard
-
+export default ReportCard;

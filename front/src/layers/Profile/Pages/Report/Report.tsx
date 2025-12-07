@@ -1,48 +1,85 @@
-import { useState } from "react"
-import ReportCard, { type ReportItem } from "./components/ReportCard/ReportCard"
-import styles from "./Report.module.scss"
+import { useState, useEffect } from "react";
+import ReportCard, {
+  type ReportItem,
+} from "./components/ReportCard/ReportCard";
+import { getHistory } from "../../../../api/files";
+import styles from "./Report.module.scss";
 
-const mockReportItems: ReportItem[] = [
-  {
-    id: "1",
-    title: "Отчет по анализу презентации проекта",
-    date: "2024-12-05T14:30:00",
-    preview:
-      "Проведен полный анализ эмоционального состояния во время презентации проекта. Выявлен высокий уровень концентрации внимания (85%) и умеренный уровень стресса (35%). Рекомендуется делать небольшие паузы для восстановления.",
-    type: "detailed",
-    status: "completed",
-  },
-  {
-    id: "2",
-    title: "Сводный отчет: Встреча с командой",
-    date: "2024-12-04T10:15:00",
-    preview:
-      "Анализ вовлеченности участников команды показал положительные результаты. Средний уровень внимания составил 78%, что указывает на высокую заинтересованность в обсуждении.",
-    type: "summary",
-    status: "completed",
-  },
-  {
-    id: "3",
-    title: "Детальный анализ онлайн обучения",
-    date: "2024-12-03T16:45:00",
-    preview:
-      "Мониторинг концентрации внимания во время онлайн обучения выявил несколько периодов снижения фокуса. Рекомендуется использовать интерактивные элементы для поддержания вовлеченности.",
-    type: "analysis",
-    status: "completed",
-  },
-  {
-    id: "4",
-    title: "Отчет по интервью кандидата",
-    date: "2024-12-02T09:20:00",
-    preview:
-      "Анализ эмоциональных реакций кандидата во время интервью показал стабильное эмоциональное состояние. Уровень уверенности оставался высоким на протяжении всей беседы.",
-    type: "detailed",
-    status: "draft",
-  },
-]
+// Интерфейс для ответа API
+interface HistoryItem {
+  id: string;
+  user_id: string;
+  video_id: string;
+  analysis: string;
+  created_at: string;
+}
 
 function Report() {
-  const [reportItems] = useState<ReportItem[]>(mockReportItems)
+  const [reportItems, setReportItems] = useState<ReportItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await getHistory();
+        const historyData: HistoryItem[] = response?.data || [];
+
+        // Преобразуем данные API в формат ReportItem
+        const reports: ReportItem[] = historyData.map((item) => {
+          // Извлекаем превью из анализа (первые 150 символов)
+          const preview = item.analysis
+            .replace(/#{1,6}\s+/g, "") // Убираем заголовки
+            .replace(/\*\*(.*?)\*\*/g, "$1") // Убираем жирный текст
+            .replace(/\n+/g, " ") // Заменяем переносы строк на пробелы
+            .trim()
+            .substring(0, 150);
+
+          // Извлекаем заголовок из анализа (первая строка с заголовком или первые 50 символов)
+          let title = "Отчет по анализу видео";
+          const lines = item.analysis.split("\n");
+          for (const line of lines) {
+            if (line.trim().startsWith("# ")) {
+              title = line.trim().substring(2).trim();
+              break;
+            } else if (line.trim().startsWith("## ")) {
+              title = line.trim().substring(3).trim();
+              break;
+            }
+          }
+          if (title.length > 50) {
+            title = title.substring(0, 50) + "...";
+          }
+
+          return {
+            id: item.id,
+            title: title || "Отчет по анализу видео",
+            date: item.created_at,
+            preview: preview + (item.analysis.length > 150 ? "..." : ""),
+            analysis: item.analysis, // Сохраняем полный анализ для просмотра
+            video_id: item.video_id,
+            type: "detailed" as const,
+            status: "completed" as const,
+          };
+        });
+
+        setReportItems(reports);
+      } catch (err: any) {
+        console.error("Ошибка при загрузке истории отчетов:", err);
+        setError(
+          err?.response?.data?.detail ||
+            err?.message ||
+            "Не удалось загрузить отчеты. Попробуйте обновить страницу."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, []);
 
   return (
     <div className={styles.reportContainer}>
@@ -53,7 +90,50 @@ function Report() {
         </p>
       </div>
 
-      {reportItems.length === 0 ? (
+      {isLoading ? (
+        <div className={styles.emptyState}>
+          <div className={styles.loader}>
+            <div className={styles.spinner}></div>
+          </div>
+          <p>Загрузка отчетов...</p>
+        </div>
+      ) : error ? (
+        <div className={styles.emptyState}>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.3"
+            />
+          </svg>
+          <p>Ошибка загрузки</p>
+          <span>{error}</span>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1.5rem",
+              background: "var(--purple-500)",
+              color: "white",
+              border: "none",
+              borderRadius: "0.5rem",
+              cursor: "pointer",
+              fontSize: "0.9375rem",
+            }}
+          >
+            Обновить
+          </button>
+        </div>
+      ) : reportItems.length === 0 ? (
         <div className={styles.emptyState}>
           <svg
             width="64"
@@ -82,7 +162,7 @@ function Report() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default Report
+export default Report;

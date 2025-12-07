@@ -2006,7 +2006,7 @@ function Analysis() {
 
                   {/* Уменьшенный график концентрации под скриншотами */}
                   <div className={styles.chartContainerSmall}>
-                    <ConcentrationEngagementChart />
+                    <KeyIndicators />
                   </div>
 
                   {uploadError && (
@@ -2145,13 +2145,6 @@ function Analysis() {
                 <button
                   className={styles.saveButton}
                   onClick={handleSaveReport}
-                >
-                  Сохранить отчет
-                </button>
-                <button
-                  className={styles.saveButton}
-                  onClick={handleExportPDF}
-                  style={{ marginLeft: "1rem" }}
                 >
                   Скачать PDF
                 </button>

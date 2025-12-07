@@ -76,3 +76,8 @@ export const analyzeEEG = (videoId: string) => {
     video_id: videoId,
   });
 };
+
+// Получение истории отчетов
+export const getHistory = () => {
+  return apiRequest("get", "/v1/history/");
+};
