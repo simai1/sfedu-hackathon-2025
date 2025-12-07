@@ -55,6 +55,8 @@ function Analysis() {
   >([]);
   const [capturedScreenshots, setCapturedScreenshots] = useState<any[]>([]);
   const [isTracking, setIsTracking] = useState(false);
+  const [eyeTrackingEnabled, setEyeTrackingEnabled] = useState(true);
+  const [showCameraPreview, setShowCameraPreview] = useState(true);
   const [cameraPermission, setCameraPermission] =
     useState<CameraPermissionStatus>("unknown");
   const [showCalibration, setShowCalibration] = useState(false);
@@ -83,35 +85,36 @@ function Analysis() {
     return false;
   }, []);
 
-  const requestCameraAccess = useCallback(async (): Promise<CameraPermissionStatus> => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setUploadError("Браузер не поддерживает доступ к камере.");
-      setCameraPermission("denied");
-      return "denied";
-    }
+  const requestCameraAccess =
+    useCallback(async (): Promise<CameraPermissionStatus> => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setUploadError("Браузер не поддерживает доступ к камере.");
+        setCameraPermission("denied");
+        return "denied";
+      }
 
-    try {
-      setCameraPermission("pending");
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach((track) => track.stop());
-      setCameraPermission("granted");
-      setUploadError(null);
-      return "granted";
-    } catch (error) {
-      console.error("Не удалось получить доступ к камере", error);
-      setCameraPermission("denied");
-      setUploadError(
-        "Доступ к камере не разрешен — тепловая карта и отслеживание взгляда не будут работать."
-      );
-      return "denied";
-    }
-  }, []);
+      try {
+        setCameraPermission("pending");
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        stream.getTracks().forEach((track) => track.stop());
+        setCameraPermission("granted");
+        setUploadError(null);
+        return "granted";
+      } catch (error) {
+        console.error("Не удалось получить доступ к камере", error);
+        setCameraPermission("denied");
+        setUploadError(
+          "Доступ к камере не разрешен — тепловая карта и отслеживание взгляда не будут работать."
+        );
+        return "denied";
+      }
+    }, []);
 
   const startCalibration = useCallback(async () => {
     const permission =
-      cameraPermission === "granted"
-        ? "granted"
-        : await requestCameraAccess();
+      cameraPermission === "granted" ? "granted" : await requestCameraAccess();
 
     if (permission !== "granted") {
       setUploadError(
@@ -120,14 +123,21 @@ function Analysis() {
       return;
     }
 
+    // Включаем отслеживание если еще не включено
+    if (!eyeTrackingEnabled) {
+      setEyeTrackingEnabled(true);
+    }
+
+    setShowCameraPreview(true);
     setCalibrationCompleted(false);
     setShowCalibration(true);
     setIsCalibrating(true);
     setUploadError(null);
-  }, [cameraPermission, requestCameraAccess]);
+  }, [cameraPermission, requestCameraAccess, eyeTrackingEnabled]);
 
   const handleGazeData = useCallback(
     (data: any) => {
+      if (!eyeTrackingEnabled) return;
       if (!data || typeof data.x !== "number" || typeof data.y !== "number") {
         return;
       }
@@ -181,7 +191,7 @@ function Analysis() {
         }
       });
     },
-    [state]
+    [state, eyeTrackingEnabled]
   );
 
   useEffect(() => {
@@ -232,6 +242,21 @@ function Analysis() {
       setGazeIndicator(null);
     }
   }, [state]);
+
+  // Останавливаем камеру при выходе из режима просмотра
+  useEffect(() => {
+    if (state !== "watching" && eyeTrackingEnabled) {
+      if (window.webgazer) {
+        try {
+          window.webgazer.end();
+        } catch (error) {
+          console.error("Ошибка при остановке WebGazer:", error);
+        }
+      }
+      setShowCameraPreview(false);
+      setShowCalibration(false);
+    }
+  }, [state, eyeTrackingEnabled]);
 
   const handleFileSelect = async (file: File | null) => {
     if (file && file.type.startsWith("video/")) {
@@ -696,25 +721,33 @@ function Analysis() {
       return;
     }
 
-    if (cameraPermission !== "granted") {
-      setUploadError(
-        "Доступ к камере не разрешен — тепловая карта и красный индикатор взгляда не будут построены."
-      );
-    }
+    if (eyeTrackingEnabled) {
+      if (cameraPermission !== "granted") {
+        setUploadError(
+          "Доступ к камере не разрешен — тепловая карта и красный индикатор взгляда не будут построены."
+        );
+        return;
+      }
 
-    if (cameraPermission === "granted" && !calibrationCompleted) {
-      setUploadError(
-        "Пройдите калибровку: нажмите «Начать калибровку» и кликните по всем точкам 5 раз."
-      );
-      return;
-    }
+      if (cameraPermission === "granted" && !calibrationCompleted) {
+        setUploadError(
+          "Пройдите калибровку: нажмите «Начать калибровку» и кликните по всем точкам 5 раз."
+        );
+        return;
+      }
 
-    if (isCalibrating) {
-      setUploadError("Дождитесь завершения калибровки перед началом просмотра.");
-      return;
+      if (isCalibrating) {
+        setUploadError(
+          "Дождитесь завершения калибровки перед началом просмотра."
+        );
+        return;
+      }
     }
 
     setShowCalibration(false);
+    if (eyeTrackingEnabled) {
+      setShowCameraPreview(true);
+    }
     setState("watching");
 
     // Отправляем video_start
@@ -829,6 +862,17 @@ function Analysis() {
     setGazeIndicator(null);
     latestGazeRef.current = null;
     gazeHistoryRef.current = [];
+
+    // Останавливаем отслеживание взгляда и камеру
+    if (window.webgazer) {
+      try {
+        window.webgazer.end();
+      } catch (error) {
+        console.error("Ошибка при остановке WebGazer:", error);
+      }
+    }
+    setEyeTrackingEnabled(false);
+    setShowCameraPreview(false);
   };
 
   useEffect(() => {
@@ -913,9 +957,58 @@ function Analysis() {
 
   const shouldShowGazeIndicator =
     state === "watching" &&
+    eyeTrackingEnabled &&
     cameraPermission === "granted" &&
     calibrationCompleted &&
     !!gazeIndicator;
+
+  const toggleEyeTracking = async () => {
+    if (eyeTrackingEnabled) {
+      // Выключаем отслеживание - используем ту же логику что и stopEyeTracking
+      stopEyeTracking();
+      return;
+    }
+
+    const permission =
+      cameraPermission === "granted" ? "granted" : await requestCameraAccess();
+    if (permission !== "granted") return;
+
+    setEyeTrackingEnabled(true);
+    setShowCameraPreview(true);
+  };
+
+  const stopEyeTracking = () => {
+    // Останавливаем WebGazer
+    if (window.webgazer) {
+      try {
+        window.webgazer.end();
+      } catch (error) {
+        console.error("Ошибка при остановке WebGazer:", error);
+      }
+    }
+
+    // Закрываем доступ к камере
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          stream.getTracks().forEach((track) => {
+            track.stop();
+          });
+        })
+        .catch(() => {
+          // Игнорируем ошибки при закрытии
+        });
+    }
+
+    setEyeTrackingEnabled(false);
+    setShowCameraPreview(false);
+    setShowCalibration(false);
+    setGazeIndicator(null);
+    latestGazeRef.current = null;
+    gazeHistoryRef.current = [];
+    setCameraPermission("unknown");
+  };
 
   // Отладочная информация (можно убрать в продакшене)
   console.log("Analysis render:", {
@@ -931,451 +1024,497 @@ function Analysis() {
 
   return (
     <>
-      <EyeTracking
-        show={showCalibration}
-        setShow={setShowCalibration}
-        showCamera={true}
-        showPoint={true}
-        listener={handleGazeData}
-      />
-      <div className={styles.analysisContainer}>
-      <div className={styles.analysis}>
-        <div className={styles.headerWithIndicator}>
-          <h1>Анализ активности</h1>
-          {shouldShowTrackingIndicator && (
-            <div className={styles.trackingIndicator}>
-              <span className={styles.trackingDot}></span>
-              <span>Идет запись состояния</span>
-            </div>
-          )}
-          {state === "watching" && !shouldShowTrackingIndicator && (
-            <div className={styles.trackingWarning}>
-              {uploadError ? (
-                <>
-                  <span className={styles.warningIcon}>❌</span>
-                  <span>Запись не идет: {uploadError}</span>
-                </>
-              ) : !isSocketConnected ? (
-                <>
-                  <span className={styles.warningIcon}>⚠️</span>
-                  <span>Запись не идет: WebSocket не подключен</span>
-                </>
-              ) : !hasChartData ? (
-                <>
-                  <span className={styles.warningIcon}>⚠️</span>
-                  <span>Запись не идет: нет данных от устройства BrainBit</span>
-                </>
-              ) : (
-                <>
-                  <span className={styles.warningIcon}>⚠️</span>
-                  <span>Запись не идет: ожидание подключения устройства</span>
-                </>
-              )}
-            </div>
-          )}
-          {state === "watching" && (
+      {eyeTrackingEnabled && (showCalibration || state === "watching") && (
+        <EyeTracking
+          show={showCalibration}
+          setShow={setShowCalibration}
+          showCamera={showCameraPreview}
+          showPoint={true}
+          listener={handleGazeData}
+        />
+      )}
+      {eyeTrackingEnabled && (
+        <div className={styles.cameraToggleButton}>
+          <div className={styles.cameraStatus}>
+            <span className={styles.statusDot}></span>
+            <span>Камера снимает</span>
+          </div>
+          <div className={styles.cameraActions}>
             <button
               className={styles.stopButton}
-              onClick={handleReset}
-              title="Остановить просмотр"
+              onClick={stopEyeTracking}
+              title="Прекратить отслеживание и закрыть доступ к камере"
             >
-              Остановить
+              Прекратить
             </button>
-          )}
-          {state === "watching" && (
-            <div
-              className={
-                shouldShowGazeIndicator
-                  ? styles.gazeStatusOk
-                  : styles.gazeStatusWarn
-              }
-            >
-              {shouldShowGazeIndicator
-                ? "Отслеживание взгляда активно"
-                : "Нет данных взгляда — проверьте камеру и калибровку"}
-            </div>
-          )}
-        </div>
-
-        {state === "upload" && (
-          <div className={styles.uploadSection}>
-            <p className={styles.uploadPrompt}>Загрузите видео файл</p>
-            <div className={styles.uploadWrapper}>
-              <UploadFile onFileSelect={handleFileSelect} />
-            </div>
-            {isUploading && (
-              <p className={styles.uploadStatus}>
-                Загружаем видео на сервер...
-              </p>
-            )}
-            {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
           </div>
-        )}
-
-        {state === "ready" && (
-          <div className={styles.readySection}>
-            <div className={styles.connectionStatus}>
-              {isSocketConnected ? (
-                <div className={styles.statusConnected}>
-                  <span className={styles.statusDot}></span>
-                  Соединение с сервером установлено
-                </div>
-              ) : (
-                <div className={styles.statusConnecting}>
-                  <span className={styles.statusDot}></span>
-                  Подключение к серверу...
-                </div>
-              )}
-              {uploadError && (
-                <div
-                  className={styles.uploadError}
-                  style={{ marginTop: "1rem" }}
-                >
-                  {uploadError}
-                  <button
-                    onClick={connectToSocket}
-                    style={{
-                      marginLeft: "1rem",
-                      padding: "0.5rem 1rem",
-                      background: "var(--purple-500)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "0.25rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Повторить подключение
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.eyeTrackingSetup}>
-              <div className={styles.eyeTrackingHeader}>
-                <h3>Отслеживание взгляда</h3>
-                <div className={styles.calibrationBadges}>
-                  <span
-                    className={
-                      cameraPermission === "granted"
-                        ? styles.badgeSuccess
-                        : styles.badgeWarning
-                    }
-                  >
-                    {cameraPermission === "granted"
-                      ? "Камера: доступ разрешен"
-                      : cameraPermission === "pending"
-                      ? "Камера: запрос..."
-                      : "Камера: доступ не разрешен"}
-                  </span>
-                  <span
-                    className={
-                      calibrationCompleted
-                        ? styles.badgeSuccess
-                        : styles.badgeWarning
-                    }
-                  >
-                    {calibrationCompleted
-                      ? "Калибровка завершена"
-                      : isCalibrating
-                      ? "Калибровка выполняется"
-                      : "Нужно пройти калибровку"}
-                  </span>
-                </div>
+        </div>
+      )}
+      <div className={styles.analysisContainer}>
+        <div className={styles.analysis}>
+          <div className={styles.headerWithIndicator}>
+            <h1>Анализ активности</h1>
+            {shouldShowTrackingIndicator && (
+              <div className={styles.trackingIndicator}>
+                <span className={styles.trackingDot}></span>
+                <span>Идет запись состояния</span>
               </div>
-              <p className={styles.eyeTrackingNote}>
-                Разрешите доступ к камере и нажмите «Начать калибровку». На белом
-                экране кликните по каждой точке 5 раз (как в примере WebGazer), иначе
-                тепловая карта и красный индикатор взгляда не появятся.
-              </p>
-              <div className={styles.eyeTrackingActions}>
-                <button
-                  className={styles.secondaryButton}
-                  onClick={requestCameraAccess}
-                  disabled={cameraPermission === "pending"}
-                >
-                  Разрешить доступ к камере
-                </button>
-                <button
-                  className={styles.startButton}
-                  onClick={startCalibration}
-                  disabled={
-                    cameraPermission === "pending" ||
-                    cameraPermission === "denied" ||
-                    isCalibrating
-                  }
-                >
-                  {isCalibrating ? "Калибровка..." : "Начать калибровку"}
-                </button>
+            )}
+            {state === "watching" && !shouldShowTrackingIndicator && (
+              <div className={styles.trackingWarning}>
+                {uploadError ? (
+                  <>
+                    <span className={styles.warningIcon}>❌</span>
+                    <span>Запись не идет: {uploadError}</span>
+                  </>
+                ) : !isSocketConnected ? (
+                  <>
+                    <span className={styles.warningIcon}>⚠️</span>
+                    <span>Запись не идет: WebSocket не подключен</span>
+                  </>
+                ) : !hasChartData ? (
+                  <>
+                    <span className={styles.warningIcon}>⚠️</span>
+                    <span>
+                      Запись не идет: нет данных от устройства BrainBit
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.warningIcon}>⚠️</span>
+                    <span>Запись не идет: ожидание подключения устройства</span>
+                  </>
+                )}
               </div>
-              <p className={styles.calibrationHint}>
-                После окончания калибровки закройте окно «Close & load saved model», затем
-                нажмите «Начать просмотр».
-              </p>
-              {cameraPermission !== "granted" && (
-                <p className={styles.calibrationWarning}>
-                  Без доступа к камере тепловая карта и отметки взгляда не будут построены.
+            )}
+            {state === "watching" && (
+              <button
+                className={styles.stopButton}
+                onClick={handleReset}
+                title="Остановить просмотр"
+              >
+                Остановить
+              </button>
+            )}
+            {state === "watching" && (
+              <div
+                className={
+                  shouldShowGazeIndicator
+                    ? styles.gazeStatusOk
+                    : styles.gazeStatusWarn
+                }
+              >
+                {shouldShowGazeIndicator
+                  ? "Отслеживание взгляда активно"
+                  : "Нет данных взгляда — проверьте камеру и калибровку"}
+              </div>
+            )}
+          </div>
+
+          {state === "upload" && (
+            <div className={styles.uploadSection}>
+              <p className={styles.uploadPrompt}>Загрузите видео файл</p>
+              <div className={styles.uploadWrapper}>
+                <UploadFile onFileSelect={handleFileSelect} />
+              </div>
+              {isUploading && (
+                <p className={styles.uploadStatus}>
+                  Загружаем видео на сервер...
                 </p>
               )}
+              {uploadError && (
+                <p className={styles.uploadError}>{uploadError}</p>
+              )}
             </div>
+          )}
 
-            {videoFile && (
-              <div className={styles.videoInfo}>
-                <p>Файл: {videoFile.name}</p>
-                <p>Размер: {(videoFile.size / 1024 / 1024).toFixed(2)} MB</p>
-              </div>
-            )}
-
-            {uploadedVideoId && (
-              <div className={styles.videoInfo}>
-                <p>ID видео: {uploadedVideoId}</p>
-                {uploadedVideoUrl && <p>Ссылка: {uploadedVideoUrl}</p>}
-              </div>
-            )}
-
-            <div className={styles.actionButtons}>
-              <button
-                className={styles.startButton}
-                onClick={handleStartWatching}
-                disabled={!isSocketConnected || isUploading}
-              >
-                Начать просмотр
-              </button>
-              <button className={styles.resetButton} onClick={handleReset}>
-                Загрузить другое видео
-              </button>
-            </div>
-
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
-          </div>
-        )}
-
-        {state === "watching" && (
-          <div className={styles.watchingSection}>
-            {!videoURL ? (
-              <div className={styles.uploadError}>
-                Ошибка: Видео не загружено. Пожалуйста, вернитесь и загрузите
-                видео.
-              </div>
-            ) : (
-              <>
-                <div className={styles.videoPlayerContainer}>
-                  <div
-                    className={styles.videoWrapper}
-                    ref={videoOverlayRef}
-                  >
-                    <VideoPlayer
-                      ref={videoPlayerRef}
-                      videoURL={videoURL}
-                      triggers={screenshotTriggers}
-                      autoCapture={false}
-                      autoPlay={true}
-                      showManualCapture={false}
-                      onVideoEnd={handleVideoEnd}
-                      onScreenshot={handleScreenshot}
-                    />
-                    {shouldShowGazeIndicator && gazeIndicator && (
-                      <div
-                        className={styles.gazeDot}
-                        style={{
-                          left: `${gazeIndicator.relativeX * 100}%`,
-                          top: `${gazeIndicator.relativeY * 100}%`,
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Скриншоты с горизонтальным скроллом */}
-                {capturedScreenshots.length > 0 ? (
-                  <div className={styles.screenshotsScrollContainer}>
-                    <h3 className={styles.screenshotsTitle}>
-                      Скриншоты ({capturedScreenshots.length})
-                    </h3>
-                    <div className={styles.screenshotsScroll}>
-                      {capturedScreenshots.map((screenshot) => (
-                        <div
-                          key={screenshot.id}
-                          className={styles.screenshotItem}
-                        >
-                          <div className={styles.screenshotImage}>
-                            <img
-                              src={screenshot.image}
-                              alt={`Screenshot at ${screenshot.formattedTime}`}
-                            />
-                          </div>
-                          <div className={styles.screenshotTime}>
-                            {screenshot.formattedTime}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+          {state === "ready" && (
+            <div className={styles.readySection}>
+              <div className={styles.connectionStatus}>
+                {isSocketConnected ? (
+                  <div className={styles.statusConnected}>
+                    <span className={styles.statusDot}></span>
+                    Соединение с сервером установлено
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      padding: "1rem",
-                      color: "var(--profile-text-secondary)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Скриншоты появятся здесь при обнаружении изменений состояния
+                  <div className={styles.statusConnecting}>
+                    <span className={styles.statusDot}></span>
+                    Подключение к серверу...
                   </div>
                 )}
-
-                {/* Уменьшенный график концентрации под скриншотами */}
-                <div className={styles.chartContainerSmall}>
-                  <ConcentrationEngagementChart />
-                </div>
-
                 {uploadError && (
                   <div
                     className={styles.uploadError}
                     style={{ marginTop: "1rem" }}
                   >
                     {uploadError}
+                    <button
+                      onClick={connectToSocket}
+                      style={{
+                        marginLeft: "1rem",
+                        padding: "0.5rem 1rem",
+                        background: "var(--purple-500)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "0.25rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Повторить подключение
+                    </button>
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        )}
+              </div>
 
-        {state === "finished" && (
-          <div className={styles.finishedSection}>
-            <div className={styles.videoPlayerContainer}>
-              {videoURL && (
-                <VideoPlayer
-                  videoURL={videoURL}
-                  triggers={screenshotTriggers}
-                  autoCapture={false}
-                  autoPlay={false}
-                  showManualCapture={false}
-                  onVideoEnd={handleVideoEnd}
-                  onScreenshot={handleScreenshot}
-                />
+              <div className={styles.eyeTrackingSetup}>
+                <div className={styles.eyeTrackingHeader}>
+                  <h3>Отслеживание взгляда</h3>
+                  <div className={styles.calibrationBadges}>
+                    <span
+                      className={
+                        cameraPermission === "granted"
+                          ? styles.badgeSuccess
+                          : styles.badgeWarning
+                      }
+                    >
+                      {cameraPermission === "granted"
+                        ? "Камера: доступ разрешен"
+                        : cameraPermission === "pending"
+                        ? "Камера: запрос..."
+                        : "Камера: доступ не разрешен"}
+                    </span>
+                    <span
+                      className={
+                        calibrationCompleted
+                          ? styles.badgeSuccess
+                          : styles.badgeWarning
+                      }
+                    >
+                      {calibrationCompleted
+                        ? "Калибровка завершена"
+                        : isCalibrating
+                        ? "Калибровка выполняется"
+                        : "Нужно пройти калибровку"}
+                    </span>
+                  </div>
+                </div>
+                <p className={styles.eyeTrackingNote}>
+                  Разрешите доступ к камере и нажмите «Начать калибровку». На
+                  белом экране кликните по каждой точке 5 раз (как в примере
+                  WebGazer), иначе тепловая карта и красный индикатор взгляда не
+                  появятся.
+                </p>
+                <div className={styles.eyeTrackingActions}>
+                  <button
+                    className={styles.secondaryButton}
+                    onClick={requestCameraAccess}
+                    disabled={cameraPermission === "pending"}
+                  >
+                    Разрешить доступ к камере
+                  </button>
+                  <button
+                    className={styles.startButton}
+                    onClick={startCalibration}
+                    disabled={
+                      cameraPermission === "pending" ||
+                      cameraPermission === "denied" ||
+                      isCalibrating
+                    }
+                  >
+                    {isCalibrating ? "Калибровка..." : "Начать калибровку"}
+                  </button>
+                  <button
+                    className={
+                      eyeTrackingEnabled
+                        ? styles.dangerButton
+                        : styles.startButton
+                    }
+                    onClick={toggleEyeTracking}
+                  >
+                    {eyeTrackingEnabled
+                      ? "Выключить отслеживание"
+                      : "Включить отслеживание"}
+                  </button>
+                </div>
+                <p className={styles.calibrationHint}>
+                  После окончания калибровки закройте окно «Close & load saved
+                  model», затем нажмите «Начать просмотр».
+                </p>
+                {cameraPermission !== "granted" && (
+                  <p className={styles.calibrationWarning}>
+                    Без доступа к камере тепловая карта и отметки взгляда не
+                    будут построены.
+                  </p>
+                )}
+              </div>
+
+              {videoFile && (
+                <div className={styles.videoInfo}>
+                  <p>Файл: {videoFile.name}</p>
+                  <p>Размер: {(videoFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
               )}
-            </div>
 
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
+              {uploadedVideoId && (
+                <div className={styles.videoInfo}>
+                  <p>ID видео: {uploadedVideoId}</p>
+                  {uploadedVideoUrl && <p>Ссылка: {uploadedVideoUrl}</p>}
+                </div>
+              )}
 
-            <div className={styles.stats}>
-              <div className={styles.statItem}>
-                <h3>Общее время</h3>
-                <p>120 часов</p>
+              <div className={styles.actionButtons}>
+                <button
+                  className={styles.startButton}
+                  onClick={handleStartWatching}
+                  disabled={!isSocketConnected || isUploading}
+                >
+                  Начать просмотр
+                </button>
+                <button className={styles.resetButton} onClick={handleReset}>
+                  Загрузить другое видео
+                </button>
               </div>
-              <div className={styles.statItem}>
-                <h3>Завершенные задачи</h3>
-                <p>42</p>
-              </div>
-              <div className={styles.statItem}>
-                <h3>Уровень вовлеченности</h3>
-                <p>85%</p>
-              </div>
-            </div>
 
-            <div className={styles.actionButtons}>
-              <button
-                className={styles.generateButton}
-                onClick={handleGenerateReport}
-                disabled={isReportGenerating}
-              >
-                {isReportGenerating
-                  ? "Генерация отчета..."
-                  : "Сгенерировать отчет"}
-              </button>
-              <button className={styles.resetButton} onClick={handleReset}>
-                Загрузить новое видео
-              </button>
-            </div>
-          </div>
-        )}
-
-        {state === "reportGenerated" && (
-          <div className={styles.reportSection}>
-            <div className={styles.reportHeader}>
-              <h2>Отчет сгенерирован</h2>
-              <p>Теперь вы можете задать вопросы о результатах анализа</p>
-            </div>
-
-            <div className={styles.chartContainer}>
-              <KeyIndicators />
-            </div>
-
-            <div className={styles.stats}>
-              <div className={styles.statItem}>
-                <h3>Общее время</h3>
-                <p>120 часов</p>
-              </div>
-              <div className={styles.statItem}>
-                <h3>Завершенные задачи</h3>
-                <p>42</p>
-              </div>
-              <div className={styles.statItem}>
-                <h3>Уровень вовлеченности</h3>
-                <p>85%</p>
+              <div className={styles.chartContainer}>
+                <KeyIndicators />
               </div>
             </div>
+          )}
 
-            {/* Скриншоты с максимальными активностями */}
-            {capturedScreenshots.length > 0 && (
-              <div className={styles.screenshotsSection}>
-                <h3>Скриншоты с активностями ({capturedScreenshots.length})</h3>
-                <div className={styles.screenshotsGrid}>
-                  {capturedScreenshots.map((screenshot) => (
-                    <div key={screenshot.id} className={styles.screenshotCard}>
-                      <div className={styles.screenshotImage}>
-                        <img
-                          src={screenshot.image}
-                          alt={`Screenshot at ${screenshot.formattedTime}`}
+          {state === "watching" && (
+            <div className={styles.watchingSection}>
+              {!videoURL ? (
+                <div className={styles.uploadError}>
+                  Ошибка: Видео не загружено. Пожалуйста, вернитесь и загрузите
+                  видео.
+                </div>
+              ) : (
+                <>
+                  <div className={styles.videoPlayerContainer}>
+                    <div className={styles.videoWrapper} ref={videoOverlayRef}>
+                      <VideoPlayer
+                        ref={videoPlayerRef}
+                        videoURL={videoURL}
+                        triggers={screenshotTriggers}
+                        autoCapture={false}
+                        autoPlay={true}
+                        showManualCapture={false}
+                        onVideoEnd={handleVideoEnd}
+                        onScreenshot={handleScreenshot}
+                      />
+                      {shouldShowGazeIndicator && gazeIndicator && (
+                        <div
+                          className={styles.gazeDot}
+                          style={{
+                            left: `${gazeIndicator.relativeX * 100}%`,
+                            top: `${gazeIndicator.relativeY * 100}%`,
+                          }}
                         />
-                        <div className={styles.screenshotTime}>
-                          {screenshot.formattedTime}
-                        </div>
-                      </div>
-                      <div className={styles.screenshotInfo}>
-                        <div className={styles.screenshotTrigger}>
-                          {screenshot.trigger.type ===
-                            "concentration_increase" && "🧠"}
-                          {screenshot.trigger.type === "engagement_increase" &&
-                            "❤️"}
-                          {screenshot.trigger.type === "stress_peak" && "⚠️"}
-                          {screenshot.trigger.type === "attention_peak" && "📈"}
-                          <span>{screenshot.trigger.message || "Событие"}</span>
-                        </div>
-                        {screenshot.trigger.value && (
-                          <div className={styles.screenshotValue}>
-                            Значение: {screenshot.trigger.value}%
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Скриншоты с горизонтальным скроллом */}
+                  {capturedScreenshots.length > 0 ? (
+                    <div className={styles.screenshotsScrollContainer}>
+                      <h3 className={styles.screenshotsTitle}>
+                        Скриншоты ({capturedScreenshots.length})
+                      </h3>
+                      <div className={styles.screenshotsScroll}>
+                        {capturedScreenshots.map((screenshot) => (
+                          <div
+                            key={screenshot.id}
+                            className={styles.screenshotItem}
+                          >
+                            <div className={styles.screenshotImage}>
+                              <img
+                                src={screenshot.image}
+                                alt={`Screenshot at ${screenshot.formattedTime}`}
+                              />
+                            </div>
+                            <div className={styles.screenshotTime}>
+                              {screenshot.formattedTime}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    <div
+                      style={{
+                        padding: "1rem",
+                        color: "var(--profile-text-secondary)",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Скриншоты появятся здесь при обнаружении изменений
+                      состояния
+                    </div>
+                  )}
+
+                  {/* Уменьшенный график концентрации под скриншотами */}
+                  <div className={styles.chartContainerSmall}>
+                    <ConcentrationEngagementChart />
+                  </div>
+
+                  {uploadError && (
+                    <div
+                      className={styles.uploadError}
+                      style={{ marginTop: "1rem" }}
+                    >
+                      {uploadError}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {state === "finished" && (
+            <div className={styles.finishedSection}>
+              <div className={styles.videoPlayerContainer}>
+                {videoURL && (
+                  <VideoPlayer
+                    videoURL={videoURL}
+                    triggers={screenshotTriggers}
+                    autoCapture={false}
+                    autoPlay={false}
+                    showManualCapture={false}
+                    onVideoEnd={handleVideoEnd}
+                    onScreenshot={handleScreenshot}
+                  />
+                )}
+              </div>
+
+              <div className={styles.chartContainer}>
+                <KeyIndicators />
+              </div>
+
+              <div className={styles.stats}>
+                <div className={styles.statItem}>
+                  <h3>Общее время</h3>
+                  <p>120 часов</p>
+                </div>
+                <div className={styles.statItem}>
+                  <h3>Завершенные задачи</h3>
+                  <p>42</p>
+                </div>
+                <div className={styles.statItem}>
+                  <h3>Уровень вовлеченности</h3>
+                  <p>85%</p>
                 </div>
               </div>
-            )}
 
-            <div className={styles.actionButtons}>
-              <button className={styles.saveButton} onClick={handleSaveReport}>
-                Сохранить отчет
-              </button>
-              <button className={styles.resetButton} onClick={handleReset}>
-                Начать заново
-              </button>
+              <div className={styles.actionButtons}>
+                <button
+                  className={styles.generateButton}
+                  onClick={handleGenerateReport}
+                  disabled={isReportGenerating}
+                >
+                  {isReportGenerating
+                    ? "Генерация отчета..."
+                    : "Сгенерировать отчет"}
+                </button>
+                <button className={styles.resetButton} onClick={handleReset}>
+                  Загрузить новое видео
+                </button>
+              </div>
             </div>
+          )}
+
+          {state === "reportGenerated" && (
+            <div className={styles.reportSection}>
+              <div className={styles.reportHeader}>
+                <h2>Отчет сгенерирован</h2>
+                <p>Теперь вы можете задать вопросы о результатах анализа</p>
+              </div>
+
+              <div className={styles.chartContainer}>
+                <KeyIndicators />
+              </div>
+
+              <div className={styles.stats}>
+                <div className={styles.statItem}>
+                  <h3>Общее время</h3>
+                  <p>120 часов</p>
+                </div>
+                <div className={styles.statItem}>
+                  <h3>Завершенные задачи</h3>
+                  <p>42</p>
+                </div>
+                <div className={styles.statItem}>
+                  <h3>Уровень вовлеченности</h3>
+                  <p>85%</p>
+                </div>
+              </div>
+
+              {/* Скриншоты с максимальными активностями */}
+              {capturedScreenshots.length > 0 && (
+                <div className={styles.screenshotsSection}>
+                  <h3>
+                    Скриншоты с активностями ({capturedScreenshots.length})
+                  </h3>
+                  <div className={styles.screenshotsGrid}>
+                    {capturedScreenshots.map((screenshot) => (
+                      <div
+                        key={screenshot.id}
+                        className={styles.screenshotCard}
+                      >
+                        <div className={styles.screenshotImage}>
+                          <img
+                            src={screenshot.image}
+                            alt={`Screenshot at ${screenshot.formattedTime}`}
+                          />
+                          <div className={styles.screenshotTime}>
+                            {screenshot.formattedTime}
+                          </div>
+                        </div>
+                        <div className={styles.screenshotInfo}>
+                          <div className={styles.screenshotTrigger}>
+                            {screenshot.trigger.type ===
+                              "concentration_increase" && "🧠"}
+                            {screenshot.trigger.type ===
+                              "engagement_increase" && "❤️"}
+                            {screenshot.trigger.type === "stress_peak" && "⚠️"}
+                            {screenshot.trigger.type === "attention_peak" &&
+                              "📈"}
+                            <span>
+                              {screenshot.trigger.message || "Событие"}
+                            </span>
+                          </div>
+                          {screenshot.trigger.value && (
+                            <div className={styles.screenshotValue}>
+                              Значение: {screenshot.trigger.value}%
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.actionButtons}>
+                <button
+                  className={styles.saveButton}
+                  onClick={handleSaveReport}
+                >
+                  Сохранить отчет
+                </button>
+                <button className={styles.resetButton} onClick={handleReset}>
+                  Начать заново
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {state === "reportGenerated" && (
+          <div className={styles.chat}>
+            <ChatMessagerComponent />
           </div>
         )}
       </div>
-
-      {state === "reportGenerated" && (
-        <div className={styles.chat}>
-          <ChatMessagerComponent />
-        </div>
-      )}
-    </div>
     </>
   );
 }
